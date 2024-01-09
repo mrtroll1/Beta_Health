@@ -43,7 +43,7 @@ def get_item_from_table_by_key(table, item, key_column, key_value):
     db_connection = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="...,
+        password="...",
         database="beta_health"
     )
     db_cursor = db_connection.cursor()
