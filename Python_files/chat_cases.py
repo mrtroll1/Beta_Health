@@ -2,7 +2,8 @@ import os
 import mysql.connector
 import telebot
 from telebot import types
-from chat_bot_module import ChatBot, ChatOpenAI, ChatPromptTemplate, ConversationBufferMemory
+from chat_bot_module import ChatBot, ChatPromptTemplate, ConversationBufferMemory
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import MessagesPlaceholder
 from langchain.schema import SystemMessage
