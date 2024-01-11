@@ -59,4 +59,6 @@ def keep_conversation(message, bot_instance):
     response = bot_instance.process_message(message.text)
     bot.send_message(message.chat.id, response)
     bot.register_next_step_handler(message, lambda msg: keep_conversation(msg, bot_instance))
+
+bot.polling()
     
