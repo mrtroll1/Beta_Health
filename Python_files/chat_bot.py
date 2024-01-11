@@ -45,6 +45,7 @@ def send_welcome(message):
     user_id = message.chat.id
     
     welcome_msg = f"Здравствуйте! Как я могу Вам помочь?"
+    bot.send_message(user_id, welcome_msg)
     bot.register_next_step_handler(message, start_conversation(message))
 
 def start_conversation(message):
