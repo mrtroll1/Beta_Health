@@ -8,6 +8,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: 
+      name: Beta_Health 
     steps:
     - name: Check out the repository
       uses: actions/checkout@v3
