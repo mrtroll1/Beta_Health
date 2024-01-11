@@ -3,6 +3,7 @@ import mysql.connector
 import telebot
 from telebot import types
 from chat_bot_module import ChatBot, ChatPromptTemplate, ConversationBufferMemory
+import langchain_openai
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import MessagesPlaceholder
@@ -58,4 +59,6 @@ def keep_conversation(message, bot_instance):
     response = bot_instance.process_message(message.text)
     bot.send_message(message.chat.id, response)
     bot.register_next_step_handler(message, lambda msg: keep_conversation(msg, bot_instance))
+
+bot.polling()
     
