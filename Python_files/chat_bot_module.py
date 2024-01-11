@@ -1,4 +1,3 @@
-from langchain_community.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import MessagesPlaceholder
