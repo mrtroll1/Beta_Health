@@ -1,0 +1,27 @@
+name: CI/CD Workflow
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v2
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: root
+        key: ${{ secrets.HETZNER_KEY }}
+        port: 22
+        script: |
+          cd /root/Projects/Beta_Health/Beta_Health_Git/
+          git pull origin master
+          pip install -r Python_files/requirements.txt  
+          systemctl restart mybot.service         
+        
