@@ -2,7 +2,7 @@ import os
 import mysql.connector
 import telebot
 from telebot import types
-from chat_bot_module import ChatBot, ChatOpenAI, ChatPromptTemplate, ConversationBufferMemory
+from chat_bot_module import ChatBot, ChatPromptTemplate, ConversationBufferMemory
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import MessagesPlaceholder
 from langchain.schema import SystemMessage
@@ -11,7 +11,7 @@ from langchain.prompts import HumanMessagePromptTemplate
 openai_api_key = os.environ.get('OPENAI_API_KEY')
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 
-llm = ChatOpenAI(openai_api_key=openai_api_key)  
+llm = langchain_openai.ChatOpenAI(openai_api_key=openai_api_key)  
 
 prompt = ChatPromptTemplate.from_messages(
     [
