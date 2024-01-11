@@ -18,6 +18,7 @@ jobs:
         host: ${{ secrets.SERVER_IP }}
         username: root
         key: ${{ secrets.HETZNER_KEY }}
+        passphrase: ${{ secrets.HETZNER_KEY_PASSPHRASE }}
         port: 22
         script: |
           cd /root/Projects/Beta_Health/Beta_Health_Git/
