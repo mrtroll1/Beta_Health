@@ -18,13 +18,13 @@ jobs:
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
-        username: root
+        username: luka
         key: ${{ secrets.HETZNER_KEY }}
         passphrase: ${{ secrets.HETZNER_KEY_PASSPHRASE }}
         port: 618
         script: |
-          cd /root/Projects/Beta_Health/Beta_Health_Git/
-          git pull origin master
-          pip install -r Python_files/requirements.txt  
-          systemctl restart mybot.service         
+          sudo cd /root/Projects/Beta_Health/Beta_Health_Git/
+          sudo git pull origin master
+          sudo pip install -r Python_files/requirements.txt  
+          sudo systemctl restart mybot.service         
         
