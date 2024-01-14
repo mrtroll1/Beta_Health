@@ -3,7 +3,7 @@ import mysql.connector
 import telebot
 from telebot import types
 from bots import ChatBot, Summarizer
-import functions
+# import functions
 from langchain.prompts import ChatPromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
