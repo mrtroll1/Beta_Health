@@ -87,7 +87,9 @@ def main_menu():
     button_1 = types.InlineKeyboardButton("Новый кейс", callback_data='new_case')
     button_2 = types.InlineKeyboardButton("Мои кейсы", callback_data='my_cases')
 
-    keyboard.add(button_1, button_2, button_3)
+    keyboard.add(button_1, button_2)
+
+    return keyboard
 
 
 
