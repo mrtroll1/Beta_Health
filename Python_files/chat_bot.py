@@ -84,9 +84,8 @@ def keep_conversation(message, memory=default_memory):
 def main_menu():
     keyboard = types.InlineKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
 
-    button_1 = types.InlineKeyboardButton("Новый кейс")
-    button_2 = types.InlineKeyboardButton("Мои кейсы")
-    button_3 = types.InlineKeyboardButton("...")
+    button_1 = types.InlineKeyboardButton("Новый кейс", callback_data='new_case')
+    button_2 = types.InlineKeyboardButton("Мои кейсы", callback_data='my_cases')
 
     keyboard.add(button_1, button_2, button_3)
 
@@ -97,16 +96,16 @@ def main_menu():
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.chat.id
-    user_name = 'Барак Обама'
+    user_name = 'Барак'
     remove_keyboard = types.ReplyKeyboardRemove()
     bot.send_message(user_id, "We're live babyyy!!!", reply_markup=remove_keyboard)
     # user_name = functions.get_item_from_table_by_key('user_names', 'user_name', 'user_id', user_id)
     
-    if user_name == 'Барак Обама':
+    if user_name == 'Барак':
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
         main_menu = main_menu()
-        bot.send_message(message.chat.id, "Как могу помочь?", reply_markup=main_menu)
+        bot.send_message(user.id, "Как могу помочь?", reply_markup=main_menu)
         set_user_state(message.from_user.id, 'awaiting_menu_choice')
         
     else:
@@ -162,5 +161,15 @@ def handle_menu_choice(message):
 def handle_case(message):
     keep_conversation(message)
     pass
+
+@bot.callback_query_handler(func=lambda call: True)
+def handle_query(call):
+    if call.data == 'new_case':
+        # Action for button 1
+        bot.send_message(call.message.chat.id, "Новый кейс!")
+    elif call.data == 'my_cases':
+        # Action for button 2
+        bot.send_message(call.message.chat.id, "Мои кейсы:")
+
 
 bot.polling()
