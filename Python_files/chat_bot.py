@@ -62,7 +62,6 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
 default_memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
 bot = telebot.TeleBot(telegram_api_token)
-bot.send_message(message.chat.id, "We're live babyyy" )
 
 user_state = {}
 
@@ -102,6 +101,7 @@ def main_menu(message):
 def send_welcome(message):
     user_id = message.chat.id
     user_name = 'Барак Обама'
+    bot.send_message(user_id, "We're live babyyy")
     # user_name = functions.get_item_from_table_by_key('user_names', 'user_name', 'user_id', user_id)
     
     if user_name:
