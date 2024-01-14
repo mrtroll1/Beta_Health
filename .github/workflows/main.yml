@@ -21,7 +21,7 @@ jobs:
         username: root
         key: ${{ secrets.HETZNER_KEY }}
         passphrase: ${{ secrets.HETZNER_KEY_PASSPHRASE }}
-        port: 22
+        port: 618
         script: |
           cd /root/Projects/Beta_Health/Beta_Health_Git/
           git pull origin master
