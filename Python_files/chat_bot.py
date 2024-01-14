@@ -159,8 +159,8 @@ def handle_menu_choice(message):
         bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню")
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case')
-def handle_case(message):
-    keep_conversation(message)
+def handle_case(message, memory):
+    keep_conversation(message, memory)
     
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -171,6 +171,7 @@ def handle_query(call):
                               message_id=call.message.message_id,
                               text="Начинаем новый кейс. Какие у вас жалобы?",
                               reply_markup=None)
+        memory = default_memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
     elif call.data == 'my_cases':
         # Action for button 2
         bot.send_message(call.message.chat.id, "Мои кейсы:")
