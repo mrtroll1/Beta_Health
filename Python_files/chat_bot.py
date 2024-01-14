@@ -64,6 +64,7 @@ default_memory = ConversationBufferMemory(memory_key="chat_history", return_mess
 bot = telebot.TeleBot(telegram_api_token)
 
 user_state = {}
+user_memory = {}
 
 
 
@@ -74,6 +75,12 @@ def set_user_state(user_id, state):
 
 def get_user_state(user_id):
     return user_state.get(user_id, None)
+
+def set_user_memory(user_id, memory):
+    user_memory[user_id] = memory
+
+def get_user_memory(user_id):
+    return user_memory.get(user_id, None)
     
 def keep_conversation(message, memory=default_memory):
     bot_instance = ChatBot(llm, prompt, default_memory)
@@ -159,8 +166,8 @@ def handle_menu_choice(message):
         bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню")
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case')
-def handle_case(message, memory):
-    keep_conversation(message, memory)
+def handle_case(message):
+    keep_conversation(message, get_user_memory(message.chat.id))
     
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -172,6 +179,8 @@ def handle_query(call):
                               text="Начинаем новый кейс. Какие у вас жалобы?",
                               reply_markup=None)
         memory = default_memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
+        set_user_memory(messgae.chat.id, memory)
+
     elif call.data == 'my_cases':
         # Action for button 2
         bot.send_message(call.message.chat.id, "Мои кейсы:")
