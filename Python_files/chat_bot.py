@@ -83,6 +83,7 @@ def keep_conversation(message, memory=default_memory):
 
 def main_menu():
     keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
 
     button_1 = types.InlineKeyboardButton("Новый кейс", callback_data='new_case')
     button_2 = types.InlineKeyboardButton("Мои кейсы", callback_data='my_cases')
@@ -105,9 +106,7 @@ def send_welcome(message):
     if user_name == 'Барак':
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
-        main_menu = main_menu()
-        bot.send_message(user_id, 'Menu created')
-        bot.send_message(user_id, "Как могу помочь?", reply_markup=main_menu)
+        bot.send_message(user_id, "Как могу помочь?", reply_markup=main_menu())
         set_user_state(message.from_user.id, 'awaiting_menu_choice')
         
     else:
@@ -174,4 +173,4 @@ def handle_query(call):
         bot.send_message(call.message.chat.id, "Мои кейсы:")
 
 
-bot.polling()
+bot.infinity_polling()
