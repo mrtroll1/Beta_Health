@@ -101,7 +101,7 @@ def main_menu(message):
 def send_welcome(message):
     user_id = message.chat.id
     user_name = 'Барак Обама'
-    bot.send_message(user_id, "We're live babyyy", reply_markup=None)
+    bot.send_message(user_id, "We're live babyyy!!!", reply_markup=None)
     # user_name = functions.get_item_from_table_by_key('user_names', 'user_name', 'user_id', user_id)
     
     if user_name is not None:
