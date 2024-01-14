@@ -106,6 +106,7 @@ def send_welcome(message):
     
     if user_name is not None:
         welcome_msg = f"Здравствуйте, {user_name}!"
+        bot.send_message(user_id, welcome_msg)
         main_menu(message)
         
     else:
