@@ -134,11 +134,11 @@ def send_help(message):
     help_text += '\n'.join(commands_list)
     bot.send_message(message.chat.id, help_text)
 
-@bot.message_handler(commands=['menu']):
+@bot.message_handler(commands=['menu'])
 def menu(message):
     main_meanu(message)
 
-@bot.message_handler(commands=['info']):
+@bot.message_handler(commands=['info'])
 def send_info(message):
     info = 'Вот как всё работает ...'
     bot.send_message(message.chat.id, info)
