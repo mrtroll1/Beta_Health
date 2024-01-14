@@ -121,7 +121,7 @@ def handle_name_input(message):
     confirmation_msg = f"Очень приятно, {user_name}! Сейчас я расскажу, как всё работает..."
     bot.send_message(user_id, confirmation_msg)
 
-@bot.message_handler(commands=['help']):
+@bot.message_handler(commands=['help'])
 def send_help(message):
     help_text = "Вот доступные команды:\n"
     commands_list = [
