@@ -82,7 +82,7 @@ def keep_conversation(message, memory=default_memory):
     bot.register_next_step_handler(message, lambda msg: keep_conversation(msg, bot_instance))
 
 def main_menu():
-    keyboard = types.InlineKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    keyboard = types.InlineKeyboardMarkup()
 
     button_1 = types.InlineKeyboardButton("Новый кейс", callback_data='new_case')
     button_2 = types.InlineKeyboardButton("Мои кейсы", callback_data='my_cases')
@@ -99,15 +99,14 @@ def main_menu():
 def send_welcome(message):
     user_id = message.chat.id
     user_name = 'Барак'
-    remove_keyboard = types.ReplyKeyboardRemove()
-    bot.send_message(user_id, "We're live babyyy!!!", reply_markup=remove_keyboard)
+    bot.send_message(user_id, "We're live babyyy!!!")
     # user_name = functions.get_item_from_table_by_key('user_names', 'user_name', 'user_id', user_id)
     
     if user_name == 'Барак':
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
         main_menu = main_menu()
-        bot.send_message(user.id, "Как могу помочь?", reply_markup=main_menu)
+        bot.send_message(user_id, "Как могу помочь?", reply_markup=main_menu)
         set_user_state(message.from_user.id, 'awaiting_menu_choice')
         
     else:
