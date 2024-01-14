@@ -9,7 +9,7 @@ def get_item_from_table_by_key(table, item, key_column, key_value):
         host="localhost",
         user="root",
         password=MYSQL_PASSWORD,
-        database="..."
+        database="Beta_Health_db"
     )
     db_cursor = db_connection.cursor()
 
@@ -27,7 +27,7 @@ def add_user_name(user_id, user_name):
         host="localhost",
         user="root",
         password=MYSQL_PASSWORD,
-        database="..."
+        database="Beta_Health_db"
     )
     db_cursor = db_connection.cursor()
     
@@ -44,7 +44,7 @@ def save_case(user_id, case):
         host="localhost",
         user="root",
         password=MYSQL_PASSWORD,
-        database="..."
+        database="Beta_Health_db"
     )
     db_cursor = db_connection.cursor()
 
@@ -61,7 +61,7 @@ def show_cases_list(user_id):
         host="localhost",
         user="root",
         password=MYSQL_PASSWORD,
-        database="..."
+        database="Beta_Health_db"
     )
     db_cursor = db_connection.cursor()
 
@@ -78,7 +78,7 @@ def continue_case(user_id, case):
         host="localhost",
         user="root",
         password=MYSQL_PASSWORD,
-        database="..."
+        database="Beta_Health_db"
     )
     db_cursor = db_connection.cursor()
 

@@ -104,7 +104,7 @@ def send_welcome(message):
     bot.send_message(user_id, "We're live babyyy")
     # user_name = functions.get_item_from_table_by_key('user_names', 'user_name', 'user_id', user_id)
     
-    if user_name:
+    if user_name is not None:
         welcome_msg = f"Здравствуйте, {user_name}!"
         main_menu(message)
         
