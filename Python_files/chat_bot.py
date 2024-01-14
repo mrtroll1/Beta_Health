@@ -137,7 +137,7 @@ def send_help(message):
 
 @bot.message_handler(commands=['menu'])
 def menu(message):
-    main_meanu(message)
+    bot.send_message(message.chat.id, 'Вот!', reply_markup=main_menu())
 
 @bot.message_handler(commands=['info'])
 def send_info(message):
@@ -161,13 +161,16 @@ def handle_menu_choice(message):
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case')
 def handle_case(message):
     keep_conversation(message)
-    pass
+    
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     if call.data == 'new_case':
-        # Action for button 1
-        bot.send_message(call.message.chat.id, "Новый кейс!")
+        set_user_state(call.message.chat.id, 'editing_case')
+        bot.edit_message_text(chat_id=call.message.chat.id,
+                              message_id=call.message.message_id,
+                              text="Начинаем новый кейс. Какие у вас жалобы?",
+                              reply_markup=None)
     elif call.data == 'my_cases':
         # Action for button 2
         bot.send_message(call.message.chat.id, "Мои кейсы:")
