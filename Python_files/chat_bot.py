@@ -105,7 +105,7 @@ def send_welcome(message):
     bot.send_message(user_id, "We're live babyyy!!!", reply_markup=remove_keyboard)
     # user_name = functions.get_item_from_table_by_key('user_names', 'user_name', 'user_id', user_id)
     
-    if user_name is not None:
+    if user_name == 'Барак Обама':
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
         main_menu(message)
