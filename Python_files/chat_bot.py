@@ -106,6 +106,7 @@ def send_welcome(message):
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
         main_menu = main_menu()
+        bot.send_message(user_id, 'Menu created')
         bot.send_message(user_id, "Как могу помочь?", reply_markup=main_menu)
         set_user_state(message.from_user.id, 'awaiting_menu_choice')
         
