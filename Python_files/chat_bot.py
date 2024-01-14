@@ -81,7 +81,7 @@ def keep_conversation(message, memory=default_memory):
     bot.send_message(message.chat.id, response)
     bot.register_next_step_handler(message, lambda msg: keep_conversation(msg, bot_instance))
 
-def main_menu(message):
+def main_menu():
     keyboard = types.InlineKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
 
     button_1 = types.InlineKeyboardButton("Новый кейс")
@@ -89,9 +89,6 @@ def main_menu(message):
     button_3 = types.InlineKeyboardButton("...")
 
     keyboard.add(button_1, button_2, button_3)
-
-    bot.send_message(message.chat.id, "Как могу помочь?", reply_markup=keyboard)
-    set_user_state(message.from_user.id, 'awaiting_menu_choice')
 
 
 
@@ -108,7 +105,9 @@ def send_welcome(message):
     if user_name == 'Барак Обама':
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
-        main_menu(message)
+        main_menu = main_menu()
+        bot.send_message(message.chat.id, "Как могу помочь?", reply_markup=main_menu)
+        set_user_state(message.from_user.id, 'awaiting_menu_choice')
         
     else:
         welcome_msg = "Добро пожаловать на Beta-Health! Как я могу к Вам обращаться?"
