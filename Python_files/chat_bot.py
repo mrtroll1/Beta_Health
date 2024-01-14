@@ -62,6 +62,7 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
 default_memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
 bot = telebot.TeleBot(telegram_api_token)
+bot.send_message(message.chat.id, "We're live babyyy" )
 
 user_state = {}
 
