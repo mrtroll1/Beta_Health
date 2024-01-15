@@ -171,15 +171,17 @@ def handle_message(message):
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     if call.data == 'new_case':
-        set_user_state(call.message.chat.id, 'editing_case')
         bot.deleted_message(chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Какие у вас жалобы?")
         memory = default_memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
         set_user_memory(messgae.chat.id, memory)
+        set_user_state(call.message.chat.id, 'editing_case')
 
     elif call.data == 'my_cases':
         # Action for button 2
+        bot.deleted_message(chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, "Мои кейсы:")
 
 
