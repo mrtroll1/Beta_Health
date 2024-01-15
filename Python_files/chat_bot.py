@@ -175,8 +175,8 @@ def handle_query(call):
 
         memory = default_memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
         set_user_memory(messgae.chat.id, memory)
-        set_user_state(call.message.chat.id, 'editing_case')
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Какие у вас жалобы?")
+        set_user_state(call.message.chat.id, 'editing_case')
         
     elif call.data == 'my_cases':
         # Action for button 2
