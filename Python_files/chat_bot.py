@@ -82,11 +82,13 @@ def set_user_memory(user_id, memory):
 def get_user_memory(user_id):
     return user_memory.get(user_id, None)
     
-def keep_conversation(message, memory=default_memory):
-    bot_instance = ChatBot(llm, prompt, default_memory)
+def conversation_step(message, memory=default_memory):
+    bot_instance = ChatBot(llm, prompt, memory)
+
     response = bot_instance.process_message(message.text)
     bot.send_message(message.chat.id, response)
-    bot.register_next_step_handler(message, lambda msg: keep_conversation(msg, bot_instance))
+
+    set_user_memory(message.chat.id, memory)
 
 def main_menu():
     keyboard = types.InlineKeyboardMarkup()
@@ -161,18 +163,18 @@ def handle_menu_choice(message):
         bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню")
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case')
-def handle_case(message):
-    keep_conversation(message, get_user_memory(message.chat.id))
+def handle_message(message):
+    conversation_step(message, get_user_memory(message.chat.id))
+    
     
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     if call.data == 'new_case':
         set_user_state(call.message.chat.id, 'editing_case')
-        bot.edit_message_text(chat_id=call.message.chat.id,
-                              message_id=call.message.message_id,
-                              text="Начинаем новый кейс. Какие у вас жалобы?",
-                              reply_markup=None)
+        bot.deleted_message(chat_id=call.message.chat.id,
+                              message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id, "Начинаем новый кейс. Какие у вас жалобы?")
         memory = default_memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
         set_user_memory(messgae.chat.id, memory)
 
