@@ -158,11 +158,6 @@ def send_info(message):
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'awaiting_menu_choice')
 def handle_menu_choice(message):
-    if message.text in ["Новый кейс", "Мои кейсы"]:
-        bot.send_message(message.chat.id, f"Вы выбрали {message.text}")
-        # if message.text == ...:
-            # set_user_state(message.from_user.id, message.text)  
-    else:
         bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню")
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case')
