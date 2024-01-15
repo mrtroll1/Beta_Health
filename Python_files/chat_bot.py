@@ -159,7 +159,7 @@ def send_info(message):
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'awaiting_menu_choice')
 def handle_menu_choice(message):
-        bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню")
+    bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню")
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case')
 def handle_message(message):
@@ -171,7 +171,8 @@ def handle_message(message):
 def handle_query(call):
     if call.data == 'new_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        memory = default_memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
+        memory = default_memory
+        memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
         set_user_memory(call.message.chat.id, memory)
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Какие у вас жалобы?")
         set_user_state(call.message.chat.id, 'editing_case')
