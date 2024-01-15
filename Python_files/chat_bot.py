@@ -101,6 +101,9 @@ def main_menu():
 
     return keyboard
 
+def summarize_case(memory, summarizer=Summarizer):
+    return summarizer.summarize(memory)
+
 
 
 #                                    """/-COMMAND HANDLERS"""
