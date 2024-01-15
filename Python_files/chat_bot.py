@@ -172,11 +172,12 @@ def handle_query(call):
     if call.data == 'new_case':
         bot.delete_message(chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, "Начинаем новый кейс. Какие у вас жалобы?")
+
         memory = default_memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
         set_user_memory(messgae.chat.id, memory)
         set_user_state(call.message.chat.id, 'editing_case')
-
+        bot.send_message(call.message.chat.id, "Начинаем новый кейс. Какие у вас жалобы?")
+        
     elif call.data == 'my_cases':
         # Action for button 2
         bot.deleted_message(chat_id=call.message.chat.id,
