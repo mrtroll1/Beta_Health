@@ -111,7 +111,6 @@ def summarize_case(memory, summarizer=Summarizer):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.chat.id
-    bot.send_message(user_id, text=user_id)
     user_name = 'Обама'
     # user_name = functions.get_item_from_table_by_key('user_names', 'user_name', 'user_id', user_id)
     
@@ -161,11 +160,13 @@ def send_info(message):
 
 #                                    """STATE HANDLERS"""
 
-@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'awaiting_menu_choice')
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'awaiting_menu_choice' 
+                                            and not message.text.startswith('/'))
 def handle_menu_choice(message):
     bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню")
 
-@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case')
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case' 
+                                            and not message.text.startswith('/'))
 def handle_message(message):
     conversation_step(message, get_user_memory(message.chat.id))
 
