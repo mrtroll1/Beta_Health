@@ -108,10 +108,10 @@ def main_menu():
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.chat.id
-    user_name = 'Барак'
+    user_name = 'Обама'
     # user_name = functions.get_item_from_table_by_key('user_names', 'user_name', 'user_id', user_id)
     
-    if user_name == 'Барак':
+    if user_name == 'Обама':
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
         bot.send_message(user_id, "Как могу помочь?", reply_markup=main_menu())
@@ -174,7 +174,7 @@ def handle_query(call):
                               message_id=call.message.message_id)
 
         memory = default_memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
-        set_user_memory(messgae.chat.id, memory)
+        set_user_memory(call.messgae.chat.id, memory)
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Какие у вас жалобы?")
         set_user_state(call.message.chat.id, 'editing_case')
         
