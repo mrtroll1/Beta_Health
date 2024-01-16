@@ -122,7 +122,7 @@ def share_case_menu():
 def summarize_into_case(memory):
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
 
-    return summarizer_instance.summarize(chat)
+    return summarizer_instance.summarize(memory)
 
 
 
@@ -173,6 +173,7 @@ def send_info(message):
 @bot.message_handler(commands=['sharecase'])
 def send_to_doctor(message):
     bot.send_message(message.chat.id, get_user_memory(message.chat.id))
+    bot.send_message(message.chat.id, user_memory[message.chat.id])
     case = summarize_into_case(memory=get_user_memory(message.chat.id))
     # bot.send_message(get_user_doctor(message.chat.id), case)
     bot.send_message(message.chat.id, case)
