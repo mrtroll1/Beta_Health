@@ -18,7 +18,7 @@ class ChatBot(langchain.chains.llm.LLMChain):
 
 class Summarizer(langchain.chains.llm.LLMChain):
     def __init__(self, llm, prompt, memory, verbose=False):
-        super().__init__(llm=llm, prompt=summarizer_prompt, verbose=verbose, memory=memory)
+        super().__init__(llm=llm, prompt=prompt, verbose=verbose, memory=memory)
 
         self.memory = memory  
     
