@@ -95,7 +95,7 @@ def conversation_step(message, memory=default_memory):
     response = bot_instance.process_message(message.text)
     bot.send_message(message.chat.id, response)
 
-    set_user_memory(message.chat.id, memory)
+    set_user_memory(message.chat.id, memory.buffer_as_str)
 
 def main_menu():
     keyboard = types.InlineKeyboardMarkup()

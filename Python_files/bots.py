@@ -22,8 +22,7 @@ class Summarizer(langchain.chains.llm.LLMChain):
 
         self.memory = memory  
     
-    def summarize(self, memo):
-        chat = memo.buffer_as_str
+    def summarize(self, chat):
         return self.invoke(chat)['text']
 
 
