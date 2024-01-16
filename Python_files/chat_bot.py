@@ -24,7 +24,7 @@ prompt = ChatPromptTemplate.from_messages(
             ним в диалог, задавая подходящие вопросы о его проблеме. После того, как ты подробно опросишь паицента, 
             твоя задача указать возможные причины для состояния пациента и посоветовать
             методы лечения, у которых известный уровень доказанности. 
-            Обращайся к пациенту на Вы. Если какой-то вопрос или сообщение от пациента не соотвествует
+            Обращайся к пациенту на Вы (с большой буквы). Если какой-то вопрос или сообщение от пациента не соотвествует
             тематике здравоохранения, то напомни ему об этом. Старайся писать не очень длинные сообщения."""
         ),  
         MessagesPlaceholder(
@@ -65,6 +65,7 @@ bot = telebot.TeleBot(telegram_api_token)
 
 user_state = {}
 user_memory = {}
+user_doctor = {}
 
 
 
@@ -81,6 +82,12 @@ def set_user_memory(user_id, memory):
 
 def get_user_memory(user_id):
     return user_memory.get(user_id, None)
+
+def set_user_doctor(user_id, doctor):
+    user_doctor[user_id] = memory
+
+def get_user_doctor(user_id):
+    return user_doctor.get(user_id, None)
     
 def conversation_step(message, memory=default_memory):
     bot_instance = ChatBot(llm, prompt, memory)
@@ -101,7 +108,18 @@ def main_menu():
 
     return keyboard
 
-def summarize_case(memory, summarizer=Summarizer):
+def share_case_menu():
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
+
+    button_1 = types.InlineKeyboardButton("Всё супер!", callback_data='share_case')
+    button_2 = types.InlineKeyboardButton("Хочу изменить", callback_data='edit_case')
+
+    keyboard.add(button_1, button_2)
+
+    return keyboard
+
+def summarize_into_case(memory, summarizer=Summarizer):
     return summarizer.summarize(memory)
 
 
@@ -136,14 +154,8 @@ def handle_name_input(message):
 
 @bot.message_handler(commands=['help'])
 def send_help(message):
-    help_text = "Вот доступные команды:\n"
-    commands_list = [
-        "/start - Запуск",
-        "/menu - Главное меню",
-        "/info - Информация",
-        "/help - Показать это сообщение"
-    ]
-    help_text += '\n'.join(commands_list)
+    help_text = """Подробно о работе бота можно почитать по команде /info. \n 
+                    Быть безупречным ботом непросто. Хотите связаться со службой поддержки?"""
     bot.send_message(message.chat.id, help_text)
 
 @bot.message_handler(commands=['menu'])
@@ -156,23 +168,29 @@ def send_info(message):
     bot.send_message(message.chat.id, info)
     # ... введите /menu, чтобы начать пользоваться
 
+@bot.message_handler(commands['sharecase'])
+def send_to_doctor(message):
+    case = summarize_into_case(get_user_memory(message.chat.id))
+    # bot.send_message(get_user_doctor(message.chat.id), case)
+    bot.send_message(message.chat.id, case)
+    bot.send_message(message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu)
+
+
 
 
 #                                    """STATE HANDLERS"""
 
-@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'awaiting_menu_choice' 
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'awaiting_menu_choice'
                                             and not message.text.startswith('/'))
 def handle_menu_choice(message):
     bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню")
 
-@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case' 
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'creating_case'
                                             and not message.text.startswith('/'))
 def handle_message(message):
     conversation_step(message, get_user_memory(message.chat.id))
 
     
-    
-
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     if call.data == 'new_case':
@@ -181,13 +199,21 @@ def handle_query(call):
         memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
         set_user_memory(call.message.chat.id, memory)
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Какие у вас жалобы?")
-        set_user_state(call.message.chat.id, 'editing_case')
+        set_user_state(call.message.chat.id, 'creating_case')
         
     elif call.data == 'my_cases':
         # Action for button 2
         bot.deleted_message(chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, "Мои кейсы:")
+
+    elif call.data == 'share_case':
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id, 'Отправил врачу! Он скоро с Вами свяжется.')
+
+    elif call.data == 'edit_case':
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id, 'Что бы Вы хотели изменить или добавить?')
 
 
 bot.infinity_polling()
