@@ -119,9 +119,10 @@ def share_case_menu():
 
     return keyboard
 
-def summarize_into_case(memory, summarizer=Summarizer):
-    chat = memory.buffer_as_str
-    return summarizer.summarize(chat)
+def summarize_into_case(memory):
+    summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
+
+    return summarizer_instance.summarize(chat)
 
 
 
