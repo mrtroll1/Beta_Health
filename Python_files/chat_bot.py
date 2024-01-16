@@ -95,8 +95,7 @@ def conversation_step(message, memory=default_memory):
     response = bot_instance.process_message(message.text)
     bot.send_message(message.chat.id, response)
 
-    curr_memory = bot_instance.memory.buffer_as_str
-    set_user_memory(message.chat.id, curr_memory)
+    set_user_memory(message.chat.id, memory)
 
 def main_menu():
     keyboard = types.InlineKeyboardMarkup()
@@ -121,7 +120,8 @@ def share_case_menu():
     return keyboard
 
 def summarize_into_case(memory, summarizer=Summarizer):
-    return summarizer.summarize(memory)
+    chat = memory.buffer_as_str
+    return summarizer.summarize(chat)
 
 
 
