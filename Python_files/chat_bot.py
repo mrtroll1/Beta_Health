@@ -168,7 +168,7 @@ def send_info(message):
     bot.send_message(message.chat.id, info)
     # ... введите /menu, чтобы начать пользоваться
 
-@bot.message_handler(commands['sharecase'])
+@bot.message_handler(commands=['sharecase'])
 def send_to_doctor(message):
     case = summarize_into_case(get_user_memory(message.chat.id))
     # bot.send_message(get_user_doctor(message.chat.id), case)
