@@ -18,12 +18,12 @@ class ChatBot(langchain.chains.llm.LLMChain):
 
 class Summarizer(langchain.chains.llm.LLMChain):
     def __init__(self, llm, prompt, memory, verbose=False):
-        super().__init__(llm=llm, prompt=prompt, verbose=verbose, memory=memory)
+        super().__init__(llm=llm, prompt=summarizer_prompt, verbose=verbose, memory=memory)
 
         self.memory = memory  
     
-    def summarize(self, memory):
-        chat = memory.buffer_as_str
+    def summarize(self, memo):
+        chat = memo.buffer_as_str
         return self.invoke(chat)['text']
 
 
