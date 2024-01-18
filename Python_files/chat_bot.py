@@ -196,8 +196,8 @@ def handle_message(message):
 def edit_case(message):
     memory = default_memory
     case = get_user_memory(message.chat.id)
-    memory.save_context({"input": f"Хочу изменить следующий кейс: {case}"}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
-    memory.save_context({"input": f"{message.text}"}, {"output": "Сейчас внесу изменения!"})
+    memory.save_context({"input": case}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
+    memory.save_context({"input": message.text}, {"output": "Сейчас внесу изменения!"})
     bot.send_message(message.chat.id, 'Вот обновлённая версия:')
     bot.send_message(message.chat.id, summarize_into_case(memory))
 
