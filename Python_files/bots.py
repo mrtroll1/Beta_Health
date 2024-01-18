@@ -1,5 +1,6 @@
 import langchain
 from langchain.prompts import ChatPromptTemplate
+import langchain_core
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import MessagesPlaceholder
 from langchain.schema import SystemMessage
@@ -24,10 +25,10 @@ class Summarizer(langchain.chains.llm.LLMChain):
     
     def summarize(self, memory):
         messages = memory.buffer_as_messages
-        if type(messages[0]) == 'langchain_core.messages.HumanMessage':
-            concat = '. '.join(message.content for message in messages[1::2])
-        else:
+        if isinstance(messages[0], langchain_core.messages.HumanMessage)
             concat = '. '.join(message.content for message in messages[::2])
+        else:
+            concat = '. '.join(message.content for message in messages[1::2])
 
         return self.invoke(concat)['text']
 
