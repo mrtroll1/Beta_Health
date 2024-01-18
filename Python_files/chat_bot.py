@@ -227,6 +227,7 @@ def handle_query(call):
     elif call.data == 'edit_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, 'Что бы Вы хотели изменить или добавить?')
+        set_user_state(call.message.chat.id, 'editing_case')
 
 
 bot.infinity_polling()
