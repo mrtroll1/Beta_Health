@@ -160,7 +160,7 @@ def send_help(message):
     bot.send_message(message.chat.id, help_text)
 
 @bot.message_handler(commands=['menu'])
-def menu(message):
+def show_main_menu(message):
     bot.send_message(message.chat.id, 'Вот!', reply_markup=main_menu())
 
 @bot.message_handler(commands=['info'])
@@ -172,11 +172,10 @@ def send_info(message):
 @bot.message_handler(commands=['sharecase'])
 def send_to_doctor(message):
     case = summarize_into_case(memory=get_user_memory(message.chat.id))
-    # bot.send_message(get_user_doctor(message.chat.id), case)
     set_user_memory(message.chat.id, case)
     bot.send_message(message.chat.id, case)
     bot.send_message(message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
-
+    
 
 
 
@@ -191,6 +190,17 @@ def handle_menu_choice(message):
                                             and not message.text.startswith('/'))
 def handle_message(message):
     conversation_step(message, get_user_memory(message.chat.id))
+
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case'
+                                            and not message.text.startswith('/'))
+def edit_case(message):
+    memory = defualt_memory
+    case = get_user_memory(message.chat.id)
+    memory.save_context({"input": f"Хочу изменить следующий кейс: {case}"}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
+    memory.save_context({"input": f"{message.text}"})
+    bot.send_message(message.chat.id, 'Вот обновлённая версия:')
+    bot.send_message(message.chat.id, summarize_into_case(memory))
+
 
     
 @bot.callback_query_handler(func=lambda call: True)
