@@ -8,7 +8,8 @@ def get_item_from_table_by_key(item, table, key_column, key_value):
         host="localhost",
         user="root",
         password=MYSQL_PASSWORD,
-        database="Beta_Health_db"
+        database="Beta_Health_db",
+        port=3307
     )
     db_cursor = db_connection.cursor()
 
@@ -26,7 +27,8 @@ def add_user_name(user_id, user_name):
         host="localhost",
         user="root",
         password=MYSQL_PASSWORD,
-        database="Beta_Health_db"
+        database="Beta_Health_db",
+        port = 3307
     )
     db_cursor = db_connection.cursor()
     
@@ -43,7 +45,8 @@ def add_user_doctor(doctor_id, user_id, doctor_name):
         host="localhost",
         user="root",
         password=MYSQL_PASSWORD,
-        database="Beta_Health_db"
+        database="Beta_Health_db",
+        port = 3307
     )
     db_cursor = db_connection.cursor()
 
@@ -60,7 +63,8 @@ def add_user_case(case_name, user_id, doctor_id, case_status, case_data):
         host="localhost",
         user="root",
         password=MYSQL_PASSWORD,
-        database="Beta_Health_db"
+        database="Beta_Health_db",
+        port = 3307
     )
     db_cursor = db_connection.cursor()
 
