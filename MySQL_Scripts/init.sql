@@ -9,8 +9,8 @@ CREATE TABLE user_names (
 );
 
 CREATE TABLE user_doctors (
-    user_id BIGINT PRIMARY KEY,
-    doctor_id BIGINT NOT NULL,
+    doctor_id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
     doctor_name VARCHAR(50)
 );
 
