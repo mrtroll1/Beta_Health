@@ -1,6 +1,5 @@
 import os
 import mysql.connector
-import telebot
 
 MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
 
@@ -39,7 +38,7 @@ def add_user_name(user_id, user_name):
     db_cursor.close()
     db_connection.close()
 
-def save_case(user_id, case):
+def add_user_doctor(doctor_id, user_id, doctor_name):
     db_connection = mysql.connector.connect(
         host="localhost",
         user="root",
@@ -48,44 +47,28 @@ def save_case(user_id, case):
     )
     db_cursor = db_connection.cursor()
 
-    # query = "INSERT INTO cases ... (%s, ...)"
+    query = "INSERT INTO user_doctors (doctor_id, user_id, doctor_name) VALUES (%s, %s, %s)"
+    
+    db_cursor.execute(query, (doctor_id, user_id, doctor_name))
+    
+    db_connection.commit() 
+    db_cursor.close()
+    db_connection.close()
 
-    # db_cursor.execute(query, (case, ...))
+def add_user_case(case_name, user_id, doctor_id, case_status, case_data):
+    db_connection = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password=MYSQL_PASSWORD,
+        database="Beta_Health_db"
+    )
+    db_cursor = db_connection.cursor()
+
+    query = "INSERT INTO user_cases (case_name, user_id, doctor_id, case_status, case_data) VALUES (%s, %s, %s, %s, %s)"
+
+    db_cursor.execute(query, (case_name, user_id, doctor_id, case_status, case_data))
 
     db_connection.commit()
     db_cursor.close()
     db_connection.close()
 
-def show_cases_list(user_id):
-    db_connection = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password=MYSQL_PASSWORD,
-        database="Beta_Health_db"
-    )
-    db_cursor = db_connection.cursor()
-
-    # query = SELECT case_name FROM cases WHERE user_id == user_id
-
-    # db_cursor.execute(query)
-
-    db_connection.commit()
-    db_cursor.close()
-    db_connection.close()
-
-def continue_case(user_id, case):
-    db_connection = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password=MYSQL_PASSWORD,
-        database="Beta_Health_db"
-    )
-    db_cursor = db_connection.cursor()
-
-    # query = SELECT case_data FROM cases where case_id == case_id
-
-     # db_cursor.execute(query)
-
-     db_connection.commit()
-     db_cursor.close()
-     db_connection.close()

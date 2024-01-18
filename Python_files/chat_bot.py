@@ -3,7 +3,7 @@ import mysql.connector
 import telebot
 from telebot import types
 from bots import ChatBot, Summarizer
-# import functions
+import functions
 from langchain.prompts import ChatPromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
@@ -121,7 +121,6 @@ def share_case_menu():
 
 def summarize_into_case(memory):
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
-
     return summarizer_instance.summarize(memory)
 
 

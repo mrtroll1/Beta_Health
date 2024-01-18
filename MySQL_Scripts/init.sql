@@ -21,7 +21,7 @@ CREATE TABLE user_cases (
     doctor_id BIGINT NOT NULL,
     start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     end_time DATETIME DEFAULT NULL,
-    status VARCHAR(20),
+    case_status VARCHAR(20),
     case_data TEXT,
     FOREIGN KEY (user_id) REFERENCES user_names(user_id),
     FOREIGN KEY (doctor_id) REFERENCES user_doctors(doctor_id)
