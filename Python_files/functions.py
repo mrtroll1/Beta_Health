@@ -3,7 +3,7 @@ import mysql.connector
 
 MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
 
-def get_item_from_table_by_key(table, item, key_column, key_value):
+def get_item_from_table_by_key(item, table, key_column, key_value):
     db_connection = mysql.connector.connect(
         host="localhost",
         user="root",

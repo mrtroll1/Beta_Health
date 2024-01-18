@@ -45,6 +45,7 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
             Не указывай возможные причины. Не указывай рекомендации. Только информацию и симптомы, содержащиеся в исходном тексте. 
+            Каждый твой ответ должен оканчиваться строкой "-*-". 
             """
         ),  
         MessagesPlaceholder(
@@ -130,9 +131,9 @@ def summarize_into_case(memory):
 def send_welcome(message):
     user_id = message.chat.id
     user_name = 'Обама'
-    # user_name = functions.get_item_from_table_by_key('user_names', 'user_name', 'user_id', user_id)
+    user_name = functions.get_item_from_table_by_key('user_name', 'user_names', 'user_id', user_id)
     
-    if user_name == 'Обама':
+    if user_name:
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
         bot.send_message(user_id, "Как могу помочь?", reply_markup=main_menu())
@@ -147,7 +148,7 @@ def handle_name_input(message):
     user_id = message.chat.id
     user_name = message.text  
 
-    # functions.add_user_name(user_id, user_name)  
+    functions.add_user_name(user_id, user_name)  
 
     confirmation_msg = f"Очень приятно, {user_name}! Сейчас я расскажу, как всё работает..."
     bot.send_message(user_id, confirmation_msg)
