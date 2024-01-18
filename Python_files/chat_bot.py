@@ -112,7 +112,7 @@ def share_case_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Всё супер!", callback_data='share_case')
+    button_1 = types.InlineKeyboardButton("Да, всё супер!", callback_data='share_case')
     button_2 = types.InlineKeyboardButton("Хочу изменить", callback_data='edit_case')
 
     keyboard.add(button_1, button_2)
@@ -122,6 +122,8 @@ def share_case_menu():
 def summarize_into_case(memory):
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
     return summarizer_instance.summarize(memory)
+
+
 
 
 
@@ -198,8 +200,13 @@ def edit_case(message):
     case = get_user_memory(message.chat.id)
     memory.save_context({"input": case}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
     memory.save_context({"input": message.text}, {"output": "Сейчас внесу изменения!"})
+
     bot.send_message(message.chat.id, 'Вот обновлённая версия:')
-    bot.send_message(message.chat.id, summarize_into_case(memory))
+    case = summarize_into_case(memory)
+    bot.send_message(message.chat.id, case)
+    set_user_memory(message.chat.id, case)
+
+    bot.send_message(message.chat.id, 'Отправляю врачу?', reply_markup=share_case_menu())
 
 
     
