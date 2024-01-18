@@ -194,7 +194,7 @@ def handle_message(message):
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case'
                                             and not message.text.startswith('/'))
 def edit_case(message):
-    memory = defualt_memory
+    memory = default_memory
     case = get_user_memory(message.chat.id)
     memory.save_context({"input": f"Хочу изменить следующий кейс: {case}"}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
     memory.save_context({"input": f"{message.text}"}, {"output": "Сейчас внесу изменения!"})
