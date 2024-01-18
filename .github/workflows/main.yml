@@ -26,5 +26,5 @@ jobs:
           sudo git -C /root/Projects/Beta_Health/Beta_Health_Git pull origin master
           sudo pip install -r /root/Projects/Beta_Health/Beta_Health_Git/Python_files/requirements.txt
           sudo systemctl restart mybot.service    
-          mysql -u root -p${{ secrets.MYSQL_HETZNER_ROOT }} -h localhost Beta_Health_db < /root/Projects/Beta_Health/Beta_Health_Git/MySQL_Scripts/init.sql
+          sudo mysql -u root -p${{ secrets.MYSQL_HETZNER_ROOT }} -h localhost Beta_Health_db < /root/Projects/Beta_Health/Beta_Health_Git/MySQL_Scripts/init.sql
         
