@@ -172,12 +172,11 @@ def send_info(message):
 
 @bot.message_handler(commands=['sharecase'])
 def send_to_doctor(message):
-    bot.send_message(message.chat.id, get_user_memory(message.chat.id))
-    bot.send_message(message.chat.id, user_memory[message.chat.id])
     case = summarize_into_case(memory=get_user_memory(message.chat.id))
     # bot.send_message(get_user_doctor(message.chat.id), case)
+    set_user_memory(message.chat.id, case)
     bot.send_message(message.chat.id, case)
-    bot.send_message(message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu)
+    bot.send_message(message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
 
 
 
@@ -213,6 +212,7 @@ def handle_query(call):
 
     elif call.data == 'share_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        # bot.send_message(get_user_doctor(call.message.chat.id), get_user_memory(call.message.chat.id))
         bot.send_message(call.message.chat.id, 'Отправил врачу! Он скоро с Вами свяжется.')
 
     elif call.data == 'edit_case':
