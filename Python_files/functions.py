@@ -42,7 +42,12 @@ def get_item_from_table_by_key(item, table, key_column, key_value):
         query = f"SELECT {item} FROM {table} WHERE {key_column} = %s"
         db_cursor.execute(query, (key_value,))
         result = db_cursor.fetchone()
+
+        while db_cursor.nextset():
+            pass
+
         return result[0] if result else None
+        
     except Error as e:
         print(f"Error: {e}")
         return None
