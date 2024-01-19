@@ -172,7 +172,7 @@ def send_welcome(message):
 
 def handle_name_input(message):
     user_id = message.chat.id
-    user_name = message.text   
+    user_name = message.text    
 
     functions.add_user_name(user_id, user_name)  
 
