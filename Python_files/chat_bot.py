@@ -91,8 +91,8 @@ def get_user_doctor(user_id):
 def conversation_step(message, memory=default_memory):
     bot_instance = ChatBot(llm, prompt, memory)
 
-    response = bot_instance.process_message(message.text)
     bot.send_chat_action(message.chat.id, 'typing')
+    response = bot_instance.process_message(message.text)
     bot.send_message(message.chat.id, response)
 
     set_user_memory(message.chat.id, memory)
@@ -202,6 +202,7 @@ def edit_case(message):
     memory.save_context({"input": message.text}, {"output": "Сейчас внесу изменения!"})
 
     bot.send_message(message.chat.id, 'Вот обновлённая версия:')
+    bot.send_chat_action(message.chat.id, 'typing')
     case = summarize_into_case(memory)
     bot.send_message(message.chat.id, case)
     set_user_memory(message.chat.id, case)
