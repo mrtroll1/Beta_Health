@@ -18,7 +18,7 @@ CREATE TABLE user_doctors (
 
 CREATE TABLE user_cases (
     case_id VARCHAR(64) PRIMARY KEY,
-    case_name TEXT,
+    case_name VARCHAR(64),
     user_id BIGINT NOT NULL,
     doctor_id BIGINT NOT NULL,
     start_time DATETIME DEFAULT CURRENT_TIMESTAMP,

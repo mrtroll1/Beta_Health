@@ -156,7 +156,7 @@ def save_photo(message):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.chat.id
-    user_name = functions.get_item_from_table_by_key('user_name', 'user_names', 'user_id', user_id)
+    user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
     
     if user_name:
         welcome_msg = f"Здравствуйте, {user_name}!"
