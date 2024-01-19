@@ -1,15 +1,19 @@
 import os
 import mysql.connector
 
-MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
+MYSQL_HOST = "localhost"
+MYSQL_USER = "root"
+MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD') 
+MYSQL_DATABASE = "Beta_Health_db" 
+MYSQL_PORT = 3307
 
 def get_item_from_table_by_key(item, table, key_column, key_value):
     db_connection = mysql.connector.connect(
-        host="localhost",
-        user="root",
+        host=MYSQL_HOST,
+        user=MYSQL_USER,
         password=MYSQL_PASSWORD,
-        database="Beta_Health_db",
-        port=3307
+        database=MYSQL_DATABASE,
+        port=MYSQL_PORT
     )
     db_cursor = db_connection.cursor()
 
@@ -24,11 +28,11 @@ def get_item_from_table_by_key(item, table, key_column, key_value):
 
 def add_user_name(user_id, user_name):
     db_connection = mysql.connector.connect(
-        host="localhost",
-        user="root",
+        host=MYSQL_HOST,
+        user=MYSQL_USER,
         password=MYSQL_PASSWORD,
-        database="Beta_Health_db",
-        port = 3307
+        database=MYSQL_DATABASE,
+        port=MYSQL_PORT
     )
     db_cursor = db_connection.cursor()
     

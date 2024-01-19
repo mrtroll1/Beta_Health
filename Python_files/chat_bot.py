@@ -15,6 +15,7 @@ from langchain.prompts import HumanMessagePromptTemplate
 
 openai_api_key = os.environ.get('OPENAI_API_KEY')
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
+MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD') 
 
 llm = ChatOpenAI(openai_api_key=openai_api_key)  
 
