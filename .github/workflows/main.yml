@@ -24,7 +24,6 @@ jobs:
         port: 618
         script: |
           sudo git -C /home/luka/Projects/Beta_Health/Beta_Health_Git pull origin master
-          sudo pip install -r /home/luka/Projects/Beta_Health/Beta_Health_Git/Python_files/requirements.txt
-          sudo systemctl restart mybot.service    
+          sudo pip install -r /home/luka/Projects/Beta_Health/Beta_Health_Git/Python_files/requirements.txt  
           sudo mysql -u root -p${{ secrets.MYSQL_HETZNER_ROOT }} -h localhost Beta_Health_db < /home/luka/Projects/Beta_Health/Beta_Health_Git/MySQL_Scripts/init.sql
-        
+          sudo systemctl restart mybot.service  
