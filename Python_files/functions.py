@@ -21,7 +21,7 @@ def connect():
             host = "127.0.0.1",
             user = "root",
             password = os.environ.get("MYSQL_PASSWORD") ,
-            database = "Beta_Health_db" ,
+            database = "Beta_Health" ,
             port = 3307
         )
         if conn.is_connected():
