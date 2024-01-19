@@ -204,6 +204,7 @@ def send_to_doctor(message):
     case_id = generate_case_id(message.chat.id)
     set_user_curr_case(message.chat.id, case_id)
     functions.add_user_case(case_id, f'Кейс {int(time.time())}', message.chat.id, 'started', case)
+    function.increment_value('users', 'num_cases', 'user_id', message.chat.id)
     bot.send_message(message.chat.id, functions.get_item_from_table_by_key('case_id', 'user_cases', 'user_id', message.chat.id))
 
     bot.send_message(message.chat.id, case)

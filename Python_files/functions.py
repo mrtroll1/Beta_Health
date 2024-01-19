@@ -47,7 +47,7 @@ def get_item_from_table_by_key(item, table, key_column, key_value):
             pass
 
         return result[0] if result else None
-        
+    
     except Error as e:
         print(f"Error: {e}")
         return None
@@ -66,6 +66,23 @@ def alter_table(table, column, new_value, key_column, key_value):
     try:
         db_cursor = db_connection.cursor()
         query = f"UPDATE {table} SET {column} = %s WHERE {key_column} = %s"
+        db_cursor.execute(query, (new_value, key_value))
+        db_connection.commit()
+    except Error as e:
+        print(f"Error altering table: {e}")
+    finally:
+        if db_connection.is_connected():
+            db_cursor.close()
+            db_connection.close()
+
+def increment_value(table, column, key_column, key_value):
+    db_connection = connect()
+    if db_connection is None:
+        return
+
+    try:
+        db_cursor = db_connection.cursor()
+        query = f"UPDATE {table} SET {column} = {column} + 1 WHERE {key_column} = %s"
         db_cursor.execute(query, (new_value, key_value))
         db_connection.commit()
     except Error as e:
