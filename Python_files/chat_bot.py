@@ -1,6 +1,7 @@
 import os
 import mysql.connector
 import telebot
+import time
 from telebot import types
 from bots import ChatBot, Summarizer
 import functions
