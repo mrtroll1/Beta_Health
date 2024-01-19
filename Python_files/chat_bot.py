@@ -92,6 +92,7 @@ def conversation_step(message, memory=default_memory):
     bot_instance = ChatBot(llm, prompt, memory)
 
     response = bot_instance.process_message(message.text)
+    bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, response)
 
     set_user_memory(message.chat.id, memory)
@@ -171,6 +172,7 @@ def send_info(message):
 
 @bot.message_handler(commands=['sharecase'])
 def send_to_doctor(message):
+    bot.send_chat_action(message.chat.id, 'typing')
     case = summarize_into_case(memory=get_user_memory(message.chat.id))
     set_user_memory(message.chat.id, case)
     bot.send_message(message.chat.id, case)
@@ -207,7 +209,8 @@ def edit_case(message):
     bot.send_message(message.chat.id, 'Отправляю врачу?', reply_markup=share_case_menu())
 
 
-    
+#                                    """CALLBACK HANDLERS"""
+
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     if call.data == 'new_case':
