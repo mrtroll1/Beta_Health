@@ -132,7 +132,7 @@ def summarize_into_case(memory):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.chat.id
-    user_name = 'Обама'
+    bot.send_message(user_id, MYSQL_PASSWORD)
     user_name = functions.get_item_from_table_by_key('user_name', 'user_names', 'user_id', user_id)
     
     if user_name:

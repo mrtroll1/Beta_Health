@@ -3,7 +3,7 @@ import mysql.connector
 
 MYSQL_HOST = "localhost"
 MYSQL_USER = "root"
-MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD') 
+MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD") 
 MYSQL_DATABASE = "Beta_Health_db" 
 MYSQL_PORT = 3307
 
