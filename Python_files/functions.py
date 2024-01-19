@@ -31,8 +31,44 @@ def connect():
         print(f"Error while connecting to MySQL: {e}")
         return None
 
+def get_item_from_table_by_key(item, table, key_column, key_value):
+    db_connection = connect()
+    if db_connection is None:
+        print("Database connection failed.")
+        return None
 
-from mysql.connector import Error
+    try:
+        db_cursor = db_connection.cursor()
+        query = f"SELECT {item} FROM {table} WHERE {key_column} = %s"
+        db_cursor.execute(query, (key_value,))
+        result = db_cursor.fetchone()
+        return result[0] if result else None
+    except Error as e:
+        print(f"Error: {e}")
+        return None
+    finally:
+        if db_cursor:
+            db_cursor.close()
+        if db_connection:
+            db_connection.close()
+
+
+def alter_table(table, column, new_value, key_column, key_value):
+    db_connection = connect()
+    if db_connection is None:
+        return
+
+    try:
+        db_cursor = db_connection.cursor()
+        query = f"UPDATE {table} SET {column} = %s WHERE {key_column} = %s"
+        db_cursor.execute(query, (new_value, key_value))
+        db_connection.commit()
+    except Error as e:
+        print(f"Error altering table: {e}")
+    finally:
+        if db_connection.is_connected():
+            db_cursor.close()
+            db_connection.close()
 
 def add_user_name(user_id, user_name):
     db_connection = connect()
@@ -90,8 +126,6 @@ def add_user_case(case_id, case_name, user_id, case_status, case_data):
             db_cursor.close()
         if db_connection:
             db_connection.close()
-
-
 
 
 def generate_unique_filename():
