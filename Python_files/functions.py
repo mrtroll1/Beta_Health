@@ -32,85 +32,65 @@ def connect():
         return None
 
 
-def get_item_from_table_by_key(item, table, key_column, key_value):
-    db_connection = connect()
-    db_cursor = db_connection.cursor()
+from mysql.connector import Error
 
-    query = f"SELECT {item} FROM {table} WHERE {key_column} = %s"
-    db_cursor.execute(query, (key_value,))
-    result = db_cursor.fetchone()
-    
-    db_cursor.close()
-    db_connection.close()
-
-    return result[0] if result else None
-
-def get_row_from_table_by_key(table, key_column, key_value):
-    db_connection = connect()
-    db_cursor = db_connection.cursor()
-
-    query = f"SELECT * FROM {table} WHERE {key_column} = %s"
-    db_cursor.execute(query, (key_value,))
-    result = db_cursor.fetchone()
-    
-    db_cursor.close()
-    db_connection.close()
-
-    return result if result else None
-
-def alter_table(table, column, new_value, key_column, key_value):
+def add_user_name(user_id, user_name):
     db_connection = connect()
     if db_connection is None:
+        print("Database connection failed.")
         return
 
     try:
         db_cursor = db_connection.cursor()
-        query = f"UPDATE {table} SET {column} = %s WHERE {key_column} = %s"
-        db_cursor.execute(query, (new_value, key_value))
-        db_connection.commit()
+        query = "INSERT INTO users (user_id, user_name) VALUES (%s, %s)"
+        db_cursor.execute(query, (user_id, user_name))
+        db_connection.commit() 
     except Error as e:
-        print(f"Error altering table: {e}")
+        print(f"Error: {e}")
     finally:
-        if db_connection.is_connected():
+        if db_cursor:
             db_cursor.close()
+        if db_connection:
             db_connection.close()
-
-
-def add_user_name(user_id, user_name):
-    db_connection = connect()
-    db_cursor = db_connection.cursor()
-    
-    query = "INSERT INTO users (user_id, user_name) VALUES (%s, %s)"
-    
-    db_cursor.execute(query, (user_id, user_name))
-    
-    db_connection.commit() 
-    db_cursor.close()
-    db_connection.close()
 
 def add_user_doctor(doctor_id, user_id, doctor_name):
     db_connection = connect()
-    db_cursor = db_connection.cursor()
+    if db_connection is None:
+        print("Database connection failed.")
+        return
 
-    query = "INSERT INTO user_doctors (doctor_id, user_id, doctor_name) VALUES (%s, %s, %s)"
-    
-    db_cursor.execute(query, (doctor_id, user_id, doctor_name))
-    
-    db_connection.commit() 
-    db_cursor.close()
-    db_connection.close()
+    try:
+        db_cursor = db_connection.cursor()
+        query = "INSERT INTO user_doctors (doctor_id, user_id, doctor_name) VALUES (%s, %s, %s)"
+        db_cursor.execute(query, (doctor_id, user_id, doctor_name))
+        db_connection.commit() 
+    except Error as e:
+        print(f"Error: {e}")
+    finally:
+        if db_cursor:
+            db_cursor.close()
+        if db_connection:
+            db_connection.close()
 
 def add_user_case(case_id, case_name, user_id, case_status, case_data):
     db_connection = connect()
-    db_cursor = db_connection.cursor()
+    if db_connection is None:
+        print("Database connection failed.")
+        return
 
-    query = "INSERT INTO user_cases (case_id, case_name, user_id, case_status, case_data) VALUES (%s, %s, %s, %s, %s)"
+    try:
+        db_cursor = db_connection.cursor()
+        query = "INSERT INTO user_cases (case_id, case_name, user_id, case_status, case_data) VALUES (%s, %s, %s, %s, %s)"
+        db_cursor.execute(query, (case_id, case_name, user_id, case_status, case_data))
+        db_connection.commit()
+    except Error as e:
+        print(f"Error: {e}")
+    finally:
+        if db_cursor:
+            db_cursor.close()
+        if db_connection:
+            db_connection.close()
 
-    db_cursor.execute(query, (case_id, case_name, user_id, case_status, case_data))
-
-    db_connection.commit()
-    db_cursor.close()
-    db_connection.close()
 
 
 
