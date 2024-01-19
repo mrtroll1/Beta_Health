@@ -91,7 +91,18 @@ def get_user_curr_case(user_id):
 
 def generate_case_id(user_id):
     num_cases = functions.get_item_from_table_by_key('num_cases', 'users', 'user_id', user_id)
+
+    if num_cases is None:
+        num_cases = 0
+
+    try:
+        num_cases = int(num_cases)
+    except ValueError:
+        print(f"Invalid num_cases value for user_id: {user_id}")
+        return None
+
     return f"{user_id}_{num_cases + 1}"
+
     
 def conversation_step(message, memory=default_memory):
     bot_instance = ChatBot(llm, prompt, memory)
@@ -272,6 +283,7 @@ def handle_query(call):
 
     elif call.data == 'share_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        # RESET MEMORY
         # bot.send_message(get_user_doctor(call.message.chat.id), get_user_memory(call.message.chat.id))
         bot.send_message(call.message.chat.id, 'Отправил врачу! Он скоро с Вами свяжется.')
 
