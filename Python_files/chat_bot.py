@@ -285,7 +285,7 @@ def handle_query(call):
 
     elif call.data == 'no_photo':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
+        bot.send_message(call.message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
 
 
 
