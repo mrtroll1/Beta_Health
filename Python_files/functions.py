@@ -8,7 +8,7 @@ def connect():
             host = "localhost",
             user = "root",
             password = os.environ.get("MYSQL_PASSWORD") ,
-            databse = "Beta_Health_db" ,
+            database = "Beta_Health_db" ,
             port = 3307
         )
         if conn.is_connected():
