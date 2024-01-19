@@ -1,11 +1,13 @@
 DROP TABLE IF EXISTS user_cases;
 DROP TABLE IF EXISTS user_doctors;
 DROP TABLE IF EXISTS user_names;
+DROP TABLE IF EXISTS users;
 
 
-CREATE TABLE user_names (
+CREATE TABLE users (
     user_id BIGINT PRIMARY KEY,
-    user_name VARCHAR(50)
+    user_name VARCHAR(50),
+    num_cases INT DEFAULT 0
 );
 
 CREATE TABLE user_doctors (
@@ -15,7 +17,7 @@ CREATE TABLE user_doctors (
 );
 
 CREATE TABLE user_cases (
-    case_id INT AUTO_INCREMENT PRIMARY KEY,
+    case_id VARCHAR(64) PRIMARY KEY,
     case_name TEXT,
     user_id BIGINT NOT NULL,
     doctor_id BIGINT NOT NULL,
@@ -23,7 +25,8 @@ CREATE TABLE user_cases (
     end_time DATETIME DEFAULT NULL,
     case_status VARCHAR(20),
     case_data TEXT,
-    FOREIGN KEY (user_id) REFERENCES user_names(user_id),
+    case_media_path VARCHAR(255) DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (doctor_id) REFERENCES user_doctors(doctor_id)
 );
 

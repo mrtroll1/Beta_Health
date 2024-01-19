@@ -1,6 +1,19 @@
 import os
 import mysql.connector
 from mysql.connector import Error
+import time
+import uuid
+import telebot
+from cryptography.fernet import Fernet
+import mysql.connector
+from mysql.connector import Error
+
+encoded_key = os.environ.get('FERNET_KEY')
+if encoded_key is None:
+    raise ValueError("No encryption key found in environment variables")
+
+key = encoded_key.encode()
+cipher_suite = Fernet(key)
 
 def connect():
     try:
@@ -32,11 +45,29 @@ def get_item_from_table_by_key(item, table, key_column, key_value):
 
     return result[0] if result else None
 
+def alter_table(table, column, new_value, key_column, key_value):
+    db_connection = connect()
+    if db_connection is None:
+        return
+
+    try:
+        db_cursor = db_connection.cursor()
+        query = f"UPDATE {table} SET {column} = %s WHERE {key_column} = %s"
+        db_cursor.execute(query, (new_value, key_value))
+        db_connection.commit()
+    except Error as e:
+        print(f"Error altering table: {e}")
+    finally:
+        if db_connection.is_connected():
+            db_cursor.close()
+            db_connection.close()
+
+
 def add_user_name(user_id, user_name):
     db_connection = connect()
     db_cursor = db_connection.cursor()
     
-    query = "INSERT INTO user_names (user_id, user_name) VALUES (%s, %s)"
+    query = "INSERT INTO users (user_id, user_name) VALUES (%s, %s)"
     
     db_cursor.execute(query, (user_id, user_name))
     
@@ -56,15 +87,54 @@ def add_user_doctor(doctor_id, user_id, doctor_name):
     db_cursor.close()
     db_connection.close()
 
-def add_user_case(case_name, user_id, doctor_id, case_status, case_data):
+def add_user_case(case_id, case_name, user_id, case_status, case_data):
     db_connection = connect()
     db_cursor = db_connection.cursor()
 
-    query = "INSERT INTO user_cases (case_name, user_id, doctor_id, case_status, case_data) VALUES (%s, %s, %s, %s, %s)"
+    query = "INSERT INTO user_cases (case_id, case_name, user_id, case_status, case_data) VALUES (%s, %s, %s, %s, %s)"
 
-    db_cursor.execute(query, (case_name, user_id, doctor_id, case_status, case_data))
+    db_cursor.execute(query, (case_id, case_name, user_id, case_status, case_data))
 
     db_connection.commit()
     db_cursor.close()
     db_connection.close()
+
+
+
+def generate_unique_filename():
+    timestamp = int(time.time())
+    random_str = uuid.uuid4().hex
+    return f"{timestamp}_{random_str}.jpg"
+
+def encrypt_file(file_path):
+    with open(file_path, 'rb') as file_to_encrypt:
+        file_data = file_to_encrypt.read()
+    encrypted_data = cipher_suite.encrypt(file_data)
+    with open(file_path, 'wb') as encrypted_file:
+        encrypted_file.write(encrypted_data)
+
+def save_image_to_server(downloaded_file, user_id, case_id):
+    base_save_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
+
+    case_specific_path = os.path.join(base_save_path, case_id)
+    if not os.path.exists(case_specific_path):
+        os.makedirs(case_specific_path)
+
+    full_path = os.path.join(case_specific_path, generate_unique_filename())
+    with open(full_path, 'wb') as image_file:
+        image_file.write(downloaded_file)
+
+    encrypt_file(full_path)
+    return full_path
+
+def decrypt_file(file_path):
+    with open(file_path, 'rb') as encrypted_file:
+        encrypted_data = encrypted_file.read()
+    decrypted_data = cipher_suite.decrypt(encrypted_data)
+    with open(file_path, 'wb') as decrypted_file:
+        decrypted_file.write(decrypted_data)
+
+
+
+
 

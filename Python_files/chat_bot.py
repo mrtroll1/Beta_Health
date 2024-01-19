@@ -46,7 +46,7 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
             Не указывай возможные причины. Не указывай рекомендации. Только информацию и симптомы, содержащиеся в исходном тексте. 
-            Каждый твой ответ должен оканчиваться строкой "-*-". 
+            Каждый твой ответ должен оканчиваться двумя символами ##. 
             """
         ),  
         MessagesPlaceholder(
@@ -64,7 +64,7 @@ bot = telebot.TeleBot(telegram_api_token)
 
 user_state = {}
 user_memory = {}
-user_doctor = {}
+user_curr_case = {}
 
 
 
@@ -82,11 +82,15 @@ def set_user_memory(user_id, memory):
 def get_user_memory(user_id):
     return user_memory.get(user_id, None)
 
-def set_user_doctor(user_id, doctor):
-    user_doctor[user_id] = memory
+def set_user_curr_case(user_id, case_id):
+    user_curr_case[user_id] = case_id
 
-def get_user_doctor(user_id):
-    return user_doctor.get(user_id, None)
+def get_user_curr_case(user_id):
+    return user_curr_case.get(user_id, None)
+
+def generate_case_id(user_id):
+    num_cases = functions.get_item_from_table_by_key('num_cases', 'users', 'user_id', user_id)
+    return f"{user_id}_{num_cases}"
     
 def conversation_step(message, memory=default_memory):
     bot_instance = ChatBot(llm, prompt, memory)
@@ -119,10 +123,30 @@ def share_case_menu():
 
     return keyboard
 
+def add_photo_menu():
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
+
+    button_1 = types.InlineKeyboardButton("Да", callback_data='add_photo')
+    button_2 = types.InlineKeyboardButton("Нет", callback_data='no_photo')
+
+    keyboard.add(button_1, button_2)
+
+    return keyboard
+
 def summarize_into_case(memory):
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
     return summarizer_instance.summarize(memory)
 
+def save_photo(message):
+    file_id = message.photo[-1].file_id
+    file_info = bot.get_file(file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+
+    case_id = get_user_curr_case(message.chat.id)
+    file_path = save_image_to_server(downloaded_file, message.chat.id, case_id)
+    
+    # ... 
 
 
 
@@ -174,9 +198,14 @@ def send_info(message):
 def send_to_doctor(message):
     bot.send_chat_action(message.chat.id, 'typing')
     case = summarize_into_case(memory=get_user_memory(message.chat.id))
+
     set_user_memory(message.chat.id, case)
+    case_id = generate_case_id(message.chat.id)
+    set_user_curr_case(message.chat.id, case_id)
+    functions.add_user_case(case_id, f'Кейс {int(time.time())}', message.chat.id, 'started', case)
+
     bot.send_message(message.chat.id, case)
-    bot.send_message(message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
+    bot.send_message(message.chat.id, 'Хотите прикрепить фото симптомов?', reply_markup=add_photo_menu())
     
 
 
@@ -209,6 +238,16 @@ def edit_case(message):
 
     bot.send_message(message.chat.id, 'Отправляю врачу?', reply_markup=share_case_menu())
 
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_photos'
+                                            and not message.text.startswith('/'))
+def handle_photos(message):
+    save_photo(message)
+    bot.send_message(message.chat.id, 'Получил!')
+    # compile case
+
+
+
+
 
 #                                    """CALLBACK HANDLERS"""
 
@@ -219,12 +258,12 @@ def handle_query(call):
         memory = default_memory
         memory.save_context({"input": "Начнём."}, {"output": "Начинаем новый кейс. Какие у вас жалобы?"})
         set_user_memory(call.message.chat.id, memory)
-        bot.send_message(call.message.chat.id, "Начинаем новый кейс. Какие у вас жалобы?")
+        bot.send_message(call.message.chat.id, "Начинаем новый кейс. Введите /sharecase, когда захотите поделиться им с врачом.")
+        bot.send_message(call.message.chat.id, "Какие у вас жалобы?")
         set_user_state(call.message.chat.id, 'creating_case')
         
     elif call.data == 'my_cases':
-        # Action for button 2
-        bot.deleted_message(chat_id=call.message.chat.id,
+        bot.delete_message(chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, "Мои кейсы:")
 
@@ -237,6 +276,33 @@ def handle_query(call):
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, 'Что бы Вы хотели изменить или добавить?')
         set_user_state(call.message.chat.id, 'editing_case')
+    
+    elif call.data == 'add_photo':
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id, 'Отправляйте фотографии! (по одной)')
+        set_user_state(call.message.chat.id, 'sending_photos')
+
+    elif call.data == 'no_photo':
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
+
+
+
+
+#                                    """PHOTO HANDLER"""
+@bot.message_handler(content_types=['photo'])
+def handle_photos(message):
+    user_state = get_user_state(user_id)
+
+    if user_state == 'sending_photos':
+        save_photo(message)
+        bot.send_message(message.chat.id, 'Получил!')
+
+
+    else:
+        bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
+    # Optionally, store file_path in your MySQL database
+    # ...
 
 
 bot.infinity_polling()
