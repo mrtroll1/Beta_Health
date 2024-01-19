@@ -12,19 +12,20 @@ jobs:
       name: Beta_Health 
     if: github.actor == 'mrtroll1'
     steps:
-    - name: Check out the repository
-      uses: actions/checkout@v3
+      - name: Check out the repository
+        uses: actions/checkout@v3
 
-    - name: Deploy to server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.SERVER_IP }}
-        username: luka
-        key: ${{ secrets.HETZNER_KEY }}
-        passphrase: ${{ secrets.HETZNER_KEY_PASSPHRASE }}
-        port: 618
-        script: |
-          sudo git -C /home/luka/Projects/Beta_Health/Beta_Health_Git pull origin master
-          sudo pip install -r /home/luka/Projects/Beta_Health/Beta_Health_Git/Python_files/requirements.txt  
-          mysql -u root -p"$MYSQL_PASSWORD" -h 127.0.0.1 -P 3307 Beta_Health < /home/luka/Projects/Beta_Health/Beta_Health_Git/MySQL_Scripts/init.sql
-          sudo systemctl restart mybot.service  
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: luka
+          key: ${{ secrets.HETZNER_KEY }}
+          passphrase: ${{ secrets.HETZNER_KEY_PASSPHRASE }}
+          port: 618
+          script: |
+            export MYSQL_PASSWORD=${{ secrets.MYSQL_HETZNER_ROOT }}
+            sudo git -C /home/luka/Projects/Beta_Health/Beta_Health_Git pull origin master
+            sudo pip install -r /home/luka/Projects/Beta_Health/Beta_Health_Git/Python_files/requirements.txt  
+            mysql -u root -p"$MYSQL_PASSWORD" -h 127.0.0.1 -P 3307 Beta_Health < /home/luka/Projects/Beta_Health/Beta_Health_Git/MySQL_Scripts/init.sql
+            sudo systemctl restart mybot.service
