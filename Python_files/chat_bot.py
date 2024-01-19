@@ -91,7 +91,7 @@ def get_user_curr_case(user_id):
 
 def generate_case_id(user_id):
     num_cases = functions.get_item_from_table_by_key('num_cases', 'users', 'user_id', user_id)
-    return f"{user_id}_{num_cases}"
+    return f"{user_id}_{num_cases + 1}"
     
 def conversation_step(message, memory=default_memory):
     bot_instance = ChatBot(llm, prompt, memory)
