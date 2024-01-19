@@ -20,7 +20,7 @@ CREATE TABLE user_cases (
     case_id VARCHAR(64) PRIMARY KEY,
     case_name VARCHAR(64),
     user_id BIGINT NOT NULL,
-    doctor_id BIGINT NOT NULL,
+    doctor_id BIGINT DEFAULT 1,
     start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     end_time DATETIME DEFAULT NULL,
     case_status VARCHAR(20),
