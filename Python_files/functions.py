@@ -45,6 +45,19 @@ def get_item_from_table_by_key(item, table, key_column, key_value):
 
     return result[0] if result else None
 
+def get_row_from_table_by_key(table, key_column, key_value):
+    db_connection = connect()
+    db_cursor = db_connection.cursor()
+
+    query = f"SELECT * FROM {table} WHERE {key_column} = %s"
+    db_cursor.execute(query, (key_value,))
+    result = db_cursor.fetchone()
+    
+    db_cursor.close()
+    db_connection.close()
+
+    return result if result else None
+
 def alter_table(table, column, new_value, key_column, key_value):
     db_connection = connect()
     if db_connection is None:
