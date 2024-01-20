@@ -91,10 +91,10 @@ def generate_case_id(user_id):
     num_cases = functions.get_item_from_table_by_key('num_cases', 'users', 'user_id', user_id)
 
     if num_cases is None:
-        num_cases = 1
+        num_cases = 0
 
     try:
-        num_cases = int(num_cases) + 1
+        num_cases = int(num_cases)
     except ValueError:
         print(f"Invalid num_cases value for user_id: {user_id}")
         return None
@@ -215,7 +215,6 @@ def send_to_doctor(message):
     case_id = generate_case_id(message.chat.id)
     set_user_curr_case(message.chat.id, case_id)
     functions.add_user_case(case_id, f'Кейс {int(time.time())}', message.chat.id, 'started', case)
-    bot.send_message(message.chat.id, functions.get_item_from_table_by_key('case_id', 'user_cases', 'user_id', message.chat.id))
     bot.send_message(message.chat.id, case_id)
 
     bot.send_message(message.chat.id, case)
