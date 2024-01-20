@@ -146,7 +146,7 @@ def add_photo_menu():
 
     return keyboard
 
-def summarize_into_case(memory):
+def summarize_into_case(memory): 
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
     return summarizer_instance.summarize(memory)
 
@@ -308,7 +308,7 @@ def handle_query(call):
 #                                    """PHOTO HANDLER"""
 @bot.message_handler(content_types=['photo'])
 def handle_photos(message):
-    user_state = get_user_state(user_id)
+    user_state = get_user_state(message.chat.id)
 
     if user_state == 'sending_photos':
         save_photo(message)
