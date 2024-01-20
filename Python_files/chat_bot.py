@@ -280,7 +280,7 @@ def handle_query(call):
         bot.delete_message(chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, "Мои кейсы:")
-        bot.send_message(call.message.chat.id, functions.get_itmes_from_table_by_key('case_name', 'user_cases', 'user_id', user_id))
+        bot.send_message(call.message.chat.id, functions.get_itmes_from_table_by_key('case_name', 'user_cases', 'user_id', call.message.chat.id))
 
     elif call.data == 'share_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
