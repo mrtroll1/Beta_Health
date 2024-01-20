@@ -81,7 +81,7 @@ def set_user_memory(user_id, memory):
     user_memory[user_id] = memory
 
 def get_user_memory(user_id):
-    return user_memory.get(user_id, None)
+    return user_memory.get(user_id, default_memory)
 
 def set_user_curr_case(user_id, case_id):
     user_curr_case[user_id] = case_id
@@ -271,7 +271,9 @@ def handle_photos(message):
 def handle_query(call):
     if call.data == 'new_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        set_user_memory(call.message.chat.id, default_memory)
+        memory = default_memory
+        memory.save_context{{'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'}}
+        set_user_memory(cal..message.chat.id, memory)
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Введите /sharecase, когда захотите поделиться им с врачом.")
         bot.send_message(call.message.chat.id, "Какие у вас жалобы?")
         set_user_state(call.message.chat.id, 'creating_case')
