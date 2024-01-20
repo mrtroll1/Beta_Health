@@ -46,7 +46,8 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
             о его состоянии. Текст должен быть сжатым. Не используй в тексте слова "пациент" или "у вас". 
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
-            Не указывай возможные причины. Не указывай рекомендации. Только информацию и симптомы, содержащиеся в исходном тексте. 
+            Не указывай возможные причины. Не указывай рекомендации. Не задавай вопросы.
+            Используй только информацию и симптомы, содержащиеся в исходном тексте. 
             Каждый твой ответ должен оканчиваться двумя символами ##. 
             """
         ),  
@@ -279,6 +280,7 @@ def handle_query(call):
         bot.delete_message(chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, "Мои кейсы:")
+        bot.send_message(call.message.chat.id, functions.get_itmes_from_table_by_key('case_name', 'user_cases', 'user_id', user_id))
 
     elif call.data == 'share_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)

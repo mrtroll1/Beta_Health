@@ -58,6 +58,33 @@ def get_item_from_table_by_key(item, table, key_column, key_value):
             db_connection.close()
 
 
+def get_itmes_from_table_by_key(user_id):
+    db_connection = connect()
+    if db_connection is None:
+        print("Database connection failed.")
+        return None
+
+    try:
+        db_cursor = db_connection.cursor()
+        query = f"SELECT {item} FROM {table} WHERE {key_column} = %s"
+        db_cursor.execute(query, (key_value,))
+        result = db_cursor.fetchone()
+
+        while db_cursor.nextset():
+            pass
+
+        return result if result else None
+    
+    except Error as e:
+        print(f"Error: {e}")
+        return None
+    finally:
+        if db_cursor:
+            db_cursor.close()
+        if db_connection:
+            db_connection.close()
+
+
 def alter_table(table, column, new_value, key_column, key_value):
     db_connection = connect()
     if db_connection is None:
