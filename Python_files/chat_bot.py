@@ -68,6 +68,7 @@ user_curr_case = {}
 
 
 
+
 #                               """GLOBAL CHAT-MANAGING FUNCTIONS"""
 
 def set_user_state(user_id, state):
@@ -155,9 +156,9 @@ def save_photo(message):
     downloaded_file = bot.download_file(file_info.file_path)
 
     case_id = get_user_curr_case(message.chat.id)
-    file_path = save_image_to_server(downloaded_file, message.chat.id, case_id)
+    case_specific_path, full_path = save_image_to_server(downloaded_file, message.chat.id, case_id)
     
-    # ... 
+    alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
 
 
 
@@ -215,7 +216,7 @@ def send_to_doctor(message):
     functions.increment_value('users', 'num_cases', 'user_id', message.chat.id)
     case_id = generate_case_id(message.chat.id)
     set_user_curr_case(message.chat.id, case_id)
-    functions.add_user_case(case_id, f'Кейс {int(time.time())}', message.chat.id, 'started', case)
+    functions.add_user_case(case_id, f'Кейс {case_id}', message.chat.id, 'started', case)
     bot.send_message(message.chat.id, case_id)
 
     bot.send_message(message.chat.id, case)
@@ -262,7 +263,6 @@ def handle_photos(message):
 
 
 
-
 #                                    """CALLBACK HANDLERS"""
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -279,7 +279,7 @@ def handle_query(call):
     elif call.data == 'my_cases':
         bot.delete_message(chat_id=call.message.chat.id,
                               message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, "Мои кейсы:")
+        bot.send_message(call.message.chat.id, "Список ваших кейсов:")
         bot.send_message(call.message.chat.id, functions.get_itmes_from_table_by_key('case_name', 'user_cases', 'user_id', call.message.chat.id))
 
     elif call.data == 'share_case':
@@ -313,7 +313,6 @@ def handle_photos(message):
     if user_state == 'sending_photos':
         save_photo(message)
         bot.send_message(message.chat.id, 'Получил!')
-
 
     else:
         bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")

@@ -68,7 +68,7 @@ def get_itmes_from_table_by_key(item, table, key_column, key_value):
         db_cursor = db_connection.cursor()
         query = f"SELECT {item} FROM {table} WHERE {key_column} = %s"
         db_cursor.execute(query, (key_value,))
-        result = db_cursor.fetchone()
+        result = db_cursor.fetchall()
 
         while db_cursor.nextset():
             pass
@@ -83,7 +83,6 @@ def get_itmes_from_table_by_key(item, table, key_column, key_value):
             db_cursor.close()
         if db_connection:
             db_connection.close()
-
 
 def alter_table(table, column, new_value, key_column, key_value):
     db_connection = connect()
@@ -178,6 +177,7 @@ def add_user_case(case_id, case_name, user_id, case_status, case_data):
             db_connection.close()
 
 
+
 def generate_unique_filename():
     timestamp = int(time.time())
     random_str = uuid.uuid4().hex
@@ -202,7 +202,7 @@ def save_image_to_server(downloaded_file, user_id, case_id):
         image_file.write(downloaded_file)
 
     encrypt_file(full_path)
-    return full_path
+    return case_specific_path, full_path
 
 def decrypt_file(file_path):
     with open(file_path, 'rb') as encrypted_file:
