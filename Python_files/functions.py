@@ -78,12 +78,13 @@ def alter_table(table, column, new_value, key_column, key_value):
 def increment_value(table, column, key_column, key_value):
     db_connection = connect()
     if db_connection is None:
+        print("Database connection failed.")
         return
 
     try:
         db_cursor = db_connection.cursor()
         query = f"UPDATE {table} SET {column} = {column} + 1 WHERE {key_column} = %s"
-        db_cursor.execute(query, (key_value))
+        db_cursor.execute(query, (key_value, ))
         db_connection.commit()
     except Error as e:
         print(f"Error altering table: {e}")
