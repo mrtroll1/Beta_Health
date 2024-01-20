@@ -58,7 +58,7 @@ def get_item_from_table_by_key(item, table, key_column, key_value):
             db_connection.close()
 
 
-def get_itmes_from_table_by_key(user_id, table, key_column, key_value):
+def get_itmes_from_table_by_key(item, table, key_column, key_value):
     db_connection = connect()
     if db_connection is None:
         print("Database connection failed.")
