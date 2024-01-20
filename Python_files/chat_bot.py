@@ -272,7 +272,7 @@ def handle_query(call):
     if call.data == 'new_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         memory = default_memory
-        memory.save_context{{'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'}}
+        memory.save_context({'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
         set_user_memory(cal..message.chat.id, memory)
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Введите /sharecase, когда захотите поделиться им с врачом.")
         bot.send_message(call.message.chat.id, "Какие у вас жалобы?")
