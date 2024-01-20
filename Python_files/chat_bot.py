@@ -59,8 +59,6 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-default_memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-
 bot = telebot.TeleBot(telegram_api_token)
 
 user_state = {}
@@ -81,7 +79,7 @@ def set_user_memory(user_id, memory):
     user_memory[user_id] = memory
 
 def get_user_memory(user_id):
-    return user_memory.get(user_id, default_memory)
+    return user_memory.get(user_id, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
 
 def set_user_curr_case(user_id, case_id):
     user_curr_case[user_id] = case_id
@@ -104,7 +102,7 @@ def generate_case_id(user_id):
     return f"{user_id}_{num_cases}"
 
     
-def conversation_step(message, memory=default_memory):
+def conversation_step(message, memory):
     bot_instance = ChatBot(llm, prompt, memory)
 
     bot.send_chat_action(message.chat.id, 'typing')
@@ -169,7 +167,7 @@ def save_photo(message):
 def send_welcome(message):
     user_id = message.chat.id
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
-    set_user_memory(user_id, default_memory)
+    set_user_memory(user_id, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
     
     if user_name:
         welcome_msg = f"Здравствуйте, {user_name}!"
@@ -210,13 +208,13 @@ def send_info(message):
 @bot.message_handler(commands=['sharecase'])
 def send_to_doctor(message):
     bot.send_chat_action(message.chat.id, 'typing')
-    case = summarize_into_case(memory=get_user_memory(message.chat.id))
+    case = summarize_into_case(get_user_memory(message.chat.id))
 
     set_user_memory(message.chat.id, case)
+    functions.increment_value('users', 'num_cases', 'user_id', message.chat.id)
     case_id = generate_case_id(message.chat.id)
     set_user_curr_case(message.chat.id, case_id)
     functions.add_user_case(case_id, f'Кейс {int(time.time())}', message.chat.id, 'started', case)
-    functions.increment_value('users', 'num_cases', 'user_id', message.chat.id)
     bot.send_message(message.chat.id, functions.get_item_from_table_by_key('case_id', 'user_cases', 'user_id', message.chat.id))
     bot.send_message(message.chat.id, case_id)
 
@@ -241,7 +239,7 @@ def handle_message(message):
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case'
                                             and not message.text.startswith('/'))
 def edit_case(message):
-    memory = default_memory
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     case = get_user_memory(message.chat.id)
     memory.save_context({"input": case}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
     memory.save_context({"input": message.text}, {"output": "Сейчас внесу изменения!"})
@@ -271,7 +269,7 @@ def handle_photos(message):
 def handle_query(call):
     if call.data == 'new_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        memory = default_memory
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         memory.save_context({'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
         set_user_memory(call.message.chat.id, memory)
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Введите /sharecase, когда захотите поделиться им с врачом.")
