@@ -158,7 +158,7 @@ def save_photo(message):
     case_id = get_user_curr_case(message.chat.id)
     case_specific_path, full_path = functions.save_image_to_server(downloaded_file, message.chat.id, case_id)
     
-    alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
+    functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
 
 
 
