@@ -189,7 +189,7 @@ def send_case(case_id, recepient):
         functions.decrypt_file(file_path)
 
         with open(file_path, 'rb') as file:
-            media_group.append(types.InputMediaPhoto(file))
+            media_group.append(types.InputMediaPhoto(file.read()))
 
         functions.encrypt_file(file_path)
 
