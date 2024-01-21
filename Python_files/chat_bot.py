@@ -187,11 +187,11 @@ def send_case(case_id, recepient):
 
         file_path = os.path.join(case_path, filename)
     
-        decrypt_file(file_path)
+        functions.decrypt_file(file_path)
 
         media_group.append(types.InputMediaPhoto(open(file_path, 'rb')))
 
-        encrypt_file(file_path)
+        functions.encrypt_file(file_path)
 
     if media_group:
         bot.send_media_group(recepient, media_group)
