@@ -162,12 +162,15 @@ def summarize_into_case(memory):
     return summarizer_instance.summarize(memory)
 
 def save_photo(message):
-    file_id = message.photo[-1].file_id
-    file_info = bot.get_file(file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
-
+    photos = message.photo if isinstance(message.photo, list) else [message.photo]
+    
     case_id = get_user_curr_case(message.chat.id)
-    case_specific_path, full_path = functions.save_image_to_server(downloaded_file, message.chat.id, case_id)
+    for photo in photos:
+        file_id = photo[-1].file_id  
+        file_info = bot.get_file(file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+
+        case_specific_path, full_path = functions.save_image_to_server(downloaded_file, message.chat.id, case_id)
     
     functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
 
@@ -296,7 +299,7 @@ def edit_case(message):
                                             and not message.text.startswith('/'))
 def handle_photos(message):
     save_photo(message)
-    bot.send_message(message.chat.id, 'Получил! Хотите отправить больше фото?', reply_markup=more_photos_menu())
+    bot.send_message(message.chat.id, 'Получил! Хотите отправить ещё фото?', reply_markup=more_photos_menu())
 
 
 
@@ -332,7 +335,7 @@ def handle_query(call):
     
     elif call.data == 'add_photo':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Отправляйте фотографии! (по одной)')
+        bot.send_message(call.message.chat.id, 'Отправляйте фотографии! (в общей сложности не больше 10)')
         set_user_state(call.message.chat.id, 'sending_photos')
 
     elif call.data == 'no_photos':
@@ -341,7 +344,7 @@ def handle_query(call):
 
     elif call.data == 'more_photos':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Присылайте следующее фото')
+        bot.send_message(call.message.chat.id, 'Присылайте следующие фото')
         set_user_state(call.message.chat.id, 'sending_photos')
         
     elif call.data == 'enough_photos':
@@ -359,7 +362,7 @@ def handle_photos(message):
 
     if user_state == 'sending_photos':
         save_photo(message)
-        bot.send_message(message.chat.id, 'Получил! Хотите отправить больше фото?', reply_markup=more_photos_menu())
+        bot.send_message(message.chat.id, 'Получил! Хотите отправить ещё фото?', reply_markup=more_photos_menu())
 
     else:
         bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
