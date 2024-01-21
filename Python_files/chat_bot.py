@@ -140,7 +140,18 @@ def add_photo_menu():
     keyboard.row_width = 1
 
     button_1 = types.InlineKeyboardButton("Да", callback_data='add_photo')
-    button_2 = types.InlineKeyboardButton("Нет", callback_data='no_photo')
+    button_2 = types.InlineKeyboardButton("Нет", callback_data='no_photos')
+
+    keyboard.add(button_1, button_2)
+
+    return keyboard
+
+def more_photos_menu():
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
+
+    button_1 = types.InlineKeyboardButton("Да", callback_data='more_photos')
+    button_2 = types.InlineKeyboardButton("Нет", callback_data='enough_photos')
 
     keyboard.add(button_1, button_2)
 
@@ -159,6 +170,33 @@ def save_photo(message):
     case_specific_path, full_path = functions.save_image_to_server(downloaded_file, message.chat.id, case_id)
     
     functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
+
+def send_case(case_id, recepient):
+    base_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
+    case_path = os.path.join(base_path, str(case_id))
+    case_text = functions.get_item_from_table_by_key('case_data', 'user_cases', 'case_id', case_id)
+
+    if not os.path.exists(case_path):
+        print(f"No directory found for case ID {case_id}")
+        return
+
+    media_group = []
+    for filename in os.listdir(case_path):
+        if len(media_group) >= 10: 
+            break
+
+        file_path = os.path.join(case_path, filename)
+    
+        decrypt_file(file_path)
+
+        media_group.append(types.InputMediaPhoto(open(file_path, 'rb')))
+
+        encrypt_file(file_path)
+
+    if media_group:
+        bot.send_media_group(recepient, media_group)
+
+    bot.send_message(recepient, case_text)
 
 
 
@@ -193,8 +231,8 @@ def handle_name_input(message):
 
 @bot.message_handler(commands=['help'])
 def send_help(message):
-    help_text = """Подробно о работе бота можно почитать по команде /info. \n 
-                    Быть безупречным ботом непросто. Хотите связаться со службой поддержки?"""
+    help_text = """Подробно о работе бота можно почитать по команде /info. 
+    Быть безупречным ботом непросто. Хотите связаться со службой поддержки?"""
     bot.send_message(message.chat.id, help_text)
 
 @bot.message_handler(commands=['menu'])
@@ -250,6 +288,7 @@ def edit_case(message):
     case = summarize_into_case(memory)
     bot.send_message(message.chat.id, case)
     set_user_memory(message.chat.id, case)
+    
 
     bot.send_message(message.chat.id, 'Отправляю врачу?', reply_markup=share_case_menu())
 
@@ -257,8 +296,7 @@ def edit_case(message):
                                             and not message.text.startswith('/'))
 def handle_photos(message):
     save_photo(message)
-    bot.send_message(message.chat.id, 'Получил!')
-    # compile case
+    bot.send_message(message.chat.id, 'Получил! Хотите отправить больше фото?', reply_markup=more_photos_menu())
 
 
 
@@ -284,7 +322,6 @@ def handle_query(call):
 
     elif call.data == 'share_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        # RESET MEMORY
         # bot.send_message(get_user_doctor(call.message.chat.id), get_user_memory(call.message.chat.id))
         bot.send_message(call.message.chat.id, 'Отправил врачу! Он скоро с Вами свяжется.')
 
@@ -298,10 +335,20 @@ def handle_query(call):
         bot.send_message(call.message.chat.id, 'Отправляйте фотографии! (по одной)')
         set_user_state(call.message.chat.id, 'sending_photos')
 
-    elif call.data == 'no_photo':
+    elif call.data == 'no_photos':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
 
+    elif call.data == 'more_photos':
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id, 'Присылайте следующее фото')
+        set_user_state(call.message.chat.id, 'sending_photos')
+        
+    elif call.data == 'enough_photos':
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        send_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
+        bot.send_message(call.message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
+        
 
 
 
@@ -312,12 +359,9 @@ def handle_photos(message):
 
     if user_state == 'sending_photos':
         save_photo(message)
-        bot.send_message(message.chat.id, 'Получил!')
+        bot.send_message(message.chat.id, 'Получил! Хотите отправить больше фото?', reply_markup=more_photos_menu())
 
     else:
         bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
-    # Optionally, store file_path in your MySQL database
-    # ...
-
 
 bot.infinity_polling()
