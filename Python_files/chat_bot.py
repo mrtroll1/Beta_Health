@@ -162,16 +162,19 @@ def summarize_into_case(memory):
     return summarizer_instance.summarize(memory)
 
 def save_photo(message):
-    photos = message.photo if isinstance(message.photo, list) else [message.photo]
-    
-    case_id = get_user_curr_case(message.chat.id)
-    for photo in photos:
-        file_id = photo[-1].file_id  
-        file_info = bot.get_file(file_id)
-        downloaded_file = bot.download_file(file_info.file_path)
+    if isinstance(message.photo, list) and message.photo:
+        largest_photo = message.photo[-1]  
+        file_id = largest_photo.file_id
+    else:
+        print("No photos found in the message.")
+        return
 
-        case_specific_path, full_path = functions.save_image_to_server(downloaded_file, message.chat.id, case_id)
-    
+    file_info = bot.get_file(file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+
+    case_id = get_user_curr_case(message.chat.id)
+    case_specific_path, full_path = functions.save_image_to_server(downloaded_file, message.chat.id, case_id)
+
     functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
 
 def send_case(case_id, recepient):
