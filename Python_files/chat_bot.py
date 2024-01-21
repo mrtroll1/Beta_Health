@@ -186,10 +186,10 @@ def send_case(case_id, recepient):
             break
 
         file_path = os.path.join(case_path, filename)
-    
         functions.decrypt_file(file_path)
 
-        media_group.append(types.InputMediaPhoto(open(file_path, 'rb')))
+        with open(file_path, 'rb') as file:
+            media_group.append(types.InputMediaPhoto(file))
 
         functions.encrypt_file(file_path)
 

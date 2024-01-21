@@ -205,11 +205,17 @@ def save_image_to_server(downloaded_file, user_id, case_id):
     return case_specific_path, full_path
 
 def decrypt_file(file_path):
-    with open(file_path, 'rb') as encrypted_file:
-        encrypted_data = encrypted_file.read()
-    decrypted_data = cipher_suite.decrypt(encrypted_data)
-    with open(file_path, 'wb') as decrypted_file:
-        decrypted_file.write(decrypted_data)
+    try:
+        with open(file_path, 'rb') as encrypted_file:
+            encrypted_data = encrypted_file.read()
+        decrypted_data = cipher_suite.decrypt(encrypted_data)
+        with open(file_path, 'wb') as decrypted_file:
+            decrypted_file.write(decrypted_data)
+    except Exception as e:
+        print(f'Error during decryption: {e}')
+        return False
+    return True
+
 
 
 
