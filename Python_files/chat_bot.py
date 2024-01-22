@@ -348,14 +348,14 @@ def handle_query(call):
 
     elif call.data == 'share_case':
         bot.send_chat_action(message.chat.id, 'typing')
-        case = summarize_into_case(get_user_memory(message.chat.id))
+        case = summarize_into_case(get_user_memory(call.message.chat.id))
 
-        set_user_memory(message.chat.id, case)
-        functions.increment_value('users', 'num_cases', 'user_id', message.chat.id)
-        case_id = generate_case_id(message.chat.id)
-        set_user_curr_case(message.chat.id, case_id)
-        functions.add_user_case(case_id, f'Кейс {case_id}', message.chat.id, 'started', case)
-        bot.send_message(message.chat.id, case_id)
+        set_user_memory(call.message.chat.id, case)
+        functions.increment_value('users', 'num_cases', 'user_id', call.message.chat.id)
+        case_id = generate_case_id(call.message.chat.id)
+        set_user_curr_case(call.message.chat.id, case_id)
+        functions.add_user_case(case_id, f'Кейс {case_id}', call.message.chat.id, 'started', case)
+        bot.send_message(call.message.chat.id, case_id)
 
         bot.send_message(message.chat.id, case)
         bot.send_message(message.chat.id, 'Хотите прикрепить фото симптомов?', reply_markup=add_photo_menu())
