@@ -357,8 +357,8 @@ def handle_query(call):
         functions.add_user_case(case_id, f'Кейс {case_id}', call.message.chat.id, 'started', case)
         bot.send_message(call.message.chat.id, case_id)
 
-        bot.send_message(message.chat.id, case)
-        bot.send_message(message.chat.id, 'Хотите прикрепить фото симптомов?', reply_markup=add_photo_menu())
+        bot.send_message(call.message.chat.id, case)
+        bot.send_message(call.message.chat.id, 'Хотите прикрепить фото симптомов?', reply_markup=add_photo_menu())
 
     elif call.data == 'edit_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
