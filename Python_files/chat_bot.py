@@ -111,7 +111,7 @@ def conversation_step(message, memory):
     bot.send_message(message.chat.id, response)
 
     symbol_combination = '##'
-    if response.startswith(symbol_combination):
+    if symbol_combination in response:
         bot.send_message(message.chat.id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=share_case_menu())
 
     set_user_memory(message.chat.id, memory)
