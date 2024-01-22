@@ -25,7 +25,8 @@ class Summarizer(langchain.chains.llm.LLMChain):
     
     def summarize(self, memory):
         messages = memory.buffer_as_messages
-        concat = '. '.join(message.content for message in messages if isinstance(message, langchain_core.messages.HumanMessage))
+        #concat = '. '.join(message.content for message in messages if isinstance(message, langchain_core.messages.HumanMessage))
+        concat = messages
 
         return self.invoke(concat)['text']
 
