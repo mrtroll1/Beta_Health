@@ -41,9 +41,9 @@ prompt = ChatPromptTemplate.from_messages(
 summarizer_prompt = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
-            content="""Ты - суммаризатор. Тебе на вход даётся диалог ассистента AI и пациента Human. 
-            Твоя задача кратко, но сохраня все фактические детали, проссумировать переданную пациентом информацию
-            о его состоянии. Текст должен быть сжатым. Не используй в тексте слова "пациент" или "у вас". 
+            content="""Тебе на вход даётся диалог ассистента AI и пациента Human. 
+            Твоя задача, сохраня все фактические детали, проссумировать переданную пациентом информацию
+            о его состоянии. Твой ответ доленж иметь две секции: симптомы и рекоммендации. Не используй в тексте слова "пациент" или "у вас". 
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
             Не указывай возможные причины. Не пиши рекомендации. Не задавай вопросов.
@@ -347,6 +347,7 @@ def handle_query(call):
         bot.send_message(call.message.chat.id, 'Отправил врачу! Он скоро с Вами свяжется.')
 
     elif call.data == 'share_case':
+        bot.delete_message(call.message.chat.id, message_id=call.message.message_id)
         bot.send_chat_action(call.message.chat.id, 'typing')
         case = summarize_into_case(get_user_memory(call.message.chat.id))
 
