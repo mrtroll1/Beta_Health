@@ -386,11 +386,12 @@ def handle_query(call):
     elif call.data == 'finalize_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_chat_action(call.message.chat.id, 'typing')
-        case = summarize_into_case(get_user_memory(call.message.chat.id))
 
+        case = summarize_into_case(get_user_memory(call.message.chat.id))
         set_user_memory(call.message.chat.id, case)
+        case_id = get_user_curr_case(call.message.chat.id)
+
         functions.add_user_case(case_id, f'Кейс {case_id}', call.message.chat.id, 'started', case)
-        bot.send_message(call.message.chat.id, case_id)
 
         compile_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
         bot.send_message(call.message.chat.id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=accept_case_menu())
