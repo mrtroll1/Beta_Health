@@ -23,7 +23,7 @@ prompt = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
             content="""Ты - виртаульный ассистент врача. Твоя задача принять жалобу или вопрос от пациента и вступить с 
-            ним в диалог, задавая подходящие вопросы о его проблеме. Задай много вопросов, чтобы собрать побольше деталей. 
+            ним в диалог, задавая подходящие вопросы о его проблеме. Задай как можно больше вопросов, чтобы собрать побольше деталей. 
             После того, как ты подробно опросишь паицента, твоя задача указать возможные причины для состояния пациента и посоветовать
             методы лечения, у которых известный уровень доказанности. Это сообщение должно оканчиваться двумя символами ##. 
             Обращайся к пациенту на Вы (с большой буквы). Если какой-то вопрос или сообщение от пациента не соотвествует
@@ -46,9 +46,8 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
             о его состоянии. Текст должен быть сжатым. Не используй в тексте слова "пациент" или "у вас". 
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
-            Не указывай возможные причины. Не указывай рекомендации. Не задавай вопросов.
+            Не указывай возможные причины. Не пиши рекомендации. Не задавай вопросов.
             Используй только информацию и симптомы, содержащиеся в исходном тексте. 
-            Каждый твой ответ должен оканчиваться двумя символами &&. 
             """
         ),  
         MessagesPlaceholder(
@@ -111,8 +110,13 @@ def conversation_step(message, memory):
     response = bot_instance.process_message(message.text)
     bot.send_message(message.chat.id, response)
 
+    symbol_combination = '##'
+    if response.endswith(symbol_combination):
+        bot.send_message(message.chat.id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=share_case_menu())
+
     set_user_memory(message.chat.id, memory)
 
+    
 def main_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
@@ -124,12 +128,23 @@ def main_menu():
 
     return keyboard
 
+def accept_case_menu():
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
+
+    button_1 = types.InlineKeyboardButton("Да, всё супер!", callback_data='send_case')
+    button_2 = types.InlineKeyboardButton("Хочу изменить", callback_data='edit_case')
+
+    keyboard.add(button_1, button_2)
+
+    return keyboard
+
 def share_case_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Да, всё супер!", callback_data='share_case')
-    button_2 = types.InlineKeyboardButton("Хочу изменить", callback_data='edit_case')
+    button_1 = types.InlineKeyboardButton("Да", callback_data='share_case')
+    button_2 = types.InlineKeyboardButton("Нет", callback_data='do_not_share_case')
 
     keyboard.add(button_1, button_2)
 
@@ -296,7 +311,7 @@ def edit_case(message):
     set_user_memory(message.chat.id, case)
     
 
-    bot.send_message(message.chat.id, 'Отправляю врачу?', reply_markup=share_case_menu())
+    bot.send_message(message.chat.id, 'Отправляю врачу?', reply_markup=accept_case_menu())
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_photos'
                                             and not message.text.startswith('/'))
@@ -326,10 +341,24 @@ def handle_query(call):
         bot.send_message(call.message.chat.id, "Список ваших кейсов:")
         bot.send_message(call.message.chat.id, functions.get_itmes_from_table_by_key('case_name', 'user_cases', 'user_id', call.message.chat.id))
 
-    elif call.data == 'share_case':
+    elif call.data == 'send_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         # bot.send_message(get_user_doctor(call.message.chat.id), get_user_memory(call.message.chat.id))
         bot.send_message(call.message.chat.id, 'Отправил врачу! Он скоро с Вами свяжется.')
+
+    elif call.data == 'share_case':
+        bot.send_chat_action(message.chat.id, 'typing')
+        case = summarize_into_case(get_user_memory(message.chat.id))
+
+        set_user_memory(message.chat.id, case)
+        functions.increment_value('users', 'num_cases', 'user_id', message.chat.id)
+        case_id = generate_case_id(message.chat.id)
+        set_user_curr_case(message.chat.id, case_id)
+        functions.add_user_case(case_id, f'Кейс {case_id}', message.chat.id, 'started', case)
+        bot.send_message(message.chat.id, case_id)
+
+        bot.send_message(message.chat.id, case)
+        bot.send_message(message.chat.id, 'Хотите прикрепить фото симптомов?', reply_markup=add_photo_menu())
 
     elif call.data == 'edit_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
@@ -343,7 +372,7 @@ def handle_query(call):
 
     elif call.data == 'no_photos':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
+        bot.send_message(call.message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=accept_case_menu())
 
     elif call.data == 'more_photos':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
@@ -353,7 +382,7 @@ def handle_query(call):
     elif call.data == 'enough_photos':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         send_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
-        bot.send_message(call.message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=share_case_menu())
+        bot.send_message(call.message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=accept_case_menu())
         
 
 
