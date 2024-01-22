@@ -346,12 +346,12 @@ def handle_query(call):
         memory.save_context({'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
         set_user_memory(call.message.chat.id, memory)
 
-        functions.increment_value('users', 'num_cases', 'user_id', message.chat.id)
-        case_id = generate_case_id(message.chat.id)
-        set_user_curr_case(message.chat.id, case_id)
-        functions.add_user_case(case_id, f'Кейс {case_id}', message.chat.id, 'started', '')
+        functions.increment_value('users', 'num_cases', 'user_id', call.message.chat.id)
+        case_id = generate_case_id(call.message.chat.id)
+        set_user_curr_case(call.message.chat.id, case_id)
+        functions.add_user_case(case_id, f'Кейс {case_id}', call.message.chat.id, 'started', '')
 
-        bot.send_message(message.chat.id, case_id)
+        bot.send_message(call.message.chat.id, case_id)
 
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Введите /sharecase, когда захотите поделиться им с врачом.")
         bot.send_message(call.message.chat.id, "Какие у вас жалобы?")
