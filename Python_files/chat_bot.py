@@ -219,8 +219,9 @@ def compile_case(case_id, recepient):
 
     if media_group:
         bot.send_media_group(recepient, media_group)
-
-    bot.send_message(recepient, case_text)
+        bot.send_message(recepient, case_text)
+    else:
+        bot.send_message(recepient, case_text)
 
 
 
