@@ -45,7 +45,7 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
         SystemMessage(
             content="""Тебе на вход даётся диалог ассистента AI и пациента Human. 
             Твоя задача, сохраня все фактические детали, проссумировать переданную пациентом информацию
-            о его состоянии. Твой ответ доленж иметь две секции: симптомы и рекоммендации. Не используй в тексте слова "пациент" или "у вас". 
+            о его состоянии. Твой ответ доленж иметь две секции: жалобы и рекоммендации. Не используй в тексте слова "пациент" или "у вас". 
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
             Не указывай возможные причины. Не пиши рекомендации. Не задавай вопросов.
@@ -112,11 +112,11 @@ def conversation_step(message, memory):
     response = bot_instance.process_message(message.text)
     bot.send_message(message.chat.id, response)
 
+    set_user_memory(message.chat.id, memory)
+
     symbol_combination = '##'
     if symbol_combination in response:
-        bot.send_message(message.chat.id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=share_case_menu())
-
-    set_user_memory(message.chat.id, memory)
+        bot.send_message(message.chat.id, 'Хотите прикрепить фото симптомов?', reply_markup=add_photo_menu())
 
     
 def main_menu():
@@ -134,19 +134,10 @@ def accept_case_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Да, всё супер!", callback_data='send_case')
+    button_1 = types.InlineKeyboardButton("Да, отправляй!", callback_data='finalize_case')
     button_2 = types.InlineKeyboardButton("Хочу изменить", callback_data='edit_case')
-
-    keyboard.add(button_1, button_2)
-
-    return keyboard
-
-def share_case_menu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    button_1 = types.InlineKeyboardButton("Да", callback_data='share_case')
-    button_2 = types.InlineKeyboardButton("Нет", callback_data='do_not_share_case')
+    butoon_3 = types.InlineKeyboardButton("Сохрани, но не отправляй врачу", callback_data='save_and_not_share')
+    button_4 = types.InlineKeyboardButton("Не сохраняй и не отправляй врачу", callback_data='delete_and_not_share')
 
     keyboard.add(button_1, button_2)
 
@@ -157,7 +148,7 @@ def add_photo_menu():
     keyboard.row_width = 1
 
     button_1 = types.InlineKeyboardButton("Да", callback_data='add_photo')
-    button_2 = types.InlineKeyboardButton("Нет", callback_data='no_photos')
+    button_2 = types.InlineKeyboardButton("Нет", callback_data='finalize_case')
 
     keyboard.add(button_1, button_2)
 
@@ -168,7 +159,17 @@ def more_photos_menu():
     keyboard.row_width = 1
 
     button_1 = types.InlineKeyboardButton("Да", callback_data='more_photos')
-    button_2 = types.InlineKeyboardButton("Нет", callback_data='enough_photos')
+    button_2 = types.InlineKeyboardButton("Нет", callback_data='finalize_case')
+
+    keyboard.add(button_1, button_2)
+
+    return keyboard
+
+def quickstart_new_case_menu():
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
+
+    button_1 = types.InlineKeyboardButton("Начать новый кейс", callback_data='quickstart_new_case')
 
     keyboard.add(button_1, button_2)
 
@@ -194,7 +195,7 @@ def save_photo(message):
 
     functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
 
-def send_case(case_id, recepient):
+def compile_case(case_id, recepient):
     base_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
     case_path = os.path.join(base_path, str(case_id))
     case_text = functions.get_item_from_table_by_key('case_data', 'user_cases', 'case_id', case_id)
@@ -251,6 +252,19 @@ def handle_name_input(message):
 
     confirmation_msg = f"Очень приятно, {user_name}! Сейчас я расскажу, как всё работает..."
     bot.send_message(user_id, confirmation_msg)
+    bot.register_next_step_handler(message, quickstart)
+
+def quickstart(message):
+    user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
+    bot.send_message(message.chat.id, 'Моя задача - сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон.')
+    bot.send_message(message.chat.id, 'Моя главная фишка - система \'кейсов\'. Кейс = жалобы и симптомы пациента + диагноз и рекоммендации врача.')
+    bot.send_message(message.chat.id, """Первую часть кейса составляем мы с Вами вместе. Сценарий такой:
+    Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из данных Вами ответов я составляю текст.
+    При желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). """)
+    bot.send_message(message.chat.id, 'Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
+    bot.send_message(message.chat.id, 'Нажимайте!', reply_markup=quickstart_new_case_menu())
+    set_user_state(message.chat.id, 'quickstarting')
+
 
 @bot.message_handler(commands=['help'])
 def send_help(message):
@@ -272,16 +286,14 @@ def send_info(message):
 def send_to_doctor(message):
     bot.send_chat_action(message.chat.id, 'typing')
     case = summarize_into_case(get_user_memory(message.chat.id))
-
     set_user_memory(message.chat.id, case)
-    functions.increment_value('users', 'num_cases', 'user_id', message.chat.id)
-    case_id = generate_case_id(message.chat.id)
-    set_user_curr_case(message.chat.id, case_id)
+
+    case_id = get_user_curr_case(message.chat.id)
     functions.add_user_case(case_id, f'Кейс {case_id}', message.chat.id, 'started', case)
+
     bot.send_message(message.chat.id, case_id)
 
-    bot.send_message(message.chat.id, case)
-    bot.send_message(message.chat.id, 'Хотите прикрепить фото симптомов?', reply_markup=add_photo_menu())
+    
     
 
 
@@ -333,6 +345,14 @@ def handle_query(call):
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         memory.save_context({'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
         set_user_memory(call.message.chat.id, memory)
+
+        functions.increment_value('users', 'num_cases', 'user_id', message.chat.id)
+        case_id = generate_case_id(message.chat.id)
+        set_user_curr_case(message.chat.id, case_id)
+        functions.add_user_case(case_id, f'Кейс {case_id}', message.chat.id, 'started', '')
+
+        bot.send_message(message.chat.id, case_id)
+
         bot.send_message(call.message.chat.id, "Начинаем новый кейс. Введите /sharecase, когда захотите поделиться им с врачом.")
         bot.send_message(call.message.chat.id, "Какие у вас жалобы?")
         set_user_state(call.message.chat.id, 'creating_case')
@@ -343,25 +363,10 @@ def handle_query(call):
         bot.send_message(call.message.chat.id, "Список ваших кейсов:")
         bot.send_message(call.message.chat.id, functions.get_itmes_from_table_by_key('case_name', 'user_cases', 'user_id', call.message.chat.id))
 
-    elif call.data == 'send_case':
+    elif call.data == 'send_case_to_doctor':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         # bot.send_message(get_user_doctor(call.message.chat.id), get_user_memory(call.message.chat.id))
         bot.send_message(call.message.chat.id, 'Отправил врачу! Он скоро с Вами свяжется.')
-
-    elif call.data == 'share_case':
-        bot.delete_message(call.message.chat.id, message_id=call.message.message_id)
-        bot.send_chat_action(call.message.chat.id, 'typing')
-        case = summarize_into_case(get_user_memory(call.message.chat.id))
-
-        set_user_memory(call.message.chat.id, case)
-        functions.increment_value('users', 'num_cases', 'user_id', call.message.chat.id)
-        case_id = generate_case_id(call.message.chat.id)
-        set_user_curr_case(call.message.chat.id, case_id)
-        functions.add_user_case(case_id, f'Кейс {case_id}', call.message.chat.id, 'started', case)
-        bot.send_message(call.message.chat.id, case_id)
-
-        bot.send_message(call.message.chat.id, case)
-        bot.send_message(call.message.chat.id, 'Хотите прикрепить фото симптомов?', reply_markup=add_photo_menu())
 
     elif call.data == 'edit_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
@@ -373,19 +378,26 @@ def handle_query(call):
         bot.send_message(call.message.chat.id, 'Отправляйте фотографии! (в общей сложности не больше 10)')
         set_user_state(call.message.chat.id, 'sending_photos')
 
-    elif call.data == 'no_photos':
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=accept_case_menu())
-
     elif call.data == 'more_photos':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         bot.send_message(call.message.chat.id, 'Присылайте следующие фото')
         set_user_state(call.message.chat.id, 'sending_photos')
         
-    elif call.data == 'enough_photos':
+    elif call.data == 'finalize_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        send_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
-        bot.send_message(call.message.chat.id, 'Утвердите кейс перед тем, как я поделюсь им с врачом.', reply_markup=accept_case_menu())
+        bot.send_chat_action(call.message.chat.id, 'typing')
+        case = summarize_into_case(get_user_memory(call.message.chat.id))
+
+        set_user_memory(call.message.chat.id, case)
+        functions.add_user_case(case_id, f'Кейс {case_id}', call.message.chat.id, 'started', case)
+        bot.send_message(call.message.chat.id, case_id)
+
+        compile_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
+        bot.send_message(call.message.chat.id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=accept_case_menu())
+    
+    elif call.data == 'quickstart_new_case':
+        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.send_message(call.message.chat.id, 'Какие у Вас жалобы? (поделитесь реальной проблемой или подыграйте мне)') 
         
 
 
