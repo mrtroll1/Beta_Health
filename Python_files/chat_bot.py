@@ -392,7 +392,7 @@ def handle_query(call):
         set_user_memory(call.message.chat.id, case)
         case_id = get_user_curr_case(call.message.chat.id)
 
-        functions.add_user_case(case_id, f'Кейс {case_id}', call.message.chat.id, 'started', case)
+        functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
         compile_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
         bot.send_message(call.message.chat.id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=accept_case_menu())
