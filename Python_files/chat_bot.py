@@ -374,8 +374,6 @@ def handle_photos(message):
     save_document(message)
     bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
 
-фото
-
 
 #                                    """CALLBACK HANDLERS"""
 
