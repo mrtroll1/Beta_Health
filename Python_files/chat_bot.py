@@ -102,7 +102,7 @@ def generate_case_id(user_id):
         print(f"Invalid num_cases value for user_id: {user_id}")
         return None
 
-    return f"{user_id}_{num_cases}"
+    return f"{user_id}_{num_cases}", num_cases
 
     
 def conversation_step(message, memory):
@@ -169,7 +169,7 @@ def quickstart_new_case_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Начать новый кейс", callback_data='quickstart_new_case')
+    button_1 = types.InlineKeyboardButton("Начать новый кейс", callback_data='new_case')
 
     keyboard.add(button_1, button_2)
 
@@ -234,7 +234,7 @@ def send_welcome(message):
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
     set_user_memory(user_id, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
     
-    if user_name:
+    if user_name == 'Обама':
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
         bot.send_message(user_id, "Как могу помочь?", reply_markup=main_menu())
@@ -261,21 +261,22 @@ def quickstart(message):
     bot.send_message(message.chat.id, 'Моя главная фишка - система \'кейсов\'. Кейс = жалобы и симптомы пациента + диагноз и рекоммендации врача.')
     bot.send_message(message.chat.id, """Первую часть кейса составляем мы с Вами вместе. Сценарий такой:
     Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из данных Вами ответов я составляю текст.
-    При желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). """)
-    bot.send_message(message.chat.id, 'Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
+    Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). """)
+    bot.send_message(message.chat.id, 'Попробуем? Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
     bot.send_message(message.chat.id, 'Нажимайте!', reply_markup=quickstart_new_case_menu())
     set_user_state(message.chat.id, 'quickstarting')
 
 
 @bot.message_handler(commands=['help'])
 def send_help(message):
-    help_text = """Подробно о работе бота можно почитать по команде /info. 
-    Быть безупречным ботом непросто. Хотите связаться со службой поддержки?"""
+    help_text = """Напоминаю, что подробно о работе бота можно почитать по команде /info. 
+    Какой у Вас вопрос?"""
     bot.send_message(message.chat.id, help_text)
 
 @bot.message_handler(commands=['menu'])
 def show_main_menu(message):
-    bot.send_message(message.chat.id, 'Вот!', reply_markup=main_menu())
+    user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
+    bot.send_message(message.chat.id, f'Вот оно главное меню! {user_name}, как я могу Вам помочь?', reply_markup=main_menu())
 
 @bot.message_handler(commands=['info'])
 def send_info(message):
@@ -296,8 +297,6 @@ def send_to_doctor(message):
 
     
     
-
-
 
 #                                    """STATE HANDLERS"""
 
@@ -321,11 +320,13 @@ def edit_case(message):
 
     bot.send_message(message.chat.id, 'Вот обновлённая версия:')
     bot.send_chat_action(message.chat.id, 'typing')
-    case = summarize_into_case(memory)
-    bot.send_message(message.chat.id, case)
-    set_user_memory(message.chat.id, case)
-    
 
+    case = summarize_into_case(memory)
+    set_user_memory(message.chat.id, case)
+    case_id = get_user_curr_case(message.chat.id)
+    functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
+
+    compile_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
     bot.send_message(message.chat.id, 'Отправляю врачу?', reply_markup=accept_case_menu())
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_photos'
@@ -344,19 +345,23 @@ def handle_query(call):
     if call.data == 'new_case':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        
         memory.save_context({'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
         set_user_memory(call.message.chat.id, memory)
 
         functions.increment_value('users', 'num_cases', 'user_id', call.message.chat.id)
-        case_id = generate_case_id(call.message.chat.id)
+        case_id, num_cases = generate_case_id(call.message.chat.id)
         set_user_curr_case(call.message.chat.id, case_id)
-        functions.add_user_case(case_id, f'Кейс {case_id}', call.message.chat.id, 'started', '')
+        functions.add_user_case(case_id, f'Кейс {num_cases}', call.message.chat.id, 'started', '')
 
-        bot.send_message(call.message.chat.id, case_id)
+        bot.send_message(call.message.chat.id, f'Кейс {num_cases}')
 
-        bot.send_message(call.message.chat.id, "Начинаем новый кейс. Введите /sharecase, когда захотите поделиться им с врачом.")
-        bot.send_message(call.message.chat.id, "Какие у вас жалобы?")
-        set_user_state(call.message.chat.id, 'creating_case')
+        bot.send_message(call.message.chat.id, "Начинаем новый кейс.")
+        if get_user_state(call.message.chat.id) == 'quickstarting':
+            bot.send_message(call.message.chat.id, 'Какие у Вас жалобы? (поделитесь реальной проблемой или подыграйте мне)') 
+        else:
+            bot.send_message(call.message.chat.id, "Какие у вас жалобы?")
+            set_user_state(call.message.chat.id, 'creating_case')
         
     elif call.data == 'my_cases':
         bot.delete_message(chat_id=call.message.chat.id,
@@ -396,10 +401,6 @@ def handle_query(call):
 
         compile_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
         bot.send_message(call.message.chat.id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=accept_case_menu())
-    
-    elif call.data == 'quickstart_new_case':
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Какие у Вас жалобы? (поделитесь реальной проблемой или подыграйте мне)') 
         
 
 
