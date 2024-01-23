@@ -176,25 +176,25 @@ def quickstart_new_case_menu():
     return keyboard
 
 def quickstart(message):
-    set_user_state(message.chat.id, 'quickstarting')
-    bot.send_chat_action(message.chat.id, 'typing')
+    user_id = message.chat.id
+    set_user_state(user_id, 'quickstarting')
+    bot.send_chat_action(user_id, 'typing')
     time.sleep(2) 
-    bot.send_message(message.chat.id, 'Моя задача -- сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка -- система \'кейсов\'.')
+    bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='Markdown')
 
-    bot.send_chat_action(message.chat.id, 'typing')
-    time.sleep(5) 
-    bot.send_message(message.chat.id,  '**Кейс** = жалобы и симптомы пациента + диагноз и рекоммендации врача.', parse_mode='Markdown')
-
-    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_chat_action(user_id, 'typing')
     time.sleep(10) 
-    bot.send_message(message.chat.id, """Первую часть кейса составляем мы с Вами вместе. Сценарий такой: \n
+    bot.send_message(user_id, """
+    _Кейс_ = жалобы и симптомы пациента + диагноз и рекоммендации врача. \n
+    Первую часть кейса составляем мы с Вами вместе. Сценарий такой: \n
     Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из данных Вами ответов я составляю текст. \n
-    Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). """)
+    Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). 
+    """, parse_mode='Markdown')
 
-    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_chat_action(user_id, 'typing')
     time.sleep(5) 
-    bot.send_message(message.chat.id, 'Попробуем? Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
-    bot.send_message(message.chat.id, 'Нажимайте!', reply_markup=quickstart_new_case_menu())
+    bot.send_message(user_id, 'Попробуем? Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
+    bot.send_message(user_id, 'Нажимайте!', reply_markup=quickstart_new_case_menu())
 
 def summarize_into_case(memory): 
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
