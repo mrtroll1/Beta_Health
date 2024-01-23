@@ -190,7 +190,7 @@ def encrypt_file(file_path):
     with open(file_path, 'wb') as encrypted_file:
         encrypted_file.write(encrypted_data)
 
-def save_file_to_server(downloaded_file, user_id, case_id):
+def save_file_to_server(downloaded_file, user_id, case_id, file_extension):
     base_save_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
 
     case_specific_path = os.path.join(base_save_path, str(case_id))
