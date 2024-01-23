@@ -349,6 +349,11 @@ def handle_menu_choice(message):
 def handle_message(message):
     conversation_step(message, get_user_memory(message.chat.id))
 
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstarting'
+                                            and not message.text.startswith('/'))
+def handle_message(message):
+    conversation_step(message, get_user_memory(message.chat.id))
+
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case'
                                             and not message.text.startswith('/'))
 def edit_case(message):
