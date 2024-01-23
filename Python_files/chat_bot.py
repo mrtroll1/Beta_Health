@@ -139,7 +139,7 @@ def accept_case_menu():
     butoon_3 = types.InlineKeyboardButton("Сохрани, но не отправляй врачу", callback_data='save_and_not_share')
     button_4 = types.InlineKeyboardButton("Не сохраняй и не отправляй врачу", callback_data='delete_and_not_share')
 
-    keyboard.add(button_1, button_2)
+    keyboard.add(button_1, button_2, button_3, button_4)
 
     return keyboard
 
@@ -171,7 +171,7 @@ def quickstart_new_case_menu():
 
     button_1 = types.InlineKeyboardButton("Начать новый кейс", callback_data='new_case')
 
-    keyboard.add(button_1, button_2)
+    keyboard.add(button_1)
 
     return keyboard
 
@@ -183,7 +183,7 @@ def quickstart(message):
 
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(5) 
-    bot.send_message(message.chat.id,  '**Кейс** = жалобы и симптомы пациента + диагноз и рекоммендации врача.')
+    bot.send_message(message.chat.id,  '**Кейс** = жалобы и симптомы пациента + диагноз и рекоммендации врача.', parse_mode='Markdown')
 
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(10) 
@@ -194,7 +194,6 @@ def quickstart(message):
     bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(5) 
     bot.send_message(message.chat.id, 'Попробуем? Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
-
     bot.send_message(message.chat.id, 'Нажимайте!', reply_markup=quickstart_new_case_menu())
 
 def summarize_into_case(memory): 
