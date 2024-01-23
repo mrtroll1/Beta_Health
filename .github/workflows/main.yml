@@ -24,7 +24,6 @@ jobs:
           passphrase: ${{ secrets.HETZNER_KEY_PASSPHRASE }}
           port: 618
           script: |
-            export MYSQL_PASSWORD=${{ secrets.MYSQL_HETZNER_ROOT }}
             sudo git -C /home/luka/Projects/Beta_Health/Beta_Health_Git pull origin master
             sudo pip install -r /home/luka/Projects/Beta_Health/Beta_Health_Git/Python_files/requirements.txt  
             mysql -u root -p"$MYSQL_PASSWORD" -h 127.0.0.1 -P 3307 Beta_Health < /home/luka/Projects/Beta_Health/Beta_Health_Git/MySQL_Scripts/init.sql
