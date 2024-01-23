@@ -177,21 +177,21 @@ def quickstart_new_case_menu():
 
 def quickstart(message):
     set_user_state(message.chat.id, 'quickstarting')
-    bot.send_chat_action(user_id, 'typing')
+    bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(2) 
     bot.send_message(message.chat.id, 'Моя задача -- сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка -- система \'кейсов\'.')
 
-    bot.send_chat_action(user_id, 'typing')
+    bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(5) 
     bot.send_message(message.chat.id,  '**Кейс** = жалобы и симптомы пациента + диагноз и рекоммендации врача.')
 
-    bot.send_chat_action(user_id, 'typing')
+    bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(10) 
     bot.send_message(message.chat.id, """Первую часть кейса составляем мы с Вами вместе. Сценарий такой: \n
     Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из данных Вами ответов я составляю текст. \n
     Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). """)
 
-    bot.send_chat_action(user_id, 'typing')
+    bot.send_chat_action(message.chat.id, 'typing')
     time.sleep(5) 
     bot.send_message(message.chat.id, 'Попробуем? Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
 
