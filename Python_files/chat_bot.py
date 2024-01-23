@@ -215,8 +215,8 @@ def summarize_into_case(memory):
     return summarizer_instance.summarize(memory)
 
 def send_documents(user_id, list_of_docs):
-    for path in list_of_docs:
-        bot.send_document(chat_id, doc)
+    for doc in list_of_docs:
+        bot.send_document(user_id, doc)
 
 def save_document(message):
     file_id = None
