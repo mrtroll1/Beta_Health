@@ -175,6 +175,28 @@ def quickstart_new_case_menu():
 
     return keyboard
 
+def quickstart(message):
+    set_user_state(message.chat.id, 'quickstarting')
+    bot.send_chat_action(user_id, 'typing')
+    time.sleep(2) 
+    bot.send_message(message.chat.id, 'Моя задача -- сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка -- система \'кейсов\'.')
+
+    bot.send_chat_action(user_id, 'typing')
+    time.sleep(5) 
+    bot.send_message(message.chat.id,  '**Кейс** = жалобы и симптомы пациента + диагноз и рекоммендации врача.')
+
+    bot.send_chat_action(user_id, 'typing')
+    time.sleep(10) 
+    bot.send_message(message.chat.id, """Первую часть кейса составляем мы с Вами вместе. Сценарий такой: \n
+    Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из данных Вами ответов я составляю текст. \n
+    Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). """)
+
+    bot.send_chat_action(user_id, 'typing')
+    time.sleep(5) 
+    bot.send_message(message.chat.id, 'Попробуем? Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
+
+    bot.send_message(message.chat.id, 'Нажимайте!', reply_markup=quickstart_new_case_menu())
+
 def summarize_into_case(memory): 
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
     return summarizer_instance.summarize(memory)
@@ -253,19 +275,7 @@ def handle_name_input(message):
 
     confirmation_msg = f"Очень приятно, {user_name}! Сейчас я расскажу, как всё работает..."
     bot.send_message(user_id, confirmation_msg)
-    bot.register_next_step_handler(message, quickstart)
-
-def quickstart(message):
-    user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    bot.send_message(message.chat.id, 'Моя задача - сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон.')
-    bot.send_message(message.chat.id, 'Моя главная фишка - система \'кейсов\'. Кейс = жалобы и симптомы пациента + диагноз и рекоммендации врача.')
-    bot.send_message(message.chat.id, """Первую часть кейса составляем мы с Вами вместе. Сценарий такой:
-    Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из данных Вами ответов я составляю текст.
-    Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). """)
-    bot.send_message(message.chat.id, 'Попробуем? Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
-    bot.send_message(message.chat.id, 'Нажимайте!', reply_markup=quickstart_new_case_menu())
-    set_user_state(message.chat.id, 'quickstarting')
-
+    quickstart(message)
 
 @bot.message_handler(commands=['help'])
 def send_help(message):
