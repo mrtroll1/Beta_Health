@@ -214,6 +214,10 @@ def summarize_into_case(memory):
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
     return summarizer_instance.summarize(memory)
 
+def send_documents(user_id, list_of_docs):
+    for path in list_of_docs:
+        bot.send_document(chat_id, doc)
+
 def save_document(message):
     file_id = None
     file_extension = None
@@ -270,7 +274,7 @@ def compile_case(case_id, recepient):
 
     if photo_group or document_group:
         bot.send_media_group(recepient, photo_group)
-        functions.send_documents(recepient, document_group)
+        send_documents(recepient, document_group)
         bot.send_message(recepient, case_text)
     else:
         bot.send_message(recepient, case_text)
