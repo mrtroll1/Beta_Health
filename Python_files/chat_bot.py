@@ -2,6 +2,7 @@ import os
 import mysql.connector
 import telebot
 import time
+from flask import Flask, request
 from telebot import types
 from bots import ChatBot, Summarizer
 import functions
@@ -13,9 +14,20 @@ from langchain_core.prompts import MessagesPlaceholder
 from langchain.schema import SystemMessage
 from langchain.prompts import HumanMessagePromptTemplate
 
-
 openai_api_key = os.environ.get('OPENAI_API_KEY')
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
+webhook_url = os.environ.get('WEBHOOK_URL')
+
+bot = telebot.TeleBot(TOKEN, threaded=False)
+bot.remove_webhook()  
+bot.set_webhook(url=webhook_url)
+
+app = Flask(__name__)
+
+@app.route('/yourbot', methods=['POST'])
+def webhook():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "OK", 200
 
 llm = ChatOpenAI(openai_api_key=openai_api_key)  
 
@@ -23,11 +35,11 @@ prompt = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
             content="""Ты - виртаульный ассистент врача. Твоя задача принять жалобу или вопрос от пациента и вступить с 
-            ним в диалог, задавая подходящие вопросы о его проблеме. Получи следующую информацию о симптомах: начало, локализация, продолжительность, характер, облегчающие/усугубляющие факторы, 
-            временная закономерность, интенсивность, история похожих болезней/симптомов. Задай как можно больше вопросов, чтобы собрать побольше деталей. 
+            ним в диалог, задавая вопросы о его проблеме. Получи следующую информацию о симптомах: начало, локализация, продолжительность, характер, облегчающие/усугубляющие факторы, 
+            временная закономерность, интенсивность, история похожих болезней/симптомов. Задай много вопросов, чтобы собрать много деталей. 
             Затем, твоя задача указать возможные причины для состояния пациента. Это сообщение должно оканчиваться двумя символами ##. 
-            Также, можешь посоветовать простые методы лечения, у которых известный уровень доказанности. 
-            Обращайся к пациенту на Вы (с большой буквы). Если какой-то вопрос или сообщение от пациента не соотвествует
+            Также, можешь посоветовать простые методы лечения, у которых известный уровень доказанности. Это сообщение тоже должно оканчиваться двумя символами ##
+            Обращайся к пациенту на Вы. Если какой-то вопрос или сообщение от пациента не соотвествует
             тематике здравоохранения, то напомни ему об этом. Старайся писать не длинные сообщения."""
         ),  
         MessagesPlaceholder(
@@ -44,7 +56,7 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
         SystemMessage(
             content="""Тебе на вход даётся диалог ассистента AI и пациента Human. 
             Твоя задача, сохраня все фактические детали, проссумировать переданную пациентом информацию
-            о его состоянии. Твой ответ доленж иметь две секции: жалобы и рекоммендации. Не используй в тексте слова "пациент" или "у вас". 
+            о его состоянии. Твой ответ доленж иметь две секции: жалобы и предворительные рекоммендации. Не используй в тексте слова "пациент" или "у вас". 
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
             Не указывай возможные причины. Не пиши рекомендации. Не задавай вопросов.
@@ -59,8 +71,6 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
         ),  
     ]
 )
-
-bot = telebot.TeleBot(telegram_api_token)
 
 user_state = {}
 user_memory = {}
@@ -474,4 +484,5 @@ def handle_document(message):
     else:
         bot.reply_to(message, "Увы, но данный формат файлов я не принимаю", reply_markup=more_documents_menu())
 
-bot.infinity_polling()
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000) 
