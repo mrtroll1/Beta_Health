@@ -106,17 +106,26 @@ def generate_case_id(user_id):
 
     
 def conversation_step(message, memory):
+    user_id = message.chat.id
     bot_instance = ChatBot(llm, prompt, memory)
 
-    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
-    bot.send_message(message.chat.id, response)
+    bot.send_message(user_id, response)
 
-    set_user_memory(message.chat.id, memory)
+    set_user_memory(user_id, memory)
 
     symbol_combination = '##'
     if symbol_combination in response:
-        bot.send_message(message.chat.id, 'Хотите прикрепить фото симптомов?', reply_markup=add_photo_menu())
+        if get_user_state(user_id) == 'quickstarting':
+            bot.send_chat_action(user_id, 'typing')
+            bot.send_message(user_id, 
+"""Кажется, я спросил всё, что хотел. Надеюсь, наш первый диалог прошёл хорошо. 
+Чуть позже у Вас будет возможность что-то изменить или добавить. А сейчас — документы. (Если не знаете, что прикрепить, сделайте селфи!)""",
+            parse_mode='Markdown')
+            bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=quickstart_add_document_menu())
+        else:
+            bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=add_document_menu())
 
     
 def main_menu():
@@ -143,22 +152,22 @@ def accept_case_menu():
 
     return keyboard
 
-def add_photo_menu():
+def add_document_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Да", callback_data='add_photo')
+    button_1 = types.InlineKeyboardButton("Да", callback_data='add_document')
     button_2 = types.InlineKeyboardButton("Нет", callback_data='finalize_case')
 
     keyboard.add(button_1, button_2)
 
     return keyboard
 
-def more_photos_menu():
+def more_documents_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Да", callback_data='more_photos')
+    button_1 = types.InlineKeyboardButton("Да", callback_data='more_documents')
     button_2 = types.InlineKeyboardButton("Нет", callback_data='finalize_case')
 
     keyboard.add(button_1, button_2)
@@ -175,44 +184,60 @@ def quickstart_new_case_menu():
 
     return keyboard
 
+def quickstart_add_document_menu():
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
+
+    button_1 = types.InlineKeyboardButton("Хочу прикрепить!", callback_data='add_document')
+
+    keyboard.add(button_1)
+
+    return keyboard
+
 def quickstart(message):
     user_id = message.chat.id
     set_user_state(user_id, 'quickstarting')
     bot.send_chat_action(user_id, 'typing')
-    time.sleep(2) 
     bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='Markdown')
 
     bot.send_chat_action(user_id, 'typing')
-    time.sleep(10) 
-    bot.send_message(user_id, """
-    _Кейс_ = жалобы и симптомы пациента + диагноз и рекоммендации врача. \n
-    Первую часть кейса составляем мы с Вами вместе. Сценарий такой: \n
-    Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из данных Вами ответов я составляю текст. \n
-    Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). 
-    """, parse_mode='Markdown')
+    bot.send_message(user_id, 
+"""_Кейс_ = Ваши жалобы и симптомы + диагноз и рекоммендации врача. Первую часть кейса составляем мы с Вами вместе. Сценарий такой: \n
+Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из переданной информации я составляю текст. \n
+Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). \n
+Когда кейс будет готов, и Вы его утвердите, им можно будет поделиться с Вашим врачом.""", 
+    parse_mode='Markdown')
 
     bot.send_chat_action(user_id, 'typing')
-    time.sleep(5) 
-    bot.send_message(user_id, 'Попробуем? Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
+    bot.send_message(user_id, 'Надеюсь, я понятно объяснил. Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
     bot.send_message(user_id, 'Нажимайте!', reply_markup=quickstart_new_case_menu())
 
 def summarize_into_case(memory): 
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
     return summarizer_instance.summarize(memory)
 
-def save_photo(message):
+def save_document(message):
+    file_id = None
+    file_extension = None
+
     if isinstance(message.photo, list) and message.photo:
-        largest_photo = message.photo[-1]  
+        largest_photo = message.photo[-1]
         file_id = largest_photo.file_id
-    else:
-        print("No photos found in the message.")
+        file_extension = 'jpg' 
+
+    elif message.document:
+        file_id = message.document.file_id
+        file_extension = message.document.file_name.split('.')[-1]
+
+    if not file_id:
+        print("No supported files found in the message.")
         return
 
     file_info = bot.get_file(file_id)
     downloaded_file = bot.download_file(file_info.file_path)
 
     case_id = get_user_curr_case(message.chat.id)
-    case_specific_path, full_path = functions.save_image_to_server(downloaded_file, message.chat.id, case_id)
+    case_specific_path, full_path = functions.save_file_to_server(downloaded_file, message.chat.id, case_id, file_extension)
 
     functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
 
@@ -233,8 +258,13 @@ def compile_case(case_id, recepient):
         file_path = os.path.join(case_path, filename)
         functions.decrypt_file(file_path)
 
-        with open(file_path, 'rb') as file:
-            media_group.append(types.InputMediaPhoto(file.read()))
+        file_extension = os.path.splitext(filename)[1].lower()
+        if file_extension in ['.jpg', '.jpeg', '.png']:
+            with open(file_path, 'rb') as file:
+                media_group.append(types.InputMediaPhoto(file.read()))
+        elif file_extension == '.pdf':
+            with open(file_path, 'rb') as file:
+                media_group.append(types.InputMediaDocument(file.read()))
 
         functions.encrypt_file(file_path)
 
@@ -285,7 +315,7 @@ def send_help(message):
 @bot.message_handler(commands=['menu'])
 def show_main_menu(message):
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    bot.send_message(message.chat.id, f'Вот оно главное меню! {user_name}, как я могу Вам помочь?', reply_markup=main_menu())
+    bot.send_message(message.chat.id, f'{user_name}, как я могу Вам помочь?', reply_markup=main_menu())
 
 @bot.message_handler(commands=['info'])
 def send_info(message):
@@ -335,81 +365,83 @@ def edit_case(message):
     case_id = get_user_curr_case(message.chat.id)
     functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
-    compile_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
+    compile_case(get_user_curr_case(user_id), user_id)
     bot.send_message(message.chat.id, 'Отправляю врачу?', reply_markup=accept_case_menu())
 
-@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_photos'
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_documents'
                                             and not message.text.startswith('/'))
 def handle_photos(message):
-    save_photo(message)
-    bot.send_message(message.chat.id, 'Получил! Хотите отправить ещё фото?', reply_markup=more_photos_menu())
+    save_document(message)
+    bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
 
-
+фото
 
 
 #                                    """CALLBACK HANDLERS"""
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
+    user_id = call.message.chat.id
+
     if call.data == 'new_case':
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         
         memory.save_context({'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
-        set_user_memory(call.message.chat.id, memory)
+        set_user_memory(user_id, memory)
 
-        functions.increment_value('users', 'num_cases', 'user_id', call.message.chat.id)
-        case_id, num_cases = generate_case_id(call.message.chat.id)
-        set_user_curr_case(call.message.chat.id, case_id)
-        functions.add_user_case(case_id, f'Кейс {num_cases}', call.message.chat.id, 'started', '')
+        functions.increment_value('users', 'num_cases', 'user_id', user_id)
+        case_id, num_cases = generate_case_id(user_id)
+        set_user_curr_case(user_id, case_id)
+        functions.add_user_case(case_id, f'Кейс {num_cases}', user_id, 'started', '')
 
-        bot.send_message(call.message.chat.id, f'Кейс {num_cases}')
+        bot.send_message(user_id, f'Кейс {num_cases}')
 
-        bot.send_message(call.message.chat.id, "Начинаем новый кейс.")
-        if get_user_state(call.message.chat.id) == 'quickstarting':
-            bot.send_message(call.message.chat.id, 'Какие у Вас жалобы? (поделитесь реальной проблемой или подыграйте мне)') 
+        bot.send_message(user_id, "Начинаем новый кейс.")
+        if get_user_state(user_id) == 'quickstarting':
+            bot.send_message(user_id, 'Какие у Вас жалобы? (поделитесь реальной проблемой или подыграйте мне)') 
         else:
-            bot.send_message(call.message.chat.id, "Какие у вас жалобы?")
-            set_user_state(call.message.chat.id, 'creating_case')
+            bot.send_message(user_id, "Какие у вас жалобы?")
+            set_user_state(user_id, 'creating_case')
         
     elif call.data == 'my_cases':
-        bot.delete_message(chat_id=call.message.chat.id,
+        bot.delete_message(chat_id=user_id,
                               message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, "Список ваших кейсов:")
-        bot.send_message(call.message.chat.id, functions.get_itmes_from_table_by_key('case_name', 'user_cases', 'user_id', call.message.chat.id))
+        bot.send_message(user_id, "Список ваших кейсов:")
+        bot.send_message(user_id, functions.get_itmes_from_table_by_key('case_name', 'user_cases', 'user_id', user_id))
 
     elif call.data == 'send_case_to_doctor':
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        # bot.send_message(get_user_doctor(call.message.chat.id), get_user_memory(call.message.chat.id))
-        bot.send_message(call.message.chat.id, 'Отправил врачу! Он скоро с Вами свяжется.')
+        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        # bot.send_message(get_user_doctor(user_id), get_user_memory(user_id))
+        bot.send_message(user_id, 'Отправил врачу! Он скоро с Вами свяжется.')
 
     elif call.data == 'edit_case':
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Что бы Вы хотели изменить или добавить?')
-        set_user_state(call.message.chat.id, 'editing_case')
+        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        bot.send_message(user_id, 'Что бы Вы хотели изменить или добавить?')
+        set_user_state(user_id, 'editing_case')
     
-    elif call.data == 'add_photo':
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Отправляйте фотографии! (в общей сложности не больше 10)')
-        set_user_state(call.message.chat.id, 'sending_photos')
+    elif call.data == 'add_document':
+        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        bot.send_message(user_id, 'Отправляйте! (в общей сложности не больше 10 файлов)')
+        set_user_state(user_id, 'sending_documents')
 
-    elif call.data == 'more_photos':
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_message(call.message.chat.id, 'Присылайте следующие фото')
-        set_user_state(call.message.chat.id, 'sending_photos')
+    elif call.data == 'more_documents':
+        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        bot.send_message(user_id, 'Присылайте документы')
+        set_user_state(user_id, 'sending_documents')
         
     elif call.data == 'finalize_case':
-        bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        bot.send_chat_action(call.message.chat.id, 'typing')
+        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        bot.send_chat_action(user_id, 'typing')
 
-        case = summarize_into_case(get_user_memory(call.message.chat.id))
-        set_user_memory(call.message.chat.id, case)
-        case_id = get_user_curr_case(call.message.chat.id)
+        case = summarize_into_case(get_user_memory(user_id))
+        set_user_memory(user_id, case)
+        case_id = get_user_curr_case(user_id)
 
         functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
-        compile_case(get_user_curr_case(call.message.chat.id), call.message.chat.id)
-        bot.send_message(call.message.chat.id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=accept_case_menu())
+        compile_case(get_user_curr_case(user_id), user_id)
+        bot.send_message(user_id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=accept_case_menu())
         
 
 
@@ -417,13 +449,23 @@ def handle_query(call):
 #                                    """PHOTO HANDLER"""
 @bot.message_handler(content_types=['photo'])
 def handle_photos(message):
-    user_state = get_user_state(message.chat.id)
+    user_id = message.chat.id
+    user_state = get_user_state(user_id)
 
-    if user_state == 'sending_photos':
-        save_photo(message)
-        bot.send_message(message.chat.id, 'Получил! Хотите отправить ещё фото?', reply_markup=more_photos_menu())
+    if user_state == 'sending_documents':
+        save_document(message)
+        bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
 
     else:
         bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
+
+@bot.message_handler(content_types=['document'])
+def handle_document(message):
+    
+    if message.document.file_name.lower().endswith('.pdf'):
+        save_document(message)
+        bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
+    else:
+        bot.reply_to(message, "Увы, но данный формат файлов я не принимаю", reply_markup=more_documents_menu())
 
 bot.infinity_polling()

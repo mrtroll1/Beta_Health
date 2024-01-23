@@ -190,16 +190,17 @@ def encrypt_file(file_path):
     with open(file_path, 'wb') as encrypted_file:
         encrypted_file.write(encrypted_data)
 
-def save_image_to_server(downloaded_file, user_id, case_id):
+def save_file_to_server(downloaded_file, user_id, case_id):
     base_save_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
 
-    case_specific_path = os.path.join(base_save_path, case_id)
+    case_specific_path = os.path.join(base_save_path, str(case_id))
     if not os.path.exists(case_specific_path):
         os.makedirs(case_specific_path)
 
-    full_path = os.path.join(case_specific_path, generate_unique_filename())
-    with open(full_path, 'wb') as image_file:
-        image_file.write(downloaded_file)
+    unique_filename = generate_unique_filename() + '.' + file_extension
+    full_path = os.path.join(case_specific_path, unique_filename)
+    with open(full_path, 'wb') as file:
+        file.write(downloaded_file)
 
     encrypt_file(full_path)
     return case_specific_path, full_path
