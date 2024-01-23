@@ -16,7 +16,7 @@ from langchain.prompts import HumanMessagePromptTemplate
 
 openai_api_key = os.environ.get('OPENAI_API_KEY')
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
-webhook_url = os.environ.get('WEBHOOK_URL')
+# webhook_url = os.environ.get('WEBHOOK_URL')
 
 bot = telebot.TeleBot(telegram_api_token)
 
@@ -474,10 +474,5 @@ def handle_document(message):
         bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
     else:
         bot.reply_to(message, "Увы, но данный формат файлов я не принимаю", reply_markup=more_documents_menu())
-
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True) 
 
 bot.infinity_polling()
