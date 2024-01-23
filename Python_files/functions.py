@@ -217,7 +217,9 @@ def decrypt_file(file_path):
         return False
     return True
 
-
+def send_documents(user_id, list_of_docs):
+    for path in list_of_docs:
+        bot.send_document(chat_id, doc)
 
 
 

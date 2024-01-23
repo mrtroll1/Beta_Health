@@ -248,9 +248,11 @@ def compile_case(case_id, recepient):
         print(f"No directory found for case ID {case_id}")
         return
 
-    media_group = []
+    photo_group = []
+    document_group = []
     for filename in os.listdir(case_path):
-        if len(media_group) >= 10: 
+        if len(photo_group) + len(document_group) >= 10: 
+            bot.send_message(recepient, 'Только первые 10 файлов будут отправлены')
             break
 
         file_path = os.path.join(case_path, filename)
@@ -259,15 +261,16 @@ def compile_case(case_id, recepient):
         file_extension = os.path.splitext(filename)[1].lower()
         if file_extension in ['.jpg', '.jpeg', '.png']:
             with open(file_path, 'rb') as file:
-                media_group.append(types.InputMediaPhoto(file.read()))
+                photo_group.append(types.InputMediaPhoto(file.read()))
         elif file_extension == '.pdf':
             with open(file_path, 'rb') as file:
-                media_group.append(types.InputMediaDocument(file.read()))
+                document_group.append(types.InputMediaDocument(file.read()))
 
         functions.encrypt_file(file_path)
 
-    if media_group:
-        bot.send_media_group(recepient, media_group)
+    if photo_group or document_group:
+        bot.send_media_group(recepient, photo_group)
+        functions.send_documents(recepient, document_group)
         bot.send_message(recepient, case_text)
     else:
         bot.send_message(recepient, case_text)
