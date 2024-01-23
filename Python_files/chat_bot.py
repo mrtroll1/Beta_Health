@@ -18,17 +18,7 @@ openai_api_key = os.environ.get('OPENAI_API_KEY')
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 webhook_url = os.environ.get('WEBHOOK_URL')
 
-bot = telebot.TeleBot(telegram_api_token, threaded=False)
-bot.remove_webhook()  
-time.sleep(1)   
-bot.set_webhook(url=webhook_url)
-
-app = Flask(__name__)
-
-@app.route('/mybot', methods=['POST'])
-def webhook():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "OK", 200
+bot = telebot.TeleBot(telegram_api_token)
 
 llm = ChatOpenAI(openai_api_key=openai_api_key)  
 
@@ -488,4 +478,6 @@ def handle_document(message):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000) 
+    app.run(host="0.0.0.0", port=5000, debug=True) 
+
+bot.infinity_polling()
