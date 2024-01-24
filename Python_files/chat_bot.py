@@ -296,12 +296,12 @@ def compile_case(case_id, recepient):
 
         functions.encrypt_file(file_path)
 
-    if photo_group or document_group:
+    if photo_group:
         bot.send_media_group(recepient, photo_group)
+    if document_group:
         bot.send_media_group(recepient, document_group)
-        bot.send_message(recepient, case_text)
-    else:
-        bot.send_message(recepient, case_text)
+    
+    bot.send_message(recepient, case_text)
 
 
 
