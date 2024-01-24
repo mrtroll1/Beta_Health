@@ -46,12 +46,12 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
             content="""Тебе на вход даётся диалог ассистента AI и пациента Human. 
-            Твоя задача, сохраня все фактические детали, проссумировать переданную пациентом информацию
-            о его состоянии. Твой ответ доленж иметь две секции: жалобы и предворительные рекоммендации. Не используй в тексте слова "пациент" или "у вас". 
+            Твоя задача, сохраня все фактические детали, отформатировать переданную пациентом информацию
+            о его состоянии в текст. Твой ответ доленж иметь две секции: жалобы и предворительные рекоммендации. Не используй в тексте слова "пациент" или "у вас". 
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
-            Не указывай возможные причины. Не пиши рекомендации. Не задавай вопросов.
-            Используй только информацию и симптомы, содержащиеся в ответах пациента. 
+            Не указывай возможные причины. Не задавай вопросов.
+            Используй только  симптомы, содержащиеся в ответах пациента. 
             """
         ),  
         MessagesPlaceholder(
@@ -171,7 +171,7 @@ def accept_case_menu():
 
     button_1 = types.InlineKeyboardButton("Да, отправляй!", callback_data='send_case_to_doctor')
     button_2 = types.InlineKeyboardButton("Хочу изменить", callback_data='edit_case')
-    butoon_3 = types.InlineKeyboardButton("Сохрани, но не отправляй врачу", callback_data='save_and_not_share')
+    button_3 = types.InlineKeyboardButton("Сохрани, но не отправляй врачу", callback_data='save_and_not_share')
     button_4 = types.InlineKeyboardButton("Не сохраняй и не отправляй врачу", callback_data='delete_and_not_share')
 
     keyboard.add(button_1, button_2, button_3, button_4)
@@ -435,9 +435,8 @@ def handle_query(call):
         bot.send_message(user_id, "Список ваших кейсов:")
         cases_data_list = functions.get_items_from_table_by_key('case_data', 'user_cases', 'user_id', user_id)
         names = []
-        for case_data in case_data_list:
+        for case_data in cases_data_list:
             namer_instance = Namer(llm, namer_prompt, '')
-
             names.append(namer_instance.process_message(case_data))
         
         my_cases_menu(names)
