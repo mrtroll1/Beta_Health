@@ -34,8 +34,8 @@ class Namer(langchain.chains.llm.LLMChain):
 
         self.memory = memory  
     
-    def summarize(self, case_data):
-        
+    def name_case(self, case_data):
+
         return self.invoke(case_data)['text']
 
 
