@@ -4,7 +4,7 @@ import telebot
 import time
 from flask import Flask, request
 from telebot import types
-from bots import ChatBot, Summarizer
+from bots import ChatBot, Summarizer, Namer
 import functions
 from langchain.prompts import ChatPromptTemplate
 from langchain.memory import ConversationBufferMemory
