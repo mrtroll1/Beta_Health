@@ -18,7 +18,7 @@ CREATE TABLE user_doctors (
 
 CREATE TABLE user_cases (
     case_id VARCHAR(64) PRIMARY KEY,
-    case_name VARCHAR(64),
+    case_name VARCHAR(64) DEFAULT 'Без названия',
     user_id BIGINT NOT NULL,
     start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     end_time DATETIME DEFAULT NULL,

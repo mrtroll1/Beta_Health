@@ -155,12 +155,12 @@ def main_menu():
 
     return keyboard
 
-def my_cases_menu(list_of_case_names, list_of_case_ids):
+def my_cases_menu(case_names_list, case_ids_list):
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    for i in range(len(list_of_case_names)):
-        button = types.InlineKeyboardButton(list_of_case_names[i], callback_data=list_of_case_ids[i])
+    for i in range(len(case_names_list)):
+        button = types.InlineKeyboardButton(case_names_list[i], callback_data=case_ids_list[i])
         keyboard.add(button)
 
     return keyboard
@@ -430,17 +430,13 @@ def handle_query(call):
             set_user_state(user_id, 'creating_case')
         
     elif call.data == 'my_cases':
-        bot.delete_message(chat_id=user_id,
-                              message_id=call.message.message_id)
-        namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         bot.send_message(user_id, "Список ваших кейсов:")
-        cases_data_list = functions.get_items_from_table_by_key('case_data', 'user_cases', 'user_id', user_id)
-        cases_id_list = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
-        names = []
-        for case_data in cases_data_list:
-            names.append(namer_instance.name_case(case_data))
+        case_names_list = functions.get_items_from_table_by_key('case_data', 'user_cases', 'user_id', user_id)
+        case_ids_list = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
+        bot.send_message(user_id, f'Case 0 name: {case_names_list[0]}, id: {case_ids_list[0]}')
         
-        bot.send_message(user_id, 'Какой кейс Вас интересует?', reply_markup=my_cases_menu(names, cases_id_list))
+        bot.send_message(user_id, 'Какой кейс Вас интересует?', reply_markup=my_cases_menu(case_names_list, case_ids_list))
 
     elif call.data == 'send_case_to_doctor':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
@@ -471,10 +467,15 @@ def handle_query(call):
         case = summarize_into_case(get_user_memory(user_id))
         set_user_memory(user_id, case)
         case_id = get_user_curr_case(user_id)
-
         functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
         compile_case(get_user_curr_case(user_id), user_id)
+
+        namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        case_name = namer_instance.name_case(case)
+        bot.send_message(user_id, f'Я решил назвать этот кейс {case_name}')
+        functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
+        
         bot.send_message(user_id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=accept_case_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
     
