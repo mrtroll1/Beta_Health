@@ -314,7 +314,7 @@ def send_welcome(message):
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
     set_user_memory(user_id, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
     
-    if user_name == 'Обама':
+    if user_name:
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
         bot.send_message(user_id, "Как могу помочь?", reply_markup=main_menu())
