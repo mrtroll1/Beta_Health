@@ -20,7 +20,7 @@ telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 
 bot = telebot.TeleBot(telegram_api_token)
 
-llm = ChatOpenAI(openai_api_key=openai_api_key)  
+llm = ChatOpenAI(openai_api_key=openai_api_key, model_name='gpt-4')  
 
 prompt = ChatPromptTemplate.from_messages(
     [
