@@ -434,12 +434,13 @@ def handle_query(call):
                               message_id=call.message.message_id)
         bot.send_message(user_id, "Список ваших кейсов:")
         cases_data_list = functions.get_items_from_table_by_key('case_data', 'user_cases', 'user_id', user_id)
+        cases_id_list = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
         names = []
         for case_data in cases_data_list:
             namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
             names.append(namer_instance.name_case(case_data))
         
-        my_cases_menu(names)
+        my_cases_menu(names, case_id_list)
 
     elif call.data == 'send_case_to_doctor':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
