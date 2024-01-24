@@ -195,7 +195,7 @@ def add_user_doctor(doctor_id, user_id, doctor_name):
         if db_connection:
             db_connection.close()
 
-def add_user_case(case_id, case_name, user_id, case_status, case_data):
+def add_user_case(case_id, user_id, case_status):
     db_connection = connect()
     if db_connection is None:
         print("Database connection failed.")
@@ -203,8 +203,8 @@ def add_user_case(case_id, case_name, user_id, case_status, case_data):
 
     try:
         db_cursor = db_connection.cursor()
-        query = "INSERT INTO user_cases (case_id, case_name, user_id, case_status, case_data) VALUES (%s, %s, %s, %s, %s)"
-        db_cursor.execute(query, (case_id, case_name, user_id, case_status, case_data))
+        query = "INSERT INTO user_cases (case_id, user_id, case_status) VALUES (%s, %s, %s)"
+        db_cursor.execute(query, (case_id, user_id, case_status))
         db_connection.commit()
     except Error as e:
         print(f"Error: {e}")

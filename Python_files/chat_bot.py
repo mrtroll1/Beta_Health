@@ -418,9 +418,7 @@ def handle_query(call):
         functions.increment_value('users', 'num_cases', 'user_id', user_id)
         case_id, num_cases = generate_case_id(user_id)
         set_user_curr_case(user_id, case_id)
-        functions.add_user_case(case_id, f'Кейс {num_cases}', user_id, 'started', '')
-
-        bot.send_message(user_id, f'Кейс {num_cases}')
+        functions.add_user_case(case_id, user_id, 'started')
 
         bot.send_message(user_id, "Начинаем новый кейс.")
         if get_user_state(user_id) == 'quickstarting':
@@ -438,8 +436,6 @@ def handle_query(call):
 
         results = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
         case_ids = [item[0] for item in results]
-
-        bot.send_message(user_id, f'Case 0 name: {case_names[0]}, id: {case_ids[0]}')
         
         bot.send_message(user_id, 'Какой кейс Вас интересует?', reply_markup=my_cases_menu(case_names, case_ids))
 
@@ -474,7 +470,7 @@ def handle_query(call):
         case_id = get_user_curr_case(user_id)
         functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
-        compile_case(get_user_curr_case(user_id), user_id)
+        compile_case(case_id, user_id)
 
         namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)

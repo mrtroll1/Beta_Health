@@ -23,7 +23,7 @@ CREATE TABLE user_cases (
     start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     end_time DATETIME DEFAULT NULL,
     case_status VARCHAR(20),
-    case_data TEXT,
+    case_data TEXT DEFAULT NULL,
     case_media_path VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
