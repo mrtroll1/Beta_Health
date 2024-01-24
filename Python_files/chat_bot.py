@@ -440,7 +440,7 @@ def handle_query(call):
             namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
             names.append(namer_instance.name_case(case_data))
         
-        my_cases_menu(names, cases_id_list)
+        bot.sen_message(user_id, 'Какой кейс Вас интересует?', my_cases_menu(names, cases_id_list))
 
     elif call.data == 'send_case_to_doctor':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
