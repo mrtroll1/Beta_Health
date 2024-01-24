@@ -155,7 +155,7 @@ def main_menu():
 
     return keyboard
 
-def my_cases_menu(case_names_list, case_ids_list):
+def my_cases_menu(case_names, case_ids):
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
@@ -432,11 +432,16 @@ def handle_query(call):
     elif call.data == 'my_cases':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         bot.send_message(user_id, "Список ваших кейсов:")
-        case_names_list = functions.get_items_from_table_by_key('case_data', 'user_cases', 'user_id', user_id)
-        case_ids_list = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
-        bot.send_message(user_id, f'Case 0 name: {case_names_list[0]}, id: {case_ids_list[0]}')
+
+        results = functions.get_items_from_table_by_key('case_name', 'user_cases', 'user_id', user_id)
+        case_names = [item[0] for item in results]
+
+        results = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
+        case_ids = [item[0] for item in results]
+
+        bot.send_message(user_id, f'Case 0 name: {case_names[0]}, id: {case_ids[0]}')
         
-        bot.send_message(user_id, 'Какой кейс Вас интересует?', reply_markup=my_cases_menu(case_names_list, case_ids_list))
+        bot.send_message(user_id, 'Какой кейс Вас интересует?', reply_markup=my_cases_menu(case_names, case_ids))
 
     elif call.data == 'send_case_to_doctor':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
