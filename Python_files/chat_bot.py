@@ -436,7 +436,7 @@ def handle_query(call):
         cases_data_list = functions.get_items_from_table_by_key('case_data', 'user_cases', 'user_id', user_id)
         names = []
         for case_data in cases_data_list:
-            namer_instance = Namer(llm, namer_prompt, '')
+            namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
             names.append(namer_instance.process_message(case_data))
         
         my_cases_menu(names)
