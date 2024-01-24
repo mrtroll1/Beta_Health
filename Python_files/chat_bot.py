@@ -160,7 +160,7 @@ def my_cases_menu(list_of_case_names, list_of_case_ids):
     keyboard.row_width = 1
 
     for i in range(len(list_of_case_names)):
-        button = types.InlineKeyboardButton(list_of_cases[i], callback_data=list_of_case_ids[i])
+        button = types.InlineKeyboardButton(list_of_case_names[i], callback_data=list_of_case_ids[i])
         keyboard.add(button)
 
     return keyboard
