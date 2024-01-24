@@ -58,7 +58,7 @@ def get_item_from_table_by_key(item, table, key_column, key_value):
             db_connection.close()
 
 
-def get_itmes_from_table_by_key(item, table, key_column, key_value):
+def get_items_from_table_by_key(item, table, key_column, key_value):
     db_connection = connect()
     if db_connection is None:
         print("Database connection failed.")
@@ -101,6 +101,26 @@ def alter_table(table, column, new_value, key_column, key_value):
             db_cursor.close()
             db_connection.close()
 
+def delete_row_from_table_by_key(table, key_column, key_value):
+    db_connection = connect()  
+    if db_connection is None:
+        print("Database connection failed.")
+        return 
+
+    try:
+        db_cursor = db_connection.cursor()
+        query = f"DELETE FROM {table} WHERE {key_column} = %s"
+        db_cursor.execute(query, (key_value,))
+        db_connection.commit()  
+    
+    except Error as e:
+        print(f"Error: {e}")
+    finally:
+        if db_cursor:
+            db_cursor.close()
+        if db_connection:
+            db_connection.close()
+
 def increment_value(table, column, key_column, key_value):
     db_connection = connect()
     if db_connection is None:
@@ -110,6 +130,24 @@ def increment_value(table, column, key_column, key_value):
     try:
         db_cursor = db_connection.cursor()
         query = f"UPDATE {table} SET {column} = {column} + 1 WHERE {key_column} = %s"
+        db_cursor.execute(query, (key_value, ))
+        db_connection.commit()
+    except Error as e:
+        print(f"Error altering table: {e}")
+    finally:
+        if db_connection.is_connected():
+            db_cursor.close()
+            db_connection.close()
+
+def decrement_value(table, column, key_column, key_value):
+    db_connection = connect()
+    if db_connection is None:
+        print("Database connection failed.")
+        return
+
+    try:
+        db_cursor = db_connection.cursor()
+        query = f"UPDATE {table} SET {column} = {column} - 1 WHERE {key_column} = %s"
         db_cursor.execute(query, (key_value, ))
         db_connection.commit()
     except Error as e:
