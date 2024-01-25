@@ -182,7 +182,7 @@ def save_document(message):
             file_id = doc.file_id
             file_extension = 'pdf'
     elif message.document:
-        file_id = doc.file_id
+        file_id = message.document.file_id
         file_extension = 'pdf'
 
     if not file_id:
