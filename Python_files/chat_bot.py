@@ -31,7 +31,7 @@ prompt = ChatPromptTemplate.from_messages(
             Затем, твоя задача указать возможные причины для состояния пациента. Это сообщение должно оканчиваться двумя символами ##. 
             Также, можешь посоветовать простые методы лечения, у которых известный уровень доказанности. Это сообщение тоже должно оканчиваться двумя символами ##.
             Обращайся к пациенту на Вы. Если какой-то вопрос или сообщение от пациента не соотвествует
-            тематике здравоохранения, то напомни ему об этом. Старайся писать не длинные сообщения. Используй *bold* и _italics_ как markdown."""
+            тематике здравоохранения, то напомни ему об этом. Старайся писать не длинные сообщения. """
         ),  
         MessagesPlaceholder(
             variable_name="chat_history"
@@ -51,7 +51,7 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
             Не указывай возможные причины. Не задавай вопросов.
-            Используй только  симптомы, содержащиеся в ответах пациента. Используй *bold* и _italics_ как markdown."""
+            Используй только  симптомы, содержащиеся в ответах пациента. """
         ),  
         MessagesPlaceholder(
             variable_name="chat_history"
@@ -169,9 +169,11 @@ def quickstart(message):
     user_id = message.chat.id
     set_user_state(user_id, 'quickstarting')
     bot.send_chat_action(user_id, 'typing')
+    time.sleep(3)
     bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='Markdown')
 
     bot.send_chat_action(user_id, 'typing')
+    time.sleep(4)
     bot.send_message(user_id, 
 """_Кейс_ = Ваши жалобы и симптомы + диагноз и рекоммендации врача. Первую часть кейса составляем мы с Вами вместе. Сценарий такой: \n
 Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из переданной информации я составляю текст. \n
@@ -180,7 +182,10 @@ def quickstart(message):
     parse_mode='Markdown')
 
     bot.send_chat_action(user_id, 'typing')
+    time.sleep(4)
     bot.send_message(user_id, 'Надеюсь, я понятно объяснил. Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
+    bot.send_chat_action(user_id, 'typing')
+    time.sleep(2)
     bot.send_message(user_id, 'Нажимайте!', reply_markup=menus.quickstart_new_case_menu())
 
 def summarize_into_case(memory): 
@@ -435,6 +440,7 @@ def handle_query(call):
         
     elif call.data == 'finalize_case':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        bot.send_message(user_id, 'Составляю кейс ...')
         bot.send_chat_action(user_id, 'typing')
 
         case = summarize_into_case(get_user_memory(user_id))
@@ -446,7 +452,7 @@ def handle_query(call):
 
         namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
-        bot.send_message(user_id, f'Я решил назвать этот кейс {case_name}')
+        bot.send_message(user_id, f'Я решил назвать этот кейс {case_name}. (я не самый талантливый автор названий)')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
         bot.send_message(user_id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=menus.accept_case_menu())
