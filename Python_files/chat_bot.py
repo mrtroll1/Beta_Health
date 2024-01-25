@@ -333,7 +333,7 @@ def send_welcome(message):
         set_user_state(user_id, 'awaiting_menu_choice')
         
     else:
-        welcome_msg = "Добро пожаловать на Beta-Health! Как я могу к Вам обращаться?"
+        welcome_msg = "Добро пожаловать! Как я могу к Вам обращаться?"
         bot.send_message(user_id, welcome_msg)
         bot.register_next_step_handler(message, handle_name_input)
 
