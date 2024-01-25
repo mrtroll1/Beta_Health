@@ -185,7 +185,8 @@ def quickstart(message):
 
 def summarize_into_case(memory): 
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
-    return summarizer_instance.summarize(memory)
+    summary = summarizer_instance.summarize(memory)
+    return chatgpt_to_telegram_markdown(summary)
 
 def save_document(message):
     file_id = None
