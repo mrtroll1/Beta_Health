@@ -128,7 +128,7 @@ def conversation_step(message, memory):
 
     bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
-    bot.send_message(user_id, response, parse_mode='Markdown')
+    bot.send_message(user_id, response, parse_mode='HTML')
 
     set_user_memory(user_id, memory)
 
@@ -138,7 +138,7 @@ def conversation_step(message, memory):
             bot.send_chat_action(user_id, 'typing')
             bot.send_message(user_id, 
 """Кажется, я спросил всё, что хотел. Надеюсь, Вам понравился наш первый диалог. Чуть позже у Вас будет возможность что-то изменить или добавить. А сейчас — документы. (Если не знаете, что прикрепить, сделайте селфи!)""",
-            parse_mode='Markdown')
+            parse_mode='HTML')
             bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=quickstart_add_document_menu())
         else:
             bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=add_document_menu())
@@ -224,7 +224,7 @@ def quickstart(message):
     user_id = message.chat.id
     set_user_state(user_id, 'quickstarting')
     bot.send_chat_action(user_id, 'typing')
-    bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='Markdown')
+    bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='HTML')
 
     bot.send_chat_action(user_id, 'typing')
     bot.send_message(user_id, 
@@ -232,7 +232,7 @@ def quickstart(message):
 Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из переданной информации я составляю текст. \n
 Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). \n
 Когда кейс будет готов, и Вы его утвердите, им можно будет поделиться с Вашим врачом.""", 
-    parse_mode='Markdown')
+    parse_mode='HTML')
 
     bot.send_chat_action(user_id, 'typing')
     bot.send_message(user_id, 'Надеюсь, я понятно объяснил. Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
@@ -301,7 +301,7 @@ def compile_case(case_id, recepient):
     if document_group:
         bot.send_media_group(recepient, document_group)
     
-    bot.send_message(recepient, case_text, parse_mode='Markdown')
+    bot.send_message(recepient, case_text, parse_mode='HTML')
 
 
 
