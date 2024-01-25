@@ -27,11 +27,11 @@ prompt = ChatPromptTemplate.from_messages(
         SystemMessage(
             content="""Ты - виртаульный ассистент врача. Твоя задача принять жалобу или вопрос от пациента и вступить с 
             ним в диалог, задавая вопросы о его проблеме. Получи следующую информацию о симптомах: начало, локализация, продолжительность, характер, облегчающие/усугубляющие факторы, 
-            временная закономерность, интенсивность, история похожих болезней/симптомов. Задай много вопросов, чтобы собрать много деталей. 
+            временная закономерность, интенсивность, история похожих болезней/симптомов. Задай много вопросов, чтобы собрать много деталей. Каждый вопрос должен быть отдельным сообщением. 
             Затем, твоя задача указать возможные причины для состояния пациента. Это сообщение должно оканчиваться двумя символами ##. 
-            Также, можешь посоветовать простые методы лечения, у которых известный уровень доказанности. Это сообщение тоже должно оканчиваться двумя символами ##
+            Также, можешь посоветовать простые методы лечения, у которых известный уровень доказанности. Это сообщение тоже должно оканчиваться двумя символами ##.
             Обращайся к пациенту на Вы. Если какой-то вопрос или сообщение от пациента не соотвествует
-            тематике здравоохранения, то напомни ему об этом. Старайся писать не длинные сообщения."""
+            тематике здравоохранения, то напомни ему об этом. Старайся писать не длинные сообщения. Используй *bold* и _italics_ как markdown."""
         ),  
         MessagesPlaceholder(
             variable_name="chat_history"
@@ -51,7 +51,7 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
             Не указывай возможные причины. Не задавай вопросов.
-            Используй только  симптомы, содержащиеся в ответах пациента. 
+            Используй только  симптомы, содержащиеся в ответах пациента. Используй *bold* и _italics_ как markdown.
             """
         ),  
         MessagesPlaceholder(
@@ -128,7 +128,7 @@ def conversation_step(message, memory):
 
     bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
-    bot.send_message(user_id, response, parse_mode='HTML')
+    bot.send_message(user_id, response, parse_mode='MarkdownV2')
 
     set_user_memory(user_id, memory)
 
@@ -138,7 +138,7 @@ def conversation_step(message, memory):
             bot.send_chat_action(user_id, 'typing')
             bot.send_message(user_id, 
 """Кажется, я спросил всё, что хотел. Надеюсь, Вам понравился наш первый диалог. Чуть позже у Вас будет возможность что-то изменить или добавить. А сейчас — документы. (Если не знаете, что прикрепить, сделайте селфи!)""",
-            parse_mode='HTML')
+            parse_mode='MarkdownV2')
             bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=quickstart_add_document_menu())
         else:
             bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=add_document_menu())
@@ -224,7 +224,7 @@ def quickstart(message):
     user_id = message.chat.id
     set_user_state(user_id, 'quickstarting')
     bot.send_chat_action(user_id, 'typing')
-    bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='HTML')
+    bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='MarkdownV2')
 
     bot.send_chat_action(user_id, 'typing')
     bot.send_message(user_id, 
@@ -232,7 +232,7 @@ def quickstart(message):
 Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из переданной информации я составляю текст. \n
 Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). \n
 Когда кейс будет готов, и Вы его утвердите, им можно будет поделиться с Вашим врачом.""", 
-    parse_mode='HTML')
+    parse_mode='MarkdownV2')
 
     bot.send_chat_action(user_id, 'typing')
     bot.send_message(user_id, 'Надеюсь, я понятно объяснил. Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
@@ -301,7 +301,7 @@ def compile_case(case_id, recepient):
     if document_group:
         bot.send_media_group(recepient, document_group)
     
-    bot.send_message(recepient, case_text, parse_mode='HTML')
+    bot.send_message(recepient, case_text, parse_mode='MarkdownV2')
 
 
 
