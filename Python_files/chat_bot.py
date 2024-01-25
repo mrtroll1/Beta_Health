@@ -2,7 +2,6 @@ import os
 import mysql.connector
 import telebot
 import time
-from flask import Flask, request
 from telebot import types
 from bots import ChatBot, Summarizer, Namer
 import functions
@@ -121,6 +120,25 @@ def generate_case_id(user_id):
 
     return f"{user_id}_{num_cases}", num_cases
 
+
+def chatgpt_to_telegram_markdown(input_text):
+    bold_transformed = input_text.replace('**', '*')
+
+    italics_transformed = ''
+    skip_next = False
+    for i, char in enumerate(bold_transformed):
+        if skip_next:
+            skip_next = False
+            continue
+
+        if char == '*' and (i == 0 or bold_transformed[i-1] != '*') and (i == len(bold_transformed) - 1 or bold_transformed[i+1] != '*'):
+            italics_transformed += '_'
+        else:
+            italics_transformed += char
+            if char == '*':
+                skip_next = True
+
+    return italics_transformed
     
 def conversation_step(message, memory):
     user_id = message.chat.id
@@ -128,7 +146,8 @@ def conversation_step(message, memory):
 
     bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
-    bot.send_message(user_id, response, parse_mode='HTML')
+    response = chatgpt_to_telegram_markdown(response)
+    bot.send_message(user_id, response, parse_mode='Markdown')
 
     set_user_memory(user_id, memory)
 
@@ -138,7 +157,7 @@ def conversation_step(message, memory):
             bot.send_chat_action(user_id, 'typing')
             bot.send_message(user_id, 
 """Кажется, я спросил всё, что хотел. Надеюсь, Вам понравился наш первый диалог. Чуть позже у Вас будет возможность что-то изменить или добавить. А сейчас — документы. (Например, сделайте селфи!)""",
-            parse_mode='MarkdownV2')
+            parse_mode='Markdown')
             bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.quickstart_add_document_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
         else:
@@ -231,7 +250,7 @@ def compile_case(case_id, recepient):
     if document_group:
         bot.send_media_group(recepient, document_group)
     
-    bot.send_message(recepient, case_text, parse_mode='HTML')
+    bot.send_message(recepient, case_text, parse_mode='Markdown')
 
 
 
@@ -316,10 +335,8 @@ def edit_case(message):
     bot.send_chat_action(user_id, 'typing')
 
     case = summarize_into_case(memory)
-    bot.send_message(user_id, case)
     set_user_memory(user_id, case)
     case_id = get_user_curr_case(user_id)
-    bot.send_message(user_id, case_id)
     functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
     compile_case(case_id, user_id)
@@ -402,7 +419,7 @@ def handle_query(call):
     
     elif call.data == 'add_document':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'Отправляйте! (фото или pdf, в общей сложности не больше 10 файлов)')
+        bot.send_message(user_id, 'Отправляйте! (Лучше по одному фото или pdf за раз. В общей сложности не больше 10 файлов)')
         set_user_state(user_id, 'sending_documents')
 
     elif call.data == 'quickstart_add_document':
