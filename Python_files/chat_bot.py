@@ -6,6 +6,7 @@ from flask import Flask, request
 from telebot import types
 from bots import ChatBot, Summarizer, Namer
 import functions
+import menus 
 from langchain.prompts import ChatPromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
@@ -31,7 +32,7 @@ prompt = ChatPromptTemplate.from_messages(
             Затем, твоя задача указать возможные причины для состояния пациента. Это сообщение должно оканчиваться двумя символами ##. 
             Также, можешь посоветовать простые методы лечения, у которых известный уровень доказанности. Это сообщение тоже должно оканчиваться двумя символами ##.
             Обращайся к пациенту на Вы. Если какой-то вопрос или сообщение от пациента не соотвествует
-            тематике здравоохранения, то напомни ему об этом. Старайся писать не длинные сообщения. Используй html как markdown."""
+            тематике здравоохранения, то напомни ему об этом. Старайся писать не длинные сообщения. Используй *bold* и _italics_ как markdown."""
         ),  
         MessagesPlaceholder(
             variable_name="chat_history"
@@ -51,8 +52,7 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
             Не указывай возможные причины. Не задавай вопросов.
-            Используй только  симптомы, содержащиеся в ответах пациента. Используй html как markdown.
-            """
+            Используй только  симптомы, содержащиеся в ответах пациента. Используй *bold* и _italics_ как markdown."""
         ),  
         MessagesPlaceholder(
             variable_name="chat_history"
@@ -139,98 +139,12 @@ def conversation_step(message, memory):
             bot.send_message(user_id, 
 """Кажется, я спросил всё, что хотел. Надеюсь, Вам понравился наш первый диалог. Чуть позже у Вас будет возможность что-то изменить или добавить. А сейчас — документы. (Например, сделайте селфи!)""",
             parse_mode='HTML')
-            bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=quickstart_add_document_menu())
+            bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.quickstart_add_document_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
         else:
-            bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=add_document_menu())
+            bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.add_document_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
 
-    
-def main_menu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    button_1 = types.InlineKeyboardButton("Новый кейс", callback_data='new_case')
-    button_2 = types.InlineKeyboardButton("Мои кейсы", callback_data='my_cases')
-
-    keyboard.add(button_1, button_2)
-
-    return keyboard
-
-def my_cases_menu(case_names, case_ids):
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    for i in range(len(case_names)):
-        button = types.InlineKeyboardButton(case_names[i], callback_data=case_ids[i])
-        keyboard.add(button)
-
-    return keyboard
-
-def accept_case_menu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    button_1 = types.InlineKeyboardButton("Да, отправляй!", callback_data='send_case_to_doctor')
-    button_2 = types.InlineKeyboardButton("Хочу изменить", callback_data='edit_case')
-    button_3 = types.InlineKeyboardButton("Сохрани, но не отправляй врачу", callback_data='save_and_not_share')
-    button_4 = types.InlineKeyboardButton("Не сохраняй и не отправляй врачу", callback_data='delete_and_not_share')
-
-    keyboard.add(button_1, button_2, button_3, button_4)
-
-    return keyboard
-
-def add_document_menu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    button_1 = types.InlineKeyboardButton("Да", callback_data='add_document')
-    button_2 = types.InlineKeyboardButton("Нет", callback_data='finalize_case')
-
-    keyboard.add(button_1, button_2)
-
-    return keyboard
-
-def more_documents_menu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    button_1 = types.InlineKeyboardButton("Да", callback_data='more_documents')
-    button_2 = types.InlineKeyboardButton("Нет", callback_data='finalize_case')
-
-    keyboard.add(button_1, button_2)
-
-    return keyboard
-
-def quickstart_new_case_menu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    button_1 = types.InlineKeyboardButton("Начать новый кейс", callback_data='new_case')
-
-    keyboard.add(button_1)
-
-    return keyboard
-
-def quickstart_add_document_menu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    button_1 = types.InlineKeyboardButton("Хочу!", callback_data='quickstart_add_document')
-
-    keyboard.add(button_1)
-
-    return keyboard
-
-def quickstart_finalize_case_menu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    button_1 = types.InlineKeyboardButton("Давай!", callback_data='quickstart_finalize_case')
-
-    keyboard.add(button_1)
-
-    return keyboard
 
 def quickstart(message):
     user_id = message.chat.id
@@ -248,7 +162,7 @@ def quickstart(message):
 
     bot.send_chat_action(user_id, 'typing')
     bot.send_message(user_id, 'Надеюсь, я понятно объяснил. Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
-    bot.send_message(user_id, 'Нажимайте!', reply_markup=quickstart_new_case_menu())
+    bot.send_message(user_id, 'Нажимайте!', reply_markup=menus.quickstart_new_case_menu())
 
 def summarize_into_case(memory): 
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
@@ -329,7 +243,7 @@ def send_welcome(message):
     if user_name:
         welcome_msg = f"Здравствуйте, {user_name}!"
         bot.send_message(user_id, welcome_msg)
-        bot.send_message(user_id, "Как могу помочь?", reply_markup=main_menu())
+        bot.send_message(user_id, "Как могу помочь?", reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
         
     else:
@@ -356,7 +270,7 @@ def send_help(message):
 @bot.message_handler(commands=['menu'])
 def show_main_menu(message):
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    bot.send_message(message.chat.id, f'{user_name}, как я могу Вам помочь?', reply_markup=main_menu())
+    bot.send_message(message.chat.id, f'{user_name}, как я могу Вам помочь?', reply_markup=menus.main_menu())
     set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 @bot.message_handler(commands=['info'])
@@ -403,7 +317,7 @@ def edit_case(message):
     functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
     compile_case(get_user_curr_case(user_id), user_id)
-    bot.send_message(user_id, 'Отправляю врачу?', reply_markup=accept_case_menu())
+    bot.send_message(user_id, 'Отправляю врачу?', reply_markup=menus.accept_case_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_documents'
@@ -411,7 +325,7 @@ def edit_case(message):
 def handle_photos(message):
     save_document(message)
     if get_user_state != 'awaiting_menu_choice':
-        bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
+        bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
         set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstart_sending_documents'
@@ -420,7 +334,7 @@ def handle_photos(message):
     save_document(message)
     if get_user_state != 'awaiting_menu_choice':
         bot.send_message(message.chat.id, 'Получил!')
-        bot.send_message(message.chat.id, 'Наш пробный кейс готов! Показать?', reply_markup=quickstart_finalize_case_menu())
+        bot.send_message(message.chat.id, 'Наш пробный кейс готов! Показать?', reply_markup=menus.quickstart_finalize_case_menu())
         set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 
@@ -460,7 +374,11 @@ def handle_query(call):
         results = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
         case_ids = [item[0] for item in results]
         
-        bot.send_message(user_id, 'Список Ваших кейсов:', reply_markup=my_cases_menu(case_names, case_ids))
+        bot.send_message(user_id, 'Список Ваших кейсов:', reply_markup=menus.my_cases_menu(case_names, case_ids))
+    
+    elif call.data == 'my_subscriptions':
+        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        bot.send_message(user_id, 'У Вас нет активных подписок.')
 
     elif call.data == 'send_case_to_doctor':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
@@ -468,7 +386,7 @@ def handle_query(call):
         # bot.send_message(get_user_doctor(user_id), get_user_memory(user_id))
         # functions.alter_table('user_cases', 'case_status', 'shared', 'case_id', case_id)
         # bot.send_message(user_id, 'Отправил врачу! Он скоро с Вами свяжется.')
-        # bot.send_message(user_id, 'Лука', reply_markup=main_menu())
+        # bot.send_message(user_id, 'Лука', reply_markup=menus.main_menu())
         # set_user_state(user_id, 'awaiting_menu_choice')
 
     elif call.data == 'edit_case':
@@ -507,7 +425,7 @@ def handle_query(call):
         bot.send_message(user_id, f'Я решил назвать этот кейс {case_name}')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
-        bot.send_message(user_id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=accept_case_menu())
+        bot.send_message(user_id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=menus.accept_case_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
 
     elif call.data == 'quickstart_finalize_case':
@@ -526,7 +444,7 @@ def handle_query(call):
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
         bot.send_message(user_id, 'Теперь Вы умеете создавать кейсы. Чтобы начать делиться ими с доктором, нужно оформить подписку.')
-        bot.send_message(user_id, 'Главное меню', reply_markup=main_menu())
+        bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'save_and_not_share':
@@ -537,7 +455,7 @@ def handle_query(call):
         case_name = functions.get_item_from_table_by_key('case_name', 'user_cases', 'case_id', case_id)
         bot.send_message(user_id, f'{case_name} сохранён.')
         functions.alter_table('user_cases', 'case_status', 'saved', 'case_id', case_id)
-        bot.send_message(user_id, 'Главное меню', reply_markup=main_menu())
+        bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'delete_and_not_share':
@@ -547,7 +465,7 @@ def handle_query(call):
         functions.delete_row_from_table_by_key('user_cases', 'case_id', case_id)
         functions.decrement_value('users', 'num_cases', 'user_id', user_id)
         bot.send_message(user_id, 'Кейс удалён.')
-        bot.send_message(user_id, 'Главное меню', reply_markup=main_menu())
+        bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
@@ -569,13 +487,14 @@ def handle_photos(message):
 
     if user_state == 'sending_documents':
         save_document(message)
-        bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
-        set_user_state(message.from_user.id, 'awaiting_menu_choice')
+        bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+        set_user_state(user_id, 'awaiting_menu_choice')
     
     elif user_state == 'quickstart_sending_documents':
         save_document(message)
-        bot.send_message(user_id, 'Получил!', reply_markup=quickstart_finalize_case_menu())
-        set_user_state(message.from_user.id, 'awaiting_menu_choice')
+        bot.send_message(user_id, 'Получил!') 
+        bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
+        set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
         bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
@@ -588,20 +507,21 @@ def handle_document(message):
     if user_state == 'sending_documents':
         if message.document.file_name.lower().endswith('.pdf'):
             save_document(message)
-            bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
-            set_user_state(message.from_user.id, 'awaiting_menu_choice')
+            bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+            set_user_state(user_id, 'awaiting_menu_choice')
         else:
-            bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=more_documents_menu())
-            set_user_state(message.from_user.id, 'awaiting_menu_choice')
+            bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.more_documents_menu())
+            set_user_state(user_id, 'awaiting_menu_choice')
 
     elif user_state == 'quickstart_sending_documents':
         if message.document.file_name.lower().endswith('.pdf'):
             save_document(message)
-            bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=quickstart_finalize_case_menu())
-            set_user_state(message.from_user.id, 'awaiting_menu_choice')
+            bot.send_message(user_id, 'Получил!', reply_markup=menus.quickstart_finalize_case_menu())
+            bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
+            set_user_state(user_id, 'awaiting_menu_choice')
         else:
-            bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=quickstart_add_document_menu())
-            set_user_state(message.from_user.id, 'awaiting_menu_choice')
+            bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.quickstart_add_document_menu())
+            set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
         bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
