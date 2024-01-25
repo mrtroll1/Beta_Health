@@ -266,6 +266,9 @@ def compile_case(case_id, recepient):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.chat.id
+    bot.send_message(user_id, '*bold text* _italic text_ [inline URL](http://www.example.com/) [inline mention of a user](tg://user?id=123456789)', parse_mode='Markdown')
+    
+
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
     set_user_memory(user_id, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
     
@@ -452,7 +455,7 @@ def handle_query(call):
 
         namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
-        bot.send_message(user_id, f'Я решил назвать этот кейс {case_name}. (я не самый талантливый автор названий)')
+        bot.send_message(user_id, f'Я решил назвать этот кейс {case_name} (я не самый талантливый автор названий)')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
         bot.send_message(user_id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=menus.accept_case_menu())
