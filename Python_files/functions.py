@@ -4,6 +4,7 @@ from mysql.connector import Error
 import time
 import uuid
 import telebot
+import shutil
 from cryptography.fernet import Fernet
 import mysql.connector
 from mysql.connector import Error
@@ -254,6 +255,13 @@ def decrypt_file(file_path):
         print(f'Error during decryption: {e}')
         return False
     return True
+
+def delete_case_data(case_id):
+    directory_path = f"/home/luka/Projects/Beta_Health/User_data/Cases/{case_id}"
+    
+    if os.path.exists(directory_path):
+        shutil.rmtree(directory_path)
+
 
 
 

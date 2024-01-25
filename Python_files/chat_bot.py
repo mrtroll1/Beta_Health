@@ -483,7 +483,7 @@ def handle_query(call):
 
         case_id = get_user_curr_case(user_id)
         case_name = functions.get_item_from_table_by_key('case_name', 'user_cases', 'case_id', case_id)
-        bot.send_message(user_id, f'{case_name} сохранён.')
+        bot.send_message(user_id, f'Кейс {case_name} сохранён.')
         functions.alter_table('user_cases', 'case_status', 'saved', 'case_id', case_id)
         bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
@@ -493,6 +493,7 @@ def handle_query(call):
         bot.send_chat_action(user_id, 'typing')
         case_id = get_user_curr_case(user_id)
         functions.delete_row_from_table_by_key('user_cases', 'case_id', case_id)
+        functions.delete_case(case_id)
         functions.decrement_value('users', 'num_cases', 'user_id', user_id)
         bot.send_message(user_id, 'Кейс удалён.')
         bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
