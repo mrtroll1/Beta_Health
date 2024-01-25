@@ -177,8 +177,12 @@ def save_document(message):
         file_id = largest_photo.file_id
         file_extension = 'jpg' 
 
-    elif isinstance(message.document, list) and message.document:
-        file_id = message.document.file_id
+    elif isinstance(message.document, list):
+        for doc in message.document:
+            file_id = doc.file_id
+            file_extension = 'pdf'
+    elif message.document:
+        file_id = doc.file_id
         file_extension = 'pdf'
 
     if not file_id:
@@ -511,7 +515,7 @@ def handle_document(message):
             if get_user_state != 'awaiting_menu_choice':
                 bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
                 set_user_state(message.chat.id, 'awaiting_menu_choice')
-                
+            
         else:
             bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.more_documents_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
