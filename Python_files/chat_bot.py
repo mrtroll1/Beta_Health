@@ -301,7 +301,7 @@ def compile_case(case_id, recepient):
     if document_group:
         bot.send_media_group(recepient, document_group)
     
-    bot.send_message(recepient, case_text)
+    bot.send_message(recepient, case_text, parse_mode='Markdown')
 
 
 
