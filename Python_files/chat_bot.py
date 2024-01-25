@@ -179,7 +179,7 @@ def save_document(message):
 
     elif isinstance(message.document, list) and message.document:
         file_id = message.document.file_id
-        file_extension = message.document.file_name.split('.')[-1]
+        file_extension = 'pdf'
 
     if not file_id:
         print("No supported files found in the message.")
@@ -487,9 +487,10 @@ def handle_photos(message):
 
     if user_state == 'sending_documents':
         save_document(message)
-        bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
-        set_user_state(user_id, 'awaiting_menu_choice')
-    
+        if get_user_state != 'awaiting_menu_choice':
+            bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+            set_user_state(message.chat.id, 'awaiting_menu_choice')
+        
     elif user_state == 'quickstart_sending_documents':
         save_document(message)
         bot.send_message(user_id, 'Получил!') 
@@ -507,8 +508,10 @@ def handle_document(message):
     if user_state == 'sending_documents':
         if message.document.file_name.lower().endswith('.pdf'):
             save_document(message)
-            bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
-            set_user_state(user_id, 'awaiting_menu_choice')
+            if get_user_state != 'awaiting_menu_choice':
+                bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+                set_user_state(message.chat.id, 'awaiting_menu_choice')
+                
         else:
             bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.more_documents_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
