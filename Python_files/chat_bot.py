@@ -567,9 +567,14 @@ def handle_photos(message):
     user_id = message.chat.id
     user_state = get_user_state(user_id)
 
-    if user_state == 'sending_documents' or user_state == 'quickstart_sending_documents':
+    if user_state == 'sending_documents':
         save_document(message)
         bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
+        set_user_state(message.from_user.id, 'awaiting_menu_choice')
+    
+    elif user_state == 'quickstart_sending_documents':
+        save_document(message)
+        bot.send_message(user_id, 'Получил!', reply_markup=quickstart_finalize_case_menu())
         set_user_state(message.from_user.id, 'awaiting_menu_choice')
 
     else:
@@ -580,7 +585,7 @@ def handle_document(message):
     user_id = message.chat.id
     user_state = get_user_state(user_id)
     
-    if user_state == 'sending_documents' or user_state == 'quickstart_sending_documents':
+    if user_state == 'sending_documents':
         if message.document.file_name.lower().endswith('.pdf'):
             save_document(message)
             bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=more_documents_menu())
@@ -588,6 +593,16 @@ def handle_document(message):
         else:
             bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=more_documents_menu())
             set_user_state(message.from_user.id, 'awaiting_menu_choice')
+
+    elif user_state == 'quickstart_sending_documents':
+        if message.document.file_name.lower().endswith('.pdf'):
+            save_document(message)
+            bot.send_message(user_id, 'Получил! Хотите отправить больше документов?', reply_markup=quickstart_finalize_case_menu())
+            set_user_state(message.from_user.id, 'awaiting_menu_choice')
+        else:
+            bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=quickstart_add_document_menu())
+            set_user_state(message.from_user.id, 'awaiting_menu_choice')
+
     else:
         bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
 
