@@ -47,7 +47,7 @@ summarizer_prompt = ChatPromptTemplate.from_messages(
         SystemMessage(
             content="""Тебе на вход даётся диалог ассистента AI и пациента Human. 
             Твоя задача, сохраня все фактические детали, отформатировать переданную пациентом информацию
-            о его состоянии в текст. Твой ответ доленж иметь две секции: жалобы и предворительные рекоммендации. Не используй в тексте слова "пациент" или "у вас". 
+            о его состоянии в текст. Твой ответ доленж иметь две секции: **жалобы** и **предворительные рекоммендации**. Не используй в тексте слова "пациент" или "у вас". 
             Например, вместо "Пациент жалуется на трёхдневную боль в горле" или
             "У вас три дня болит горло", напиши "Три дня боль в горле." 
             Не указывай возможные причины. Не задавай вопросов.
@@ -156,7 +156,7 @@ def conversation_step(message, memory):
         if get_user_state(user_id) == 'quickstarting':
             bot.send_chat_action(user_id, 'typing')
             bot.send_message(user_id, 
-"""Кажется, я спросил всё, что хотел. Надеюсь, Вам понравился наш первый диалог. Чуть позже у Вас будет возможность что-то изменить или добавить. А сейчас — документы. (Например, сделайте селфи!)""",
+"""Кажется, я спросил всё, что хотел. Чуть позже у Вас будет возможность что-то изменить или добавить. А сейчас — документы. (Например, сделайте селфи!)""",
             parse_mode='Markdown')
             bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.quickstart_add_document_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
@@ -266,9 +266,6 @@ def compile_case(case_id, recepient):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.chat.id
-    bot.send_message(user_id, '*bold text* _italic text_ [inline URL](http://www.example.com/) [inline mention of a user](tg://user?id=123456789)', parse_mode='Markdown')
-    
-
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
     set_user_memory(user_id, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
     
@@ -443,8 +440,9 @@ def handle_query(call):
         
     elif call.data == 'finalize_case':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'Составляю кейс ...')
+        bot.send_message(user_id, 'Подождите немного, составляю кейс ...')
         bot.send_chat_action(user_id, 'typing')
+        bot.send_chat_action(user_id, 'upload_document')
 
         case = summarize_into_case(get_user_memory(user_id))
         set_user_memory(user_id, case)
@@ -455,7 +453,7 @@ def handle_query(call):
 
         namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
-        bot.send_message(user_id, f'Я решил назвать этот кейс {case_name} (я не самый талантливый автор названий)')
+        bot.send_message(user_id, f'Я решил назвать этот кейс {case_name}.')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
         bot.send_message(user_id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=menus.accept_case_menu())
@@ -463,7 +461,9 @@ def handle_query(call):
 
     elif call.data == 'quickstart_finalize_case':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        bot.send_message(user_id, 'Подождите немного, составляю кейс ...')
         bot.send_chat_action(user_id, 'typing')
+        bot.send_chat_action(user_id, 'upload_document')
 
         case = summarize_into_case(get_user_memory(user_id))
         set_user_memory(user_id, case)
@@ -472,8 +472,9 @@ def handle_query(call):
 
         compile_case(case_id, user_id)
 
-        case_name = 'Пилотный'
-        bot.send_message(user_id, f'Получилось? Этот кейс назовём {case_name}.')
+        namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        case_name = namer_instance.name_case(case)
+        bot.send_message(user_id, f'Вот он наш первый кейс! Я решил назвать его {case_name} (я не самый талантливый автор названий)')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
         bot.send_message(user_id, 'Теперь Вы умеете создавать кейсы. Чтобы начать делиться ими с доктором, нужно оформить подписку.')
