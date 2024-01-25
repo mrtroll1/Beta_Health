@@ -236,7 +236,7 @@ def quickstart(message):
     user_id = message.chat.id
     set_user_state(user_id, 'quickstarting')
     bot.send_chat_action(user_id, 'typing')
-    bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='HTML')
+    bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='Markdown')
 
     bot.send_chat_action(user_id, 'typing')
     bot.send_message(user_id, 
@@ -244,7 +244,7 @@ def quickstart(message):
 Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из переданной информации я составляю текст. \n
 Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). \n
 Когда кейс будет готов, и Вы его утвердите, им можно будет поделиться с Вашим врачом.""", 
-    parse_mode='HTML')
+    parse_mode='Markdown')
 
     bot.send_chat_action(user_id, 'typing')
     bot.send_message(user_id, 'Надеюсь, я понятно объяснил. Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
@@ -481,7 +481,7 @@ def handle_query(call):
         bot.send_message(user_id, 'Отправляйте! (фото или pdf, в общей сложности не больше 10 файлов)')
         set_user_state(user_id, 'sending_documents')
 
-    elif call.data == 'qucikstart_add_document':
+    elif call.data == 'quickstart_add_document':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         bot.send_message(user_id, 'Отправляйте!')
         set_user_state(user_id, 'quickstart_sending_documents')
