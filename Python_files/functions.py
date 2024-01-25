@@ -219,7 +219,7 @@ def add_user_case(case_id, user_id, case_status):
 def generate_unique_filename():
     timestamp = int(time.time())
     random_str = uuid.uuid4().hex
-    return f"{timestamp}_{random_str}.jpg"
+    return f"{timestamp}_{random_str}"
 
 def encrypt_file(file_path):
     with open(file_path, 'rb') as file_to_encrypt:

@@ -128,7 +128,7 @@ def conversation_step(message, memory):
 
     bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
-    bot.send_message(user_id, response)
+    bot.send_message(user_id, response, parse_mode='Markdown')
 
     set_user_memory(user_id, memory)
 
@@ -402,6 +402,8 @@ def handle_photos(message):
     set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 
+
+
 #                                    """CALLBACK HANDLERS"""
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -429,7 +431,6 @@ def handle_query(call):
         
     elif call.data == 'my_cases':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, "Список ваших кейсов:")
 
         results = functions.get_items_from_table_by_key('case_name', 'user_cases', 'user_id', user_id)
         case_names = [item[0] for item in results]
@@ -437,11 +438,12 @@ def handle_query(call):
         results = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
         case_ids = [item[0] for item in results]
         
-        bot.send_message(user_id, 'Какой кейс Вас интересует?', reply_markup=my_cases_menu(case_names, case_ids))
+        bot.send_message(user_id, 'Список Ваших кейсов:', reply_markup=my_cases_menu(case_names, case_ids))
 
     elif call.data == 'send_case_to_doctor':
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         # bot.send_message(get_user_doctor(user_id), get_user_memory(user_id))
+        functions.alter_table('user_cases', 'case_status', 'shared', 'case_id', case_id)
         bot.send_message(user_id, 'Отправил врачу! Он скоро с Вами свяжется.')
         bot.send_message(user_id, 'Лука', reply_markup=main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
@@ -487,6 +489,7 @@ def handle_query(call):
         case_id = get_user_curr_case(user_id)
         case_name = functions.get_item_from_table_by_key('case_name', 'user_cases', 'case_id', case_id)
         bot.send_message(user_id, f'{case_name} сохранён.')
+        functions.alter_table('user_cases', 'case_status', 'saved', 'case_id', case_id)
         bot.send_message(user_id, 'Лука', reply_markup=main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
     
@@ -505,12 +508,11 @@ def handle_query(call):
         bot.send_chat_action(user_id, 'typing')
 
         compile_case(call.data, user_id)
+        bot.send_message(user_id, 'Тут должно быть какое-то меню, но я его пока не придумал)')
 
 
 
         
-
-
 
 #                                    """PHOTO HANDLER"""
 @bot.message_handler(content_types=['photo'])
