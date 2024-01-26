@@ -5,9 +5,9 @@ def main_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Новый кейс", callback_data='new_case')
-    button_2 = types.InlineKeyboardButton("Мои кейсы", callback_data='my_cases')
-    button_3 = types.InlineKeyboardButton("Мои подписки", callback_data='my_subscriptions')
+    button_1 = types.InlineKeyboardButton("📝 Новый кейс", callback_data='new_case')
+    button_2 = types.InlineKeyboardButton("🗃 Мои кейсы", callback_data='my_cases')
+    button_3 = types.InlineKeyboardButton("🔐 Мои подписки", callback_data='my_subscriptions')
 
     keyboard.add(button_1, button_2, button_3)
 
@@ -18,7 +18,7 @@ def my_cases_menu(case_names, case_ids):
     keyboard.row_width = 1
 
     for i in range(len(case_names)):
-        button = types.InlineKeyboardButton(case_names[i], callback_data=case_ids[i])
+        button = types.InlineKeyboardButton(f'🏷 {case_names[i]}', callback_data=case_ids[i])
         keyboard.add(button)
 
     return keyboard
@@ -62,7 +62,7 @@ def quickstart_new_case_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Начать новый кейс", callback_data='new_case')
+    button_1 = types.InlineKeyboardButton("📝 Начать новый кейс", callback_data='new_case')
 
     keyboard.add(button_1)
 
