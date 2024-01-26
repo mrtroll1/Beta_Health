@@ -142,28 +142,28 @@ def chatgpt_to_telegram_markdown(input_text):
 
     return italics_transformed
     
-def conversation_step(message, memory):
+async def conversation_step(message, memory):
     user_id = message.chat.id
     bot_instance = ChatBot(llm, prompt, memory)
 
-    bot.send_chat_action(user_id, 'typing')
+    await bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
     response = chatgpt_to_telegram_markdown(response)
-    bot.send_message(user_id, response, parse_mode='Markdown')
+    await bot.send_message(user_id, response, parse_mode='Markdown')
 
     set_user_memory(user_id, memory)
 
     symbol_combination = '##'
     if symbol_combination in response:
         if get_user_state(user_id) == 'quickstarting':
-            bot.send_chat_action(user_id, 'typing')
-            bot.send_message(user_id, 
+            await bot.send_chat_action(user_id, 'typing')
+            await bot.send_message(user_id, 
 """Кажется, я спросил всё, что хотел. Чуть позже у Вас будет возможность что-то изменить или добавить. А сейчас — документы. (Например, сделайте селфи!)""",
             parse_mode='Markdown')
-            bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.quickstart_add_document_menu())
+            await bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.quickstart_add_document_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
         else:
-            bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.add_document_menu())
+            await bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.add_document_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
 
 
@@ -374,7 +374,7 @@ def handle_photos(message):
 #                                    """CALLBACK HANDLERS"""
 
 @bot.callback_query_handler(func=lambda call: True)
-async def handle_query(call):
+asyncdef handle_query(call):
     user_id = call.message.chat.id
 
     if call.data == 'new_case':
