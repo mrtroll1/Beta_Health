@@ -374,7 +374,7 @@ def handle_photos(message):
 #                                    """CALLBACK HANDLERS"""
 
 @bot.callback_query_handler(func=lambda call: True)
-def handle_query(call):
+async def handle_query(call):
     user_id = call.message.chat.id
 
     if call.data == 'new_case':
