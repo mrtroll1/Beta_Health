@@ -167,35 +167,35 @@ async def conversation_step(message, memory):
             set_user_state(user_id, 'awaiting_menu_choice')
 
 
-def quickstart(message):
+async def quickstart(message):
     user_id = message.chat.id
     set_user_state(user_id, 'quickstarting')
-    bot.send_chat_action(user_id, 'typing')
+    await bot.send_chat_action(user_id, 'typing')
     time.sleep(3)
-    bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='Markdown')
+    await bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='Markdown')
 
-    bot.send_chat_action(user_id, 'typing')
+    await bot.send_chat_action(user_id, 'typing')
     time.sleep(4)
-    bot.send_message(user_id, 
+    await bot.send_message(user_id, 
 """_Кейс_ = Ваши жалобы и симптомы + диагноз и рекоммендации врача. Первую часть кейса составляем мы с Вами вместе. Сценарий такой: \n
 Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из переданной информации я составляю текст. \n
 Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). \n
 Когда кейс будет готов, и Вы его утвердите, им можно будет поделиться с Вашим врачом.""", 
     parse_mode='Markdown')
 
-    bot.send_chat_action(user_id, 'typing')
+    await bot.send_chat_action(user_id, 'typing')
     time.sleep(4)
-    bot.send_message(user_id, 'Надеюсь, я понятно объяснил. Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
-    bot.send_chat_action(user_id, 'typing')
+    await bot.send_message(user_id, 'Надеюсь, я понятно объяснил. Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
+    await bot.send_chat_action(user_id, 'typing')
     time.sleep(2)
-    bot.send_message(user_id, 'Нажимайте!', reply_markup=menus.quickstart_new_case_menu())
+    await bot.send_message(user_id, 'Нажимайте!', reply_markup=menus.quickstart_new_case_menu())
 
 def summarize_into_case(memory): 
     summarizer_instance = Summarizer(llm, summarizer_prompt, memory)
     summary = summarizer_instance.summarize(memory)
     return chatgpt_to_telegram_markdown(summary)
 
-def save_document(message):
+async def save_document(message):
     file_id = None
     file_extension = None
 
@@ -217,27 +217,27 @@ def save_document(message):
         return
 
     file_info = bot.get_file(file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
+    downloaded_file = await bot.download_file(file_info.file_path)
 
     case_id = get_user_curr_case(message.chat.id)
     case_specific_path, full_path = functions.save_file_to_server(downloaded_file, message.chat.id, case_id, file_extension)
 
     functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
 
-def compile_case(case_id, recepient):
+async def compile_case(case_id, recepient):
     base_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
     case_path = os.path.join(base_path, str(case_id))
     case_text = functions.get_item_from_table_by_key('case_data', 'user_cases', 'case_id', case_id)
 
     if not os.path.exists(case_path):
-        print(f"No directory found for case ID {case_id}")
+        await bot.send_message(recepeint, 'Данные не найдены')
         return
 
     photo_group = []
     document_group = []
     for filename in os.listdir(case_path):
         if len(photo_group) + len(document_group) >= 10: 
-            bot.send_message(recepient, 'Только первые 10 файлов будут отправлены')
+            await bot.send_message(recepient, 'Только первые 10 файлов будут отправлены')
             break
 
         file_path = os.path.join(case_path, filename)
@@ -254,11 +254,11 @@ def compile_case(case_id, recepient):
         functions.encrypt_file(file_path)
 
     if photo_group:
-        bot.send_media_group(recepient, photo_group)
+        await bot.send_media_group(recepient, photo_group)
     if document_group:
-        bot.send_media_group(recepient, document_group)
+        await bot.send_media_group(recepient, document_group)
     
-    bot.send_message(recepient, case_text, parse_mode='Markdown')
+    await bot.send_message(recepient, case_text, parse_mode='Markdown')
 
 
 
@@ -293,21 +293,21 @@ async def handle_name_input(message):
     quickstart(message)
 
 @bot.message_handler(commands=['help'])
-def send_help(message):
+async def send_help(message):
     help_text = """Напоминаю, что подробно о работе бота можно почитать по команде /info. 
     Какой у Вас вопрос?"""
-    bot.send_message(message.chat.id, help_text)
+    await bot.send_message(message.chat.id, help_text)
 
 @bot.message_handler(commands=['menu'])
-def show_main_menu(message):
+async def show_main_menu(message):
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    bot.send_message(message.chat.id, f'{user_name}, как я могу Вам помочь?', reply_markup=menus.main_menu())
+    await bot.send_message(message.chat.id, f'{user_name}, как я могу Вам помочь?', reply_markup=menus.main_menu())
     set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 @bot.message_handler(commands=['info'])
-def send_info(message):
+async def send_info(message):
     info = 'Вот как всё работает ...'
-    bot.send_message(message.chat.id, info)
+    await bot.send_message(message.chat.id, info)
     # ... введите /menu, чтобы начать пользоваться
 
     
@@ -317,8 +317,8 @@ def send_info(message):
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'awaiting_menu_choice'
                                             and not message.text.startswith('/'))
-def handle_menu_choice(message):
-    bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню.")
+async def handle_menu_choice(message):
+    await bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню.")
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'creating_case'
                                             and not message.text.startswith('/'))
@@ -327,20 +327,20 @@ async def handle_message(message):
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstarting'
                                             and not message.text.startswith('/'))
-def handle_message(message):
+async def handle_message(message):
     conversation_step(message, get_user_memory(message.chat.id))
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case'
                                             and not message.text.startswith('/'))
-def edit_case(message):
+async def edit_case(message):
     user_id = message.chat.id
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     case = get_user_memory(user_id)
     memory.save_context({"input": case}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
     memory.save_context({"input": message.text}, {"output": "Сейчас внесу изменения!"})
 
-    bot.send_message(user_id, 'Вот обновлённая версия:')
-    bot.send_chat_action(user_id, 'typing')
+    await bot.send_message(user_id, 'Вот обновлённая версия:')
+    await bot.send_chat_action(user_id, 'typing')
 
     case = summarize_into_case(memory)
     set_user_memory(user_id, case)
@@ -348,24 +348,24 @@ def edit_case(message):
     functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
     compile_case(case_id, user_id)
-    bot.send_message(user_id, 'Отправляю врачу?', reply_markup=menus.accept_case_menu())
+    await bot.send_message(user_id, 'Отправляю врачу?', reply_markup=menus.accept_case_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_documents'
                                             and not message.text.startswith('/'))
-def handle_photos(message):
+async def handle_photos(message):
     save_document(message)
     if get_user_state != 'awaiting_menu_choice':
-        bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+        await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
         set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstart_sending_documents'
                                             and not message.text.startswith('/'))
-def handle_photos(message):
+async def handle_photos(message):
     save_document(message)
     if get_user_state != 'awaiting_menu_choice':
-        bot.send_message(message.chat.id, 'Получил!')
-        bot.send_message(message.chat.id, 'Наш пробный кейс готов! Показать?', reply_markup=menus.quickstart_finalize_case_menu())
+        await bot.send_message(message.chat.id, 'Получил!')
+        await bot.send_message(message.chat.id, 'Наш пробный кейс готов! Показать?', reply_markup=menus.quickstart_finalize_case_menu())
         set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 
@@ -397,7 +397,7 @@ async def handle_query(call):
             set_user_state(user_id, 'creating_case')
         
     elif call.data == 'my_cases':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
 
         results = functions.get_items_from_table_by_key('case_name', 'user_cases', 'user_id', user_id)
         case_names = [item[0] for item in results]
@@ -405,15 +405,15 @@ async def handle_query(call):
         results = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
         case_ids = [item[0] for item in results]
         
-        bot.send_message(user_id, 'Список Ваших кейсов:', reply_markup=menus.my_cases_menu(case_names, case_ids))
+        await bot.send_message(user_id, 'Список Ваших кейсов:', reply_markup=menus.my_cases_menu(case_names, case_ids))
     
     elif call.data == 'my_subscriptions':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'У Вас нет активных подписок.')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'У Вас нет активных подписок.')
 
     elif call.data == 'send_case_to_doctor':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'Чтобы воспользоваться этой функцией, оформите подписку.')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Чтобы воспользоваться этой функцией, оформите подписку.')
         # bot.send_message(get_user_doctor(user_id), get_user_memory(user_id))
         # functions.alter_table('user_cases', 'case_status', 'shared', 'case_id', case_id)
         # bot.send_message(user_id, 'Отправил врачу! Он скоро с Вами свяжется.')
@@ -421,30 +421,30 @@ async def handle_query(call):
         # set_user_state(user_id, 'awaiting_menu_choice')
 
     elif call.data == 'edit_case':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'Что бы Вы хотели изменить или добавить?')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Что бы Вы хотели изменить или добавить?')
         set_user_state(user_id, 'editing_case')
     
     elif call.data == 'add_document':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'Отправляйте! (Лучше по одному фото или pdf за раз. В общей сложности не больше 10 файлов)')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Отправляйте! (Лучше по одному фото или pdf за раз. В общей сложности не больше 10 файлов)')
         set_user_state(user_id, 'sending_documents')
 
     elif call.data == 'quickstart_add_document':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'Отправляйте!')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Отправляйте!')
         set_user_state(user_id, 'quickstart_sending_documents')
 
     elif call.data == 'more_documents':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'Присылайте документы')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Присылайте документы')
         set_user_state(user_id, 'sending_documents')
         
     elif call.data == 'finalize_case':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'Подождите немного, составляю кейс ...')
-        bot.send_chat_action(user_id, 'typing')
-        bot.send_chat_action(user_id, 'upload_document')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Подождите немного, составляю кейс ...')
+        await bot.send_chat_action(user_id, 'typing')
+        await bot.send_chat_action(user_id, 'upload_document')
 
         case = summarize_into_case(get_user_memory(user_id))
         set_user_memory(user_id, case)
@@ -455,17 +455,17 @@ async def handle_query(call):
 
         namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
-        bot.send_message(user_id, f'Я решил назвать этот кейс {case_name}.')
+        await bot.send_message(user_id, f'Я решил назвать этот кейс {case_name}.')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
-        bot.send_message(user_id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=menus.accept_case_menu())
+        await bot.send_message(user_id, 'Хотите поделиться этим кейсом с врачом?', reply_markup=menus.accept_case_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
 
     elif call.data == 'quickstart_finalize_case':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_message(user_id, 'Подождите немного, составляю кейс ...')
-        bot.send_chat_action(user_id, 'typing')
-        bot.send_chat_action(user_id, 'upload_document')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Подождите немного, составляю кейс ...')
+        await bot.send_chat_action(user_id, 'typing')
+        await bot.send_chat_action(user_id, 'upload_document')
 
         case = summarize_into_case(get_user_memory(user_id))
         set_user_memory(user_id, case)
@@ -476,41 +476,41 @@ async def handle_query(call):
 
         namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
-        bot.send_message(user_id, f'Вот он наш первый кейс! Я решил назвать его {case_name} (я не самый талантливый автор названий)')
+        await bot.send_message(user_id, f'Вот он наш первый кейс! Я решил назвать его {case_name} (я не самый талантливый автор названий)')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
-        bot.send_message(user_id, 'Теперь Вы умеете создавать кейсы. Чтобы начать делиться ими с доктором, нужно оформить подписку.')
-        bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+        await bot.send_message(user_id, 'Теперь Вы умеете создавать кейсы. Чтобы начать делиться ими с доктором, нужно оформить подписку.')
+        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'save_and_not_share':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_chat_action(user_id, 'typing')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_chat_action(user_id, 'typing')
 
         case_id = get_user_curr_case(user_id)
         case_name = functions.get_item_from_table_by_key('case_name', 'user_cases', 'case_id', case_id)
-        bot.send_message(user_id, f'Кейс {case_name} сохранён.')
+        await bot.send_message(user_id, f'Кейс {case_name} сохранён.')
         functions.alter_table('user_cases', 'case_status', 'saved', 'case_id', case_id)
-        bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'delete_and_not_share':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_chat_action(user_id, 'typing')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_chat_action(user_id, 'typing')
         case_id = get_user_curr_case(user_id)
         functions.delete_row_from_table_by_key('user_cases', 'case_id', case_id)
         functions.delete_case(case_id)
         functions.decrement_value('users', 'num_cases', 'user_id', user_id)
-        bot.send_message(user_id, 'Кейс удалён.')
-        bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+        await bot.send_message(user_id, 'Кейс удалён.')
+        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bot.send_chat_action(user_id, 'typing')
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_chat_action(user_id, 'typing')
 
         compile_case(call.data, user_id)
-        bot.send_message(user_id, 'Тут должно быть какое-то меню, но я его пока не придумал)')
+        await bot.send_message(user_id, 'Тут должно быть какое-то меню, но я его пока не придумал)')
 
 
 
@@ -518,27 +518,27 @@ async def handle_query(call):
 
 #                                    """PHOTO HANDLER"""
 @bot.message_handler(content_types=['photo'])
-def handle_photos(message):
+async def handle_photos(message):
     user_id = message.chat.id
     user_state = get_user_state(user_id)
 
     if user_state == 'sending_documents':
         save_document(message)
         if get_user_state != 'awaiting_menu_choice':
-            bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+            await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
             set_user_state(message.chat.id, 'awaiting_menu_choice')
         
     elif user_state == 'quickstart_sending_documents':
         save_document(message)
-        bot.send_message(user_id, 'Получил!') 
-        bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
+        await bot.send_message(user_id, 'Получил!') 
+        await bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
-        bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
+        await bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
 
 @bot.message_handler(content_types=['document'])
-def handle_document(message):
+async def handle_document(message):
     user_id = message.chat.id
     user_state = get_user_state(user_id)
     
@@ -546,25 +546,25 @@ def handle_document(message):
         if message.document.file_name.lower().endswith('.pdf'):
             save_document(message)
             if get_user_state != 'awaiting_menu_choice':
-                bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+                await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
                 set_user_state(message.chat.id, 'awaiting_menu_choice')
             
         else:
-            bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.more_documents_menu())
+            await bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.more_documents_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
 
     elif user_state == 'quickstart_sending_documents':
         if message.document.file_name.lower().endswith('.pdf'):
             save_document(message)
-            bot.send_message(user_id, 'Получил!', reply_markup=menus.quickstart_finalize_case_menu())
-            bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
+            await bot.send_message(user_id, 'Получил!', reply_markup=menus.quickstart_finalize_case_menu())
+            await bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
         else:
-            bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.quickstart_add_document_menu())
+            await bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.quickstart_add_document_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
-        bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
+        await bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
 
 
 async def main():
