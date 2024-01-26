@@ -347,14 +347,14 @@ async def edit_case(message):
     case_id = get_user_curr_case(user_id)
     functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
-    compile_case(case_id, user_id)
+    await compile_case(case_id, user_id)
     await bot.send_message(user_id, 'Отправляю врачу?', reply_markup=menus.accept_case_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_documents'
                                             and not message.text.startswith('/'))
 async def handle_photos(message):
-    save_document(message)
+    await save_document(message)
     if get_user_state != 'awaiting_menu_choice':
         await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
         set_user_state(message.chat.id, 'awaiting_menu_choice')
@@ -362,7 +362,7 @@ async def handle_photos(message):
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstart_sending_documents'
                                             and not message.text.startswith('/'))
 async def handle_photos(message):
-    save_document(message)
+    await save_document(message)
     if get_user_state != 'awaiting_menu_choice':
         await bot.send_message(message.chat.id, 'Получил!')
         await bot.send_message(message.chat.id, 'Наш пробный кейс готов! Показать?', reply_markup=menus.quickstart_finalize_case_menu())
@@ -451,7 +451,7 @@ async def handle_query(call):
         case_id = get_user_curr_case(user_id)
         functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
-        compile_case(case_id, user_id)
+        await compile_case(case_id, user_id)
 
         namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
@@ -472,7 +472,7 @@ async def handle_query(call):
         case_id = get_user_curr_case(user_id)
         functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
-        compile_case(case_id, user_id)
+        await compile_case(case_id, user_id)
 
         namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
@@ -509,7 +509,7 @@ async def handle_query(call):
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_chat_action(user_id, 'typing')
 
-        compile_case(call.data, user_id)
+        await compile_case(call.data, user_id)
         await bot.send_message(user_id, 'Тут должно быть какое-то меню, но я его пока не придумал)')
 
 
@@ -523,13 +523,13 @@ async def handle_photos(message):
     user_state = get_user_state(user_id)
 
     if user_state == 'sending_documents':
-        save_document(message)
+        await save_document(message)
         if get_user_state != 'awaiting_menu_choice':
             await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
             set_user_state(message.chat.id, 'awaiting_menu_choice')
         
     elif user_state == 'quickstart_sending_documents':
-        save_document(message)
+        await save_document(message)
         await bot.send_message(user_id, 'Получил!') 
         await bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
@@ -544,7 +544,7 @@ async def handle_document(message):
     
     if user_state == 'sending_documents':
         if message.document.file_name.lower().endswith('.pdf'):
-            save_document(message)
+            await save_document(message)
             if get_user_state != 'awaiting_menu_choice':
                 await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
                 set_user_state(message.chat.id, 'awaiting_menu_choice')
@@ -555,7 +555,7 @@ async def handle_document(message):
 
     elif user_state == 'quickstart_sending_documents':
         if message.document.file_name.lower().endswith('.pdf'):
-            save_document(message)
+            await save_document(message)
             await bot.send_message(user_id, 'Получил!', reply_markup=menus.quickstart_finalize_case_menu())
             await bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
