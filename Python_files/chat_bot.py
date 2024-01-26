@@ -378,7 +378,7 @@ def handle_query(call):
     user_id = call.message.chat.id
 
     if call.data == 'new_case':
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         
         memory.save_context({'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
@@ -389,11 +389,11 @@ def handle_query(call):
         set_user_curr_case(user_id, case_id)
         functions.add_user_case(case_id, user_id, 'started')
 
-        bot.send_message(user_id, "Начинаем новый кейс.")
+        await bot.send_message(user_id, "Начинаем новый кейс.")
         if get_user_state(user_id) == 'quickstarting':
-            bot.send_message(user_id, 'Какие у Вас жалобы? (подыграйте мне)') 
+            await bot.send_message(user_id, 'Какие у Вас жалобы? (подыграйте мне)') 
         else:
-            bot.send_message(user_id, "Какие у вас жалобы?")
+            await bot.send_message(user_id, "Какие у вас жалобы?")
             set_user_state(user_id, 'creating_case')
         
     elif call.data == 'my_cases':
