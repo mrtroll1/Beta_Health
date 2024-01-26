@@ -322,7 +322,7 @@ def handle_menu_choice(message):
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'creating_case'
                                             and not message.text.startswith('/'))
-def async handle_message(message):
+async def handle_message(message):
     await conversation_step(message, get_user_memory(message.chat.id))
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstarting'
