@@ -266,30 +266,30 @@ def compile_case(case_id, recepient):
 #                                    """/-COMMAND HANDLERS""" 
 
 @bot.message_handler(commands=['start'])
-def send_welcome(message):
+async def send_welcome(message):
     user_id = message.chat.id
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
     set_user_memory(user_id, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
-    
+
     if user_name:
         welcome_msg = f"Здравствуйте, {user_name}!"
-        bot.send_message(user_id, welcome_msg)
-        bot.send_message(user_id, "Как могу помочь?", reply_markup=menus.main_menu())
+        await bot.send_message(user_id, welcome_msg)
+        await bot.send_message(user_id, "Как могу помочь?", reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
-        
+
     else:
         welcome_msg = "Добро пожаловать! Как я могу к Вам обращаться?"
-        bot.send_message(user_id, welcome_msg)
-        bot.register_next_step_handler(message, handle_name_input)
+        await bot.send_message(user_id, welcome_msg)
+        await bot.register_next_step_handler(message, handle_name_input)
 
-def handle_name_input(message):
+async def handle_name_input(message):
     user_id = message.chat.id
-    user_name = message.text    
+    user_name = message.text
 
-    functions.add_user_name(user_id, user_name)  
+    functions.add_user_name(user_id, user_name)
 
     confirmation_msg = f"Очень приятно, {user_name}! Сейчас я расскажу, как всё работает..."
-    bot.send_message(user_id, confirmation_msg)
+    await bot.send_message(user_id, confirmation_msg)
     quickstart(message)
 
 @bot.message_handler(commands=['help'])
