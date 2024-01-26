@@ -216,7 +216,7 @@ async def save_document(message):
         print("No supported files found in the message.")
         return
 
-    file_info = bot.get_file(file_id)
+    file_info = await bot.get_file(file_id)
     downloaded_file = await bot.download_file(file_info.file_path)
 
     case_id = get_user_curr_case(message.chat.id)
@@ -328,7 +328,7 @@ async def handle_message(message):
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstarting'
                                             and not message.text.startswith('/'))
 async def handle_message(message):
-    conversation_step(message, get_user_memory(message.chat.id))
+    await conversation_step(message, get_user_memory(message.chat.id))
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case'
                                             and not message.text.startswith('/'))
