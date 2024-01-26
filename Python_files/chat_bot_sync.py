@@ -565,8 +565,4 @@ def handle_document(message):
         bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
 
 
-async def main():
-    await bot.infinity_polling()
-
-if __name__ == '__main__':
-    asyncio.run(main())
+bot.infinity_polling()
