@@ -20,7 +20,7 @@ openai_api_key = os.environ.get('OPENAI_API_KEY')
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 # webhook_url = os.environ.get('WEBHOOK_URL')
 
-bot = telebot.AsyncTeleBot(telegram_api_token)
+bot = async_telebot.AsyncTeleBot(telegram_api_token)
 
 llm = ChatOpenAI(openai_api_key=openai_api_key, model_name='gpt-4')  
 
