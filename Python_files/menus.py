@@ -24,7 +24,7 @@ def my_cases_menu(case_names, case_ids):
 
     return keyboard
 
-def change_bio_menu(case_names, case_ids):
+def change_bio_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
