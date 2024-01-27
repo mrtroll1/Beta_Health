@@ -203,10 +203,9 @@ async def compile_case(case_id, recipient):
     if document_paths:
         await bot.send_message(recipient, 'Отправляю документы...')
         for i, file_path in enumerate(document_paths, 0):
-            await bot.send_message(recipient, document_names[i])
             functions.decrypt_file(file_path)
             with open(file_path, 'rb') as file:
-                await bot.send_document(recipient, types.InputFile(file), visible_file_name='Жопа почему ты не работаешь')
+                await bot.send_document(recipient, types.InputFile(file), caption=document_names[i])
             functions.encrypt_file(file_path)
     
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
