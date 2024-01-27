@@ -148,12 +148,12 @@ async def save_document(message):
         for doc in message.document:
             file_id = doc.file_id
             file_extension = 'pdf'
-            original_file_name = os.path.splitext(doc.file_name)
+            original_file_name = os.path.splitext(doc.file_name)[0]
 
     elif message.document:
         file_id = message.document.file_id
         file_extension = 'pdf'
-        original_file_name = os.path.splitext(message.document.file_name)
+        original_file_name = os.path.splitext(message.document.file_name)[0]
 
     if not file_id:
         print("No supported files found in the message.")

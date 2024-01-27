@@ -219,7 +219,7 @@ def add_user_case(case_id, user_id, case_status):
 
 def generate_unique_filename(original_file_name):
     timestamp = int(time.time())
-    return f"{original_file_name}_{timestamp}"
+    return original_file_name + f'{timestamp}'
 
 def encrypt_file(file_path):
     with open(file_path, 'rb') as file_to_encrypt:
