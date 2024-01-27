@@ -195,7 +195,7 @@ async def compile_case(case_id, recipient):
         elif file_extension == '.pdf':
             with open(file_path, 'rb') as file:
                 document_list.append(types.InputFile(file))
-                await bot.send_docuemnt(recipient, types.InputFile(file))
+                await bot.send_document(recipient, types.InputFile(file))
 
         functions.encrypt_file(file_path)
 
