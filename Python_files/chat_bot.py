@@ -194,10 +194,10 @@ async def compile_case(case_id, recipient):
                 photo_group.append(types.InputMediaPhoto(file.read()))
         elif file_extension == '.pdf':
             with open(file_path, 'rb') as file:
-                document_list.append(types.InputFile(file.read()))
+                document_list.append(types.InputFile(file))
                 await bot.send_document(recipient, types.InputFile(file), visible_file_name=filename[:-15])
 
-        functions.encrypt_file(file_path)
+        # functions.encrypt_file(file_path)
 
     if photo_group:
         await bot.send_media_group(recipient, photo_group)
@@ -205,6 +205,10 @@ async def compile_case(case_id, recipient):
         await bot.send_message(recipient, 'Отправляю документы...')
         for i in range(len(document_list)):
             await bot.send_document(recipient, document_list[i], visible_file_name=document_name_list[i])
+
+    for filename in os.listdir(case_path):
+        file_path = os.path.join(case_path, filename)
+        functions.encrypt_file(file_path)
     
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
 
