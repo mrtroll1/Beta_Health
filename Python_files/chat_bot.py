@@ -109,23 +109,31 @@ async def quickstart(message):
     user_id = message.chat.id
     set_user_state(user_id, 'quickstarting')
     await bot.send_chat_action(user_id, 'typing')
-    time.sleep(3)
-    await bot.send_message(user_id, 'Моя задача — сделать Ваше взаимодействие с доктором проще и удобнее для обеих сторон. Моя главная фишка — система _кейсов_.', parse_mode='Markdown')
+    await asyncio.sleep(3)
+    await bot.send_message(user_id, 'Я помогу сделать Ваше взаимодействие с доктором проще и удобнее. Моя главная фишка — система _кейсов_.', parse_mode='Markdown')
 
     await bot.send_chat_action(user_id, 'typing')
-    time.sleep(4)
-    await bot.send_message(user_id, 
-"""_Кейс_ = Ваши жалобы и симптомы + диагноз и рекоммендации врача. Первую часть кейса составляем мы с Вами вместе. Сценарий такой: \n
-Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из переданной информации я составляю текст. \n
-Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно). \n
-Когда кейс будет готов, и Вы его утвердите, им можно будет поделиться с Вашим врачом.""", 
-    parse_mode='Markdown')
+    await asyncio.sleep(7)
+    await bot.send_message(user_id, '_Кейс_ = Ваши жалобы и симптомы + диагноз и рекоммендации врача. Первую часть кейса составляем мы с Вами вместе. Сценарий такой:', parse_mode='Markdown')
 
     await bot.send_chat_action(user_id, 'typing')
-    time.sleep(4)
+    await asyncio.sleep(7)
+    await bot.send_message(user_id, 'Вы обращаетесь ко мне с жалобой; я задаю Вам уточняющие вопросы; Вы подробно на них отвечаете; из переданной информации я составляю текст.')
+
+    await bot.send_chat_action(user_id, 'typing')
+    await asyncio.sleep(7)
+    await bot.send_message(user_id, 'Далее, при желании, вы прикрепляете медиафалы. Например, фото симптомов или медицинские справки (если уместно).')
+
+    await bot.send_chat_action(user_id, 'typing')
+    await asyncio.sleep(7)
+    await bot.send_message(user_id, 'Когда кейс будет готов, и Вы его утвердите, им можно будет поделиться с Вашим врачом.')
+
+    await bot.send_chat_action(user_id, 'typing')
+    await asyncio.sleep(7)
     await bot.send_message(user_id, 'Надеюсь, я понятно объяснил. Давайте попробуем! Сейчас я отправлю Вам меню, в котором всего одна кнопка.')
+
     await bot.send_chat_action(user_id, 'typing')
-    time.sleep(2)
+    await asyncio.sleep(7)
     await bot.send_message(user_id, 'Нажимайте!', reply_markup=menus.quickstart_new_case_menu())
 
 def summarize_into_case(memory): 
@@ -346,7 +354,7 @@ async def handle_query(call):
     if call.data == 'new_case':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        bio = get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
+        bio = functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
         if bio:
             memory.save_context({'input': f'Общая информация обо мне: {bio}'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
         else:
@@ -379,6 +387,8 @@ async def handle_query(call):
     elif call.data == 'my_subscriptions':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_message(user_id, 'У Вас нет активных подписок. Чтобы купить, скажите: "Дон-дон"')
+        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+        set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'bio':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
@@ -395,6 +405,8 @@ async def handle_query(call):
     elif call.data == 'send_case_to_doctor':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_message(user_id, 'Чтобы воспользоваться этой функцией, оформите подписку.')
+        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+        set_user_state(user_id, 'awaiting_menu_choice')
         # bot.send_message(get_user_doctor(user_id), get_user_memory(user_id))
         # functions.alter_table('user_cases', 'case_status', 'shared', 'case_id', case_id)
         # bot.send_message(user_id, 'Отправил врачу! Он скоро с Вами свяжется.')
