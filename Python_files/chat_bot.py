@@ -204,7 +204,7 @@ async def compile_case(case_id, recipient):
     if document_list:
         await bot.send_message(recipient, 'Отправляю документы...')
         for i in range(len(document_list)):
-            await bot.send_document(recipient, document_list[i], visible_file_name=document_name_list[i])
+            await bot.send_document(recipient, document_list[i])
 
     for filename in os.listdir(case_path):
         file_path = os.path.join(case_path, filename)
