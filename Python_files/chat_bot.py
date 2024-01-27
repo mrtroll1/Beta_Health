@@ -180,6 +180,7 @@ async def compile_case(case_id, recipient):
     document_list = []
     document_name_list = []
     for filename in os.listdir(case_path):
+        document_name_list.append(filename[:-15])
         if len(photo_group) + len(document_list) >= 10: 
             await bot.send_message(recipient, 'Только первые 10 файлов будут отправлены')
             break
@@ -193,8 +194,7 @@ async def compile_case(case_id, recipient):
                 photo_group.append(types.InputMediaPhoto(file.read()))
         elif file_extension == '.pdf':
             with open(file_path, 'rb') as file:
-                document_list.append(types.InputFile(file.read()))
-                # document_name_list.append(filename[:-15])
+                document_list.append(types.InputFile(file))
 
         functions.encrypt_file(file_path)
 
@@ -203,8 +203,7 @@ async def compile_case(case_id, recipient):
     if document_list:
         await bot.send_message(recipient, 'Отправляю документы...')
         for i in range(len(document_list)):
-            await bot.send_document(recipient, document_list[i])
-            # await bot.send_document(recipient, document_list[i], visible_file_name=document_name_list[i])
+            await bot.send_document(recipient, document_list[i], visible_file_name=document_name_list[i])
     
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
 
