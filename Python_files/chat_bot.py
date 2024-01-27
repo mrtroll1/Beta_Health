@@ -194,8 +194,8 @@ async def compile_case(case_id, recipient):
                 photo_group.append(types.InputMediaPhoto(file.read()))
         elif file_extension == '.pdf':
             with open(file_path, 'rb') as file:
-                document_list.append(types.InputFile(file))
-                await bot.send_document(recipient, types.InputFile(file))
+                document_list.append(types.InputFile(file.read()))
+                await bot.send_document(recipient, types.InputFile(file), visible_file_name=filename[:-15])
 
         functions.encrypt_file(file_path)
 
