@@ -224,7 +224,7 @@ async def send_welcome(message):
     else:
         welcome_msg = "Добро пожаловать! Как я могу к Вам обращаться?"
         await bot.send_message(user_id, welcome_msg)
-        await bot.register_next_step_handler(message, handle_name_input)
+        await bot.register_message_handler(message, handle_name_input)
 
 async def handle_name_input(message):
     user_id = message.chat.id
