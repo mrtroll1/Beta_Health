@@ -263,7 +263,7 @@ async def handle_name_input(message):
 
     confirmation_msg = f"Очень приятно, {user_name}! Сейчас я расскажу, как всё работает..."
     await bot.send_message(user_id, confirmation_msg)
-    quickstart(message)
+    await quickstart(message)
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'creating_case'
                                             and not message.text.startswith('/'))
