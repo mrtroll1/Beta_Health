@@ -198,7 +198,7 @@ async def compile_case(case_id, recipient):
 
     if photo_group:
         await bot.send_media_group(recipient, photo_group)
-    if document_group:
+    if document_dict:
         for doc in document_dict.keys():
             await bot.send_document(recipient, doc, visible_file_name=document_dict[doc])
     
