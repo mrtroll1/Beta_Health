@@ -7,6 +7,7 @@ from langchain_core.prompts import MessagesPlaceholder
 from langchain.schema import SystemMessage
 from langchain.prompts import HumanMessagePromptTemplate
 from langchain.chains import LLMChain
+from langchain_openai import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 
 openai_api_key = os.environ.get('OPENAI_API_KEY')
