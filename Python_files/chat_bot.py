@@ -233,6 +233,12 @@ async def send_help(message):
     help_text = """Быть идеальным ботом непросто. Какой у Вас вопрос? (ответа не ждите, колл-центр пока не арендовали)"""
     await bot.send_message(message.chat.id, help_text)
 
+@bot.message_handler(commands=['test'])
+async def send_help(message):
+    help_text = """Отправляйте документы"""
+    set_user_state(message.chat.id, 'sending_documents')
+    await bot.send_message(message.chat.id, help_text)
+
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
     user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
