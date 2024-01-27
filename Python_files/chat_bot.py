@@ -179,7 +179,7 @@ async def compile_case(case_id, recipient):
     photo_group = []
     document_dict = {}
     for filename in os.listdir(case_path):
-        if len(photo_group) + len(document_group) >= 10: 
+        if len(photo_group) + len(document_dict) >= 10: 
             await bot.send_message(recipient, 'Только первые 10 файлов будут отправлены')
             break
 
@@ -223,22 +223,12 @@ async def send_welcome(message):
 
     else:
         welcome_msg = "Добро пожаловать! Как я могу к Вам обращаться?"
+        set_user_state(user_id, 'entering_name')
         await bot.send_message(user_id, welcome_msg)
-        await bot.register_message_handler(message, handle_name_input)
-
-async def handle_name_input(message):
-    user_id = message.chat.id
-    user_name = message.text
-
-    functions.add_user_name(user_id, user_name)
-
-    confirmation_msg = f"Очень приятно, {user_name}! Сейчас я расскажу, как всё работает..."
-    await bot.send_message(user_id, confirmation_msg)
-    quickstart(message)
 
 @bot.message_handler(commands=['help'])
 async def send_help(message):
-    help_text = """Быть идеальным ботом непросто. Какой у Вас вопрос?"""
+    help_text = """Быть идеальным ботом непросто. Какой у Вас вопрос? (ответа не ждите, колл-центр пока не арендовали)"""
     await bot.send_message(message.chat.id, help_text)
 
 @bot.message_handler(commands=['menu'])
@@ -262,6 +252,18 @@ async def send_info(message):
                                             and not message.text.startswith('/'))
 async def handle_menu_choice(message):
     await bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню.")
+
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'entering_name'
+                                            and not message.text.startswith('/'))
+async def handle_name_input(message):
+    user_id = message.chat.id
+    user_name = message.text
+
+    functions.add_user_name(user_id, user_name)
+
+    confirmation_msg = f"Очень приятно, {user_name}! Сейчас я расскажу, как всё работает..."
+    await bot.send_message(user_id, confirmation_msg)
+    quickstart(message)
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'creating_case'
                                             and not message.text.startswith('/'))
