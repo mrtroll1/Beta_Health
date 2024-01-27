@@ -178,7 +178,9 @@ async def compile_case(case_id, recipient):
 
     photo_group = []
     document_paths = []
+    document_names = []
     for filename in os.listdir(case_path):
+        document_names.append(filename)
         if len(photo_group) + len(document_paths) >= 10: 
             await bot.send_message(recipient, 'Только первые 10 файлов будут отправлены')
             break
@@ -200,7 +202,8 @@ async def compile_case(case_id, recipient):
     
     if document_paths:
         await bot.send_message(recipient, 'Отправляю документы...')
-        for file_path in document_paths:
+        for idx, file_path in enumerate(document_paths, 0):
+            await bot.send_message(recipient, document_names[i])
             functions.decrypt_file(file_path)
             with open(file_path, 'rb') as file:
                 await bot.send_document(recipient, types.InputFile(file))
