@@ -180,13 +180,13 @@ async def compile_case(case_id, recipient):
     document_paths = []
     document_names = []
     for filename in os.listdir(case_path):
-        document_names.append(filename)
         if len(photo_group) + len(document_paths) >= 10: 
             await bot.send_message(recipient, 'Только первые 10 файлов будут отправлены')
             break
 
         file_path = os.path.join(case_path, filename)
         file_extension = os.path.splitext(filename)[1].lower()
+        document_names.append(filename[:-14] + file_extension)
 
         if file_extension in ['.jpg', '.jpeg', '.png']:
             functions.decrypt_file(file_path)
@@ -308,6 +308,14 @@ async def edit_case(message):
     await bot.send_message(user_id, 'Отправляю врачу?', reply_markup=menus.accept_case_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
 
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_bio'
+                                            and not message.text.startswith('/'))
+async def edit_bio(message):
+    user_id = message.chat.id
+    await bot.send_message(user_id, 'Обновил!')
+    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+    set_user_state(user_id, 'awaiting_menu_choice')
+
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_documents'
                                             and not message.text.startswith('/'))
 async def handle_photos(message):
@@ -337,8 +345,11 @@ async def handle_query(call):
     if call.data == 'new_case':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        
-        memory.save_context({'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
+        bio = get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
+        if bio:
+            memory.save_context({'input': f'Общая информация обо мне: {bio}'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
+        else:
+            memory.save_context({'input': 'Начнём.'}, {'output': 'Начинаем новый кейс. Какие у вас жалобы?'})
         set_user_memory(user_id, memory)
 
         functions.increment_value('users', 'num_cases', 'user_id', user_id)
@@ -367,6 +378,18 @@ async def handle_query(call):
     elif call.data == 'my_subscriptions':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_message(user_id, 'У Вас нет активных подписок. Чтобы купить, скажите: "Дон-дон"')
+    
+    elif call.data == 'bio':
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Информация о Вас:')
+        bio = get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
+        if bio:
+            await bot.send_message(user_id, bio)
+            await bot.send_message(user_id, 'Хотите изменить?', reply_markup=menus.change_bio_menu())
+            set_user_state(user_id, 'awaiting_menu_choice')
+        else:
+            await bot.send_message(user_id, 'Поделитесь полом, возрастом, историей заболеваний или наличием аллергий. Эта информация немного улучшит качество моей работы. Хотите добавить?', reply_markup=menus.change_bio_menu())
+            set_user_state(user_id, 'awaiting_menu_choice')
 
     elif call.data == 'send_case_to_doctor':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
@@ -381,6 +404,16 @@ async def handle_query(call):
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_message(user_id, 'Что бы Вы хотели изменить или добавить?')
         set_user_state(user_id, 'editing_case')
+    
+    elif call.data == 'edit_bio':
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Отправьте информацию о Вас одним сообщением')
+        set_user_state(user_id, 'editing_bio')
+    
+    elif call.data == 'save_bio':
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+        set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'add_document':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)

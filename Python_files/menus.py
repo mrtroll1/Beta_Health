@@ -8,6 +8,7 @@ def main_menu():
     button_1 = types.InlineKeyboardButton("📝 Новый кейс", callback_data='new_case')
     button_2 = types.InlineKeyboardButton("🗃 Мои кейсы", callback_data='my_cases')
     button_3 = types.InlineKeyboardButton("🔐 Мои подписки", callback_data='my_subscriptions')
+    button_4 = types.InlineKeyboardButton("👤 Обо мне", callback_data='bio')
 
     keyboard.add(button_1, button_2, button_3)
 
@@ -20,6 +21,17 @@ def my_cases_menu(case_names, case_ids):
     for i in range(len(case_names)):
         button = types.InlineKeyboardButton(f'🗒 {case_names[i]}', callback_data=case_ids[i])
         keyboard.add(button)
+
+    return keyboard
+
+def change_bio_menu(case_names, case_ids):
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
+
+    button_1 = types.InlineKeyboardButton("Да", callback_data='edit_bio')
+    button_2 = types.InlineKeyboardButton("Нет", callback_data='save_bio')
+
+    keyboard.add(button_1, button_2)
 
     return keyboard
 
