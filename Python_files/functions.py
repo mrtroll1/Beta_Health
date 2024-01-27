@@ -217,10 +217,9 @@ def add_user_case(case_id, user_id, case_status):
 
 
 
-def generate_unique_filename():
+def generate_unique_filename(original_file_name):
     timestamp = int(time.time())
-    random_str = uuid.uuid4().hex
-    return f"{timestamp}_{random_str}"
+    return f"{original_file_name}_{timestamp}"
 
 def encrypt_file(file_path):
     with open(file_path, 'rb') as file_to_encrypt:
@@ -229,14 +228,14 @@ def encrypt_file(file_path):
     with open(file_path, 'wb') as encrypted_file:
         encrypted_file.write(encrypted_data)
 
-def save_file_to_server(downloaded_file, user_id, case_id, file_extension):
+def save_file_to_server(downloaded_file, user_id, case_id, original_file_name, file_extension):
     base_save_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
 
     case_specific_path = os.path.join(base_save_path, str(case_id))
     if not os.path.exists(case_specific_path):
         os.makedirs(case_specific_path)
 
-    unique_filename = generate_unique_filename() + '.' + file_extension
+    unique_filename = generate_unique_filename(original_file_name) + '.' + file_extension
     full_path = os.path.join(case_specific_path, unique_filename)
     with open(full_path, 'wb') as file:
         file.write(downloaded_file)
