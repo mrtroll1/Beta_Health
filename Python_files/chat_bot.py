@@ -173,42 +173,38 @@ async def compile_case(case_id, recipient):
     case_text = functions.get_item_from_table_by_key('case_data', 'user_cases', 'case_id', case_id)
 
     if not os.path.exists(case_path):
-        await bot.send_message(recipeint, 'Данные не найдены')
+        await bot.send_message(recipient, 'Данные не найдены')
         return
 
     photo_group = []
-    document_list = []
-    document_name_list = []
+    document_paths = []
     for filename in os.listdir(case_path):
-        document_name_list.append(filename[:-15])
-        if len(photo_group) + len(document_list) >= 10: 
+        if len(photo_group) + len(document_paths) >= 10: 
             await bot.send_message(recipient, 'Только первые 10 файлов будут отправлены')
             break
 
         file_path = os.path.join(case_path, filename)
-        functions.decrypt_file(file_path)
-
         file_extension = os.path.splitext(filename)[1].lower()
+
         if file_extension in ['.jpg', '.jpeg', '.png']:
+            functions.decrypt_file(file_path)
             with open(file_path, 'rb') as file:
                 photo_group.append(types.InputMediaPhoto(file.read()))
-        elif file_extension == '.pdf':
-            with open(file_path, 'rb') as file:
-                document_list.append(types.InputFile(file))
-                await bot.send_document(recipient, types.InputFile(file))
+            functions.encrypt_file(file_path)
 
-        # functions.encrypt_file(file_path)
+        elif file_extension == '.pdf':
+            document_paths.append(file_path)
 
     if photo_group:
         await bot.send_media_group(recipient, photo_group)
-    if document_list:
+    
+    if document_paths:
         await bot.send_message(recipient, 'Отправляю документы...')
-        for i in range(len(document_list)):
-            await bot.send_document(recipient, document_list[i])
-
-    for filename in os.listdir(case_path):
-        file_path = os.path.join(case_path, filename)
-        functions.encrypt_file(file_path)
+        for file_path in document_paths:
+            functions.decrypt_file(file_path)
+            with open(file_path, 'rb') as file:
+                await bot.send_document(recipient, types.InputFile(file))
+            functions.encrypt_file(file_path)
     
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
 
