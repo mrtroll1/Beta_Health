@@ -201,6 +201,7 @@ async def compile_case(case_id, recipient):
     if photo_group:
         await bot.send_media_group(recipient, photo_group)
     if document_list:
+        await bot.send_message(recipient, 'Отправляю документы...')
         for i in range(len(document_list)):
             await bot.send_document(recipient, document_list[i], visible_file_name=document_name_list[i])
     
