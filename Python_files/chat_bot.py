@@ -173,13 +173,14 @@ async def compile_case(case_id, recipient):
     case_text = functions.get_item_from_table_by_key('case_data', 'user_cases', 'case_id', case_id)
 
     if not os.path.exists(case_path):
-        await bot.send_message(recepeint, 'Данные не найдены')
+        await bot.send_message(recipeint, 'Данные не найдены')
         return
 
     photo_group = []
-    document_dict = {}
+    document_list = []
+    document_name_list = []
     for filename in os.listdir(case_path):
-        if len(photo_group) + len(document_dict) >= 10: 
+        if len(photo_group) + len(document_list) >= 10: 
             await bot.send_message(recipient, 'Только первые 10 файлов будут отправлены')
             break
 
@@ -192,15 +193,16 @@ async def compile_case(case_id, recipient):
                 photo_group.append(types.InputMediaPhoto(file.read()))
         elif file_extension == '.pdf':
             with open(file_path, 'rb') as file:
-                document_dict[types.InputMediaDocument(file.read())] = filename[:-11]
+                document_listtypes.append(InputMediaDocument(file.read()))
+                document_name_list.append(filename[:-15])
 
         functions.encrypt_file(file_path)
 
     if photo_group:
         await bot.send_media_group(recipient, photo_group)
-    if document_dict:
-        for doc in document_dict.keys():
-            await bot.send_document(recipient, doc, visible_file_name=document_dict[doc])
+    if document_list:
+        for i in range(len(document_list)):
+            await bot.send_document(recipient, document_list[i], visible_file_name=document_name_list[i])
     
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
 
@@ -419,7 +421,7 @@ async def handle_query(call):
 
         await compile_case(case_id, user_id)
 
-        namer_instance = Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        namer_instance = bots.Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
         await bot.send_message(user_id, f'Вот он наш первый кейс! Я решил назвать его {case_name} (я не самый талантливый автор названий)')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
