@@ -381,9 +381,9 @@ async def handle_query(call):
     
     elif call.data == 'bio':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Информация о Вас:')
-        bio = get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
+        bio = functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
         if bio:
+            await bot.send_message(user_id, 'Информация о Вас:')
             await bot.send_message(user_id, bio)
             await bot.send_message(user_id, 'Хотите изменить?', reply_markup=menus.change_bio_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
