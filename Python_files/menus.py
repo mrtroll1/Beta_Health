@@ -10,7 +10,7 @@ def main_menu():
     button_3 = types.InlineKeyboardButton("🔐 Мои подписки", callback_data='my_subscriptions')
     button_4 = types.InlineKeyboardButton("👤 Обо мне", callback_data='bio')
 
-    keyboard.add(button_1, button_2, button_3)
+    keyboard.add(button_1, button_2, button_3, button_4)
 
     return keyboard
 
