@@ -312,6 +312,7 @@ async def edit_case(message):
                                             and not message.text.startswith('/'))
 async def edit_bio(message):
     user_id = message.chat.id
+    functions.alter_table('users', 'medical_bio', message.text, 'user_id', user_id)
     await bot.send_message(user_id, 'Обновил!')
     await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
