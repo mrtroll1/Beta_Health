@@ -42,7 +42,7 @@ class Namer(langchain.chains.llm.LLMChain):
 
         return self.invoke(case_data)['text']
 
-llm = ChatOpenAI(openai_api_key=openai_api_key, model_name='gpt-4')  
+llm = ChatOpenAI(openai_api_key=openai_api_key, model_name='gpt-4-turbo-preview')  
 
 chat_prompt = ChatPromptTemplate.from_messages(
     [
