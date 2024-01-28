@@ -234,6 +234,9 @@ def save_file_to_server(downloaded_file, user_id, case_id, original_file_name, f
     case_specific_path = os.path.join(base_save_path, str(case_id))
     if not os.path.exists(case_specific_path):
         os.makedirs(case_specific_path)
+    
+    if original_file_name == None:
+        original_file_name = 'photo'
 
     unique_filename = generate_unique_filename(original_file_name) + '.' + file_extension
     full_path = os.path.join(case_specific_path, unique_filename)
