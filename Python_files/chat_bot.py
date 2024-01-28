@@ -209,7 +209,6 @@ async def compile_case(case_id, recipient):
         await bot.send_media_group(recipient, photo_group)
     
     if document_paths:
-        await bot.send_message(recipient, 'Отправляю документы...')
         for i, file_path in enumerate(document_paths, 0):
             functions.decrypt_file(file_path)
             with open(file_path, 'rb') as file:
@@ -477,7 +476,7 @@ async def handle_query(call):
 
         await compile_case(case_id, user_id)
 
-        namer_instance = bots.Namer(bots.llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        namer_instance = bots.Namer(bots.llm, bots.namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
         await bot.send_message(user_id, f'Вот он наш первый кейс! Я решил назвать его {case_name} (я не самый талантливый автор названий)')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
@@ -559,7 +558,7 @@ async def handle_document(message):
     elif user_state == 'quickstart_sending_documents':
         if message.document.file_name.lower().endswith(('.pdf', '.jpg', '.png', '.jpeg')):
             await save_document(message)
-            await bot.send_message(user_id, 'Получил!', reply_markup=menus.quickstart_finalize_case_menu())
+            await bot.send_message(user_id, 'Получил!')
             await bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
         else:
