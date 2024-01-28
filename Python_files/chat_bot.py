@@ -164,7 +164,7 @@ async def save_document(message):
         original_file_name = os.path.splitext(message.document.file_name)[0]
 
     if not file_id:
-        print("No supported files found in the message.")
+        await bot.send_message(recipient, 'Данный формат файлов не поддерживается')
         return
 
     file_info = await bot.get_file(file_id)
@@ -477,7 +477,7 @@ async def handle_query(call):
 
         await compile_case(case_id, user_id)
 
-        namer_instance = bots.Namer(llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        namer_instance = bots.Namer(bots.llm, namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
         await bot.send_message(user_id, f'Вот он наш первый кейс! Я решил назвать его {case_name} (я не самый талантливый автор названий)')
         functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
@@ -546,7 +546,7 @@ async def handle_document(message):
     user_state = get_user_state(user_id)
     
     if user_state == 'sending_documents':
-        if message.document.file_name.lower().endswith('.pdf'):
+        if message.document.file_name.lower().endswith(('.pdf', '.jpg', '.png', '.jpeg')):
             await save_document(message)
             if get_user_state != 'awaiting_menu_choice':
                 await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
@@ -557,7 +557,7 @@ async def handle_document(message):
             set_user_state(user_id, 'awaiting_menu_choice')
 
     elif user_state == 'quickstart_sending_documents':
-        if message.document.file_name.lower().endswith('.pdf'):
+        if message.document.file_name.lower().endswith(('.pdf', '.jpg', '.png', '.jpeg')):
             await save_document(message)
             await bot.send_message(user_id, 'Получил!', reply_markup=menus.quickstart_finalize_case_menu())
             await bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
