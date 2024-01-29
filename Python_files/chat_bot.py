@@ -31,7 +31,7 @@ async def send_scheduled_message(chat_id, message):
 async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
     scheduled_time = datetime.datetime.now() + delay
     await bot.send_message(chat_id, f'Отправка уведомления {message} запланирована на {scheduled_time}')
-    scheduler.add_job(func=send_scheduled_message, name=f'{chat_id}_{datetime.time.now()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
+    scheduler.add_job(func=send_scheduled_message, name=f'{chat_id}_{datetime.datetime.now().time()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
 
 
 user_state = {}
@@ -348,10 +348,6 @@ async def set_reminders(message):
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
     reminders = reminder_instance.compose_reminders(message.text)
-    reminders = {'Не забудьте записаться на лечение кариеса зубов 4.6 и 4.8. Важно позаботиться о здоровье ваших зубов вовремя.': [datetime.timedelta(days=1)],
-                'Планируйте визит к стоматологу для замены несостоятельных пломб на зубах 2.4 и 2.5 с профилактической целью.': [datetime.timedelta(days=3)],
-                'Если заметите повышенную чувствительность зубов или другие жалобы в области рецессий десны, рекомендуется консультация у стоматолога-хирурга по вопросу пластики десны.': [datetime.timedelta(days=7)]
-    }
 
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
     await schedule_message(message.chat.id, f'Привет, {user_name}', datetime.timedelta(seconds=60))
