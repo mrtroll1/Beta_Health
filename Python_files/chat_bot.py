@@ -30,7 +30,11 @@ async def send_scheduled_message(chat_id, message):
 
 async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
     scheduled_time = datetime.datetime.now() + delay
-    await bot.send_message(chat_id, f'Отправка уведомления {message} запланирована на {scheduled_time}')
+    await bot.send_message(chat_id, f'''
+Отправка уведомления 
+{message} 
+запланирована на {scheduled_time}
+    ''')
     scheduler.add_job(func=send_scheduled_message, name=f'{chat_id}_{datetime.datetime.now().time()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
 
 
@@ -348,17 +352,25 @@ async def set_reminders(message):
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
     response, reminders = reminder_instance.compose_reminders(message.text)
-    await bot.send_message(message.chat.id, response)
-    await bot.send_message(message.chat.id, reminders)
+    await bot.send_message(message.chat.id, f'''
+Ответ GPT: 
+{response}
+    ''')
+    await bot.send_message(message.chat.id, f'''
+Отформатированные напоминания: 
+{reminders}
+    ''')
 
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
     await schedule_message(message.chat.id, f'Привет, {user_name}', datetime.timedelta(seconds=60))
 
+    total = 1
     for reminder_text, delays in reminders.items():
         for delay in delays:
+            total += 1
             await schedule_message(message.chat.id, reminder_text, delay)
     jobs = scheduler.get_jobs()
-    await bot.send_message(message.chat.id, f'{len(jobs)} из {len(reminders.items()) + 1}  уведомлений были успешно установлены')
+    await bot.send_message(message.chat.id, f'{len(jobs)} из {total}  уведомлений были успешно установлены')
 
 
 
