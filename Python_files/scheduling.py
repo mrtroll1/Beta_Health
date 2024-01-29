@@ -12,7 +12,10 @@ async def send_scheduled_message(chat_id, message):
 async def schedule_message(chat_id, message, delay):
     scheduled_time = datetime.datetime.now() + delay
     await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
-    scheduler.add_job(func=send_scheduled_message, name=chat_id, trigger='date', run_date=scheduled_time, args=[chat_id, message])
+    try:
+        scheduler.add_job(func=send_scheduled_message, trigger='date', run_date=scheduled_time, args=[chat_id, message])
+    except:
+        bot.send_message(chat_id, f'Could not schedule a job with args: {chat_id}, {message}, {delay}')
 
 
 
