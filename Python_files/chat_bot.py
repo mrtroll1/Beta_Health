@@ -234,8 +234,8 @@ async def send_help(message):
     await bot.send_message(message.chat.id, help_text)
 
 @bot.message_handler(commands=['test'])
-async def send_help(message):
-    await bot.send_message(message.chat.id, 'Через минуту Вам придёт сообщение')
+async def test(message):
+    await bot.send_message(message.chat.id, 'Через 15 секунд Вам придёт сообщение')
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
     await scheduler_functions.schedule_message(bot, message.chat.id, f'Привет, {user_name}')
 
