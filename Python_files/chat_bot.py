@@ -347,7 +347,8 @@ async def handle_photos(message):
 async def set_reminders(message):
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
-    reminders = reminder_instance.compose_reminders(message.text)
+    response, reminders = reminder_instance.compose_reminders(message.text)
+    await bot.send_message(message.chat.id, response)
     await bot.send_message(message.chat.id, reminders)
 
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
