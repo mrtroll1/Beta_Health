@@ -8,6 +8,7 @@ scheduler = AsyncIOScheduler()
 scheduler.start()
 
 async def send_scheduled_message(chat_id, message):
+    print('Entered send_scheduled_message function')
     await bot.send_message(chat_id, message)
 
 async def schedule_message(chat_id, message, delay_in_hours=0, delay_in_minutes=0, delay_in_seconds=15):
