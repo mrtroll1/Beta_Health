@@ -23,23 +23,13 @@ from langchain.prompts import HumanMessagePromptTemplate
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token)
 
+
+
+
+
 user_state = {}
 user_memory = {}
 user_curr_case = {}
-
-scheduler = AsyncIOScheduler()
-
-async def send_scheduled_message(chat_id, message):
-    await bot.send_message(chat_id, message)
-
-async def schedule_message(chat_id, message, delay_in_hours=0, delay_in_minutes=0, delay_in_seconds=15):
-    await bot.send_message(chat_id, 'entered schedule_message function')
-    scheduled_time = datetime.datetime.now() + datetime.timedelta(seconds=delay_in_seconds, minutes=delay_in_minutes, hours=delay_in_hours)
-    await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
-    scheduler.add_job(func=send_scheduled_message, name='send_scheduled_message', trigger='date', run_date=scheduled_time, args=[chat_id, message])
-    jobs = scheduler.get_jobs()
-    await bot.send_message(chat_id, f'Scheduled jobs: {jobs}')
-
 
 #                               """GLOBAL CHAT-MANAGING functions"""
 
@@ -249,9 +239,9 @@ async def send_help(message):
 
 @bot.message_handler(commands=['test'])
 async def test(message):
-    await bot.send_message(message.chat.id, 'Через 15 секунд Вам придёт сообщение')
+    await bot.send_message(message.chat.id, 'Через 2 минуты Вам придёт сообщение')
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    await schedule_message(message.chat.id, f'Привет, {user_name}')
+    await scheduler_functions.schedule_message(message.chat.id, f'Привет, {user_name}')
 
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
@@ -572,7 +562,7 @@ async def handle_document(message):
 
 
 async def main():
-    scheduler.start()
+    scheduler_functions.scheduler.start()
     await bot.infinity_polling()
 
 if __name__ == '__main__':
