@@ -29,13 +29,9 @@ async def send_scheduled_message(chat_id, message):
     await bot.send_message(chat_id, message)
 
 async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
-    await bot.send_message(chat_id, 'entered schedule_message function')
     scheduled_time = datetime.datetime.now() + delay
-    await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
-    try:
-        scheduler.add_job(func=send_scheduled_message, name=f'{datetime.datetime.now()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
-    except:
-        await bot.send_message(chat_id, f'Could not schedule a job with args: {chat_id}, {message}, {delay}')
+    await bot.send_message(chat_id, f'Отправка уведомления {message} запланирована на {scheduled_time}')
+    scheduler.add_job(func=send_scheduled_message, name=f'{chat_id}_{datetime.time.now()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
 
 
 user_state = {}
@@ -349,10 +345,9 @@ async def handle_photos(message):
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'setting_reminders'
                                             and not message.text.startswith('/'))
 async def set_reminders(message):
-    await bot.send_message(message.chat.id, 'Подождите немного...')
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
-    # reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
-    # reminders = reminder_instance.compose_reminders(message.text)
+    reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
+    reminders = reminder_instance.compose_reminders(message.text)
     reminders = {'Не забудьте записаться на лечение кариеса зубов 4.6 и 4.8. Важно позаботиться о здоровье ваших зубов вовремя.': [datetime.timedelta(days=1)],
                 'Планируйте визит к стоматологу для замены несостоятельных пломб на зубах 2.4 и 2.5 с профилактической целью.': [datetime.timedelta(days=3)],
                 'Если заметите повышенную чувствительность зубов или другие жалобы в области рецессий десны, рекомендуется консультация у стоматолога-хирурга по вопросу пластики десны.': [datetime.timedelta(days=7)]
@@ -360,13 +355,11 @@ async def set_reminders(message):
 
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
     await schedule_message(message.chat.id, f'Привет, {user_name}', datetime.timedelta(seconds=60))
-    await bot.send_message(message.chat.id, 'Подождите ещё ...')
     for reminder_text, delays in reminders.items():
         for delay in delays:
             await schedule_message(message.chat.id, reminder_text, delay)
-    await bot.send_message(message.chat.id, 'Reminders have been set, here they are:')
     jobs = scheduler.get_jobs()
-    await bot.send_message(message.chat.id, jobs)
+    await bot.send_message(message.chat.id, f'{len(jobs)}/{len(reminders.items())}  уведомлений были успешно установлены')
 
 
 
