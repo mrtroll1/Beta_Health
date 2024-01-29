@@ -6,6 +6,9 @@ import data_functions
 import scheduler_functions
 import menus 
 import mysql.connector
+import datetime
+import apscheduler 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import telebot
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
@@ -26,8 +29,20 @@ user_curr_case = {}
 
 
 
+scheduler = AsyncIOScheduler()
+scheduler.start()
 
-#                               """GLOBAL CHAT-MANAGING data_functions"""
+async def send_scheduled_message(chat_id, message):
+    await bot.send_message(chat_id, message)
+
+async def schedule_message(chat_id, message, delay_in_hours=0, delay_in_minutes=0, delay_in_seconds=15):
+    await bot.send_message(chat_id, 'entered schedule_message function')
+    scheduled_time = datetime.datetime.now() + datetime.timedelta(seconds=delay_in_seconds, minutes=delay_in_minutes, hours=delay_in_hours)
+    await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
+    scheduler.add_job(send_scheduled_message, 'date', run_date=scheduled_time, args=[chat_id, message])
+
+
+#                               """GLOBAL CHAT-MANAGING functions"""
 
 def set_user_state(user_id, state):
     user_state[user_id] = state
@@ -237,7 +252,7 @@ async def send_help(message):
 async def test(message):
     await bot.send_message(message.chat.id, 'Через 15 секунд Вам придёт сообщение')
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    await scheduler_functions.schedule_message(message.chat.id, f'Привет, {user_name}')
+    await schedule_message(message.chat.id, f'Привет, {user_name}')
 
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
