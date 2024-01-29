@@ -341,7 +341,7 @@ async def set_reminders(message):
     await bot.send_message(message.chat.id, 'Подождите немного...')
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
-    reminders = reminder_instance.compose_reminders(message)
+    reminders = reminder_instance.compose_reminders(message.text)
     await bot.send_message(message.chat.id, 'Подождите ещё ...')
     for reminder_text, delays in reminders.items():
         for delay in delays:
