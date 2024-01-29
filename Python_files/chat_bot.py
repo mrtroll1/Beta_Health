@@ -3,7 +3,7 @@ import time
 import asyncio
 import bots
 import data_functions
-import scheduler_functions
+import scheduling
 import menus 
 import mysql.connector
 import datetime
@@ -345,9 +345,9 @@ async def set_reminders(message):
     await bot.send_message(message.chat.id, 'Подождите ещё ...')
     for reminder_text, delays in reminders.items():
         for delay in delays:
-            await scheduler_functions.schedule_message(message.chat.id, reminder_text, delay)
+            await scheduling.schedule_message(message.chat.id, reminder_text, delay)
     await bot.send_message(message.chat.id, 'Reminders have been set, here they are:')
-    jobs = scheduler.get_jobs()
+    jobs = scheduling.scheduler.get_jobs()
     await bot.send_message(message.chat.id, jobs)
 
 
@@ -577,7 +577,7 @@ async def handle_document(message):
 
 
 async def main():
-    scheduler_functions.scheduler.start()
+    scheduling.scheduler.start()
     await bot.infinity_polling()
 
 if __name__ == '__main__':
