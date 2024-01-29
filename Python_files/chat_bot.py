@@ -35,7 +35,7 @@ async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15
     try:
         scheduler.add_job(func=send_scheduled_message, trigger='date', run_date=scheduled_time, args=[chat_id, message])
     except:
-        bot.send_message(chat_id, f'Could not schedule a job with args: {chat_id}, {message}, {delay}')
+        await bot.send_message(chat_id, f'Could not schedule a job with args: {chat_id}, {message}, {delay}')
 
 
 user_state = {}
@@ -359,7 +359,7 @@ async def set_reminders(message):
     }
 
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    await schedule_message(message.chat.id, f'Привет, {user_name}')
+    await schedule_message(message.chat.id, f'Привет, {user_name}', datetime.timedelta(seconds=60))
     await bot.send_message(message.chat.id, 'Подождите ещё ...')
     for reminder_text, delays in reminders.items():
         for delay in delays:
