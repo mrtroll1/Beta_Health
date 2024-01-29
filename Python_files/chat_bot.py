@@ -239,9 +239,8 @@ async def send_help(message):
 
 @bot.message_handler(commands=['test'])
 async def test(message):
-    await bot.send_message(message.chat.id, 'Через 2 минуты Вам придёт сообщение')
-    user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    await scheduler_functions.schedule_message(message.chat.id, f'Привет, {user_name}')
+    await bot.send_message(message.chat.id, 'Введите рекоммендации врача, и я назначу Вам напоминания.')
+    set_user_state(message.chat.id, 'setting reminders')
 
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
@@ -254,6 +253,7 @@ async def send_info(message):
     info = 'А чё тут писать-то)'
     await bot.send_message(message.chat.id, info)
     # ... введите /menu, чтобы начать пользоваться
+
 
     
     
@@ -334,6 +334,19 @@ async def handle_photos(message):
         await bot.send_message(message.chat.id, 'Показать, что получилось?', reply_markup=menus.quickstart_finalize_case_menu())
         set_user_state(message.chat.id, 'awaiting_menu_choice')
 
+
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'setting_reminders'
+                                            and not message.text.startswith('/'))
+async def set_reminders(message):
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
+    reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
+    reminders = reminder_instance.compose_reminders(message)
+    for reminder_text, delays in reminders.items():
+        for delay in delays:
+            await scheduler_functions.schedule_message(message.chat.id, reminder_text, delay)
+    await bot.send_message(message.chat.id, 'Reminders have been set, here they are:')
+    jobs = scheduler.get_jobs()
+    await bot.send_message(message.chat.id, jobs)
 
 
 

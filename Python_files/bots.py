@@ -1,4 +1,5 @@
 import os
+import datetime
 import langchain
 import langchain_core
 from langchain.prompts import ChatPromptTemplate
@@ -41,6 +42,30 @@ class Namer(langchain.chains.llm.LLMChain):
     def name_case(self, case_data):
 
         return self.invoke(case_data)['text']
+
+class Reminder(langchain.chains.llm.LLMChain):
+    def __init__(self, llm, prompt, memory, verbose=False):
+        super().__init__(llm=llm, prompt=prompt, verbose=verbose, memory=memory)
+
+        self.memory = memory  
+
+    def process_output(self, response):
+        allowed_names = {"datetime": datetime}
+    
+        formatted_string = input_string.replace("'''", "").replace("python", "")
+        
+        formatted_string = formatted_string.replace("\n", "")
+        
+        try:
+            result_dict = eval(formatted_string, {"__builtins__": None}, allowed_names)
+        except Exception as e:
+            return {}
+
+        return result_dict
+    
+    def compose_reminders(self, recommendations):
+        response = self.invoke(recommendations)['text']
+        return process_output(response)
 
 llm = ChatOpenAI(openai_api_key=openai_api_key, model_name='gpt-4-turbo-preview')  
 

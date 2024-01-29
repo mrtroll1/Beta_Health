@@ -9,11 +9,10 @@ scheduler = AsyncIOScheduler()
 async def send_scheduled_message(chat_id, message):
     await bot.send_message(chat_id, message)
 
-async def schedule_message(chat_id, message, delay_in_hours=0, delay_in_minutes=0, delay_in_seconds=15):
-    scheduled_time = datetime.datetime.now() + datetime.timedelta(seconds=delay_in_seconds, minutes=delay_in_minutes, hours=delay_in_hours)
+async def schedule_message(chat_id, message, delay):
+    scheduled_time = datetime.datetime.now() + delay
     await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
-    scheduler.add_job(func=send_scheduled_message, name='send_scheduled_message', trigger='date', run_date=scheduled_time, args=[chat_id, message])
-
+    scheduler.add_job(func=send_scheduled_message, name=chat_id, trigger='date', run_date=scheduled_time, args=[chat_id, message])
 
 
 
