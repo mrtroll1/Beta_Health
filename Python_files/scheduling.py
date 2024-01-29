@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import apscheduler 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from chat_bot import bot, scheduler
 
 async def send_scheduled_message(chat_id, message):

@@ -9,6 +9,7 @@ import mysql.connector
 import datetime
 import apscheduler 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 import telebot
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
@@ -22,8 +23,20 @@ from langchain.prompts import HumanMessagePromptTemplate
 
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token)
-scheduler = AsyncIOScheduler()
+scheduler = BackgroundScheduler()
+scheduler.start()
 
+async def send_scheduled_message(chat_id, message):
+    await bot.send_message(chat_id, message)
+
+async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=10)):
+    await bot.send_message(chat_id, 'entered schedule_message function')
+    scheduled_time = datetime.datetime.now() + delay
+    await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
+    try:
+        scheduler.add_job(func=send_scheduled_message, trigger='date', run_date=scheduled_time, args=[chat_id, message])
+    except:
+        bot.send_message(chat_id, f'Could not schedule a job with args: {chat_id}, {message}, {delay}')
 
 
 user_state = {}
@@ -347,11 +360,11 @@ async def set_reminders(message):
     }
 
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    await scheduling.schedule_message(message.chat.id, f'Привет, {user_name}')
+    await schedule_message(message.chat.id, f'Привет, {user_name}')
     await bot.send_message(message.chat.id, 'Подождите ещё ...')
     for reminder_text, delays in reminders.items():
         for delay in delays:
-            await scheduling.schedule_message(message.chat.id, reminder_text, delay)
+            await schedule_message(message.chat.id, reminder_text, delay)
     await bot.send_message(message.chat.id, 'Reminders have been set, here they are:')
     jobs = scheduler.get_jobs()
     await bot.send_message(message.chat.id, jobs)
@@ -583,7 +596,6 @@ async def handle_document(message):
 
 
 async def main():
-    scheduler.start()
     await bot.infinity_polling()
 
 if __name__ == '__main__':
