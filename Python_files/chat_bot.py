@@ -22,8 +22,7 @@ from langchain.prompts import HumanMessagePromptTemplate
 
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token)
-
-
+scheduler = AsyncIOScheduler()
 
 
 
@@ -347,7 +346,7 @@ async def set_reminders(message):
         for delay in delays:
             await scheduling.schedule_message(message.chat.id, reminder_text, delay)
     await bot.send_message(message.chat.id, 'Reminders have been set, here they are:')
-    jobs = scheduling.scheduler.get_jobs()
+    jobs = scheduler.get_jobs()
     await bot.send_message(message.chat.id, jobs)
 
 
