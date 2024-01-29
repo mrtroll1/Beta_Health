@@ -7,7 +7,7 @@ from chat_bot import bot, scheduler
 async def send_scheduled_message(chat_id, message):
     await bot.send_message(chat_id, message)
 
-async def schedule_message(chat_id, message, delay):
+async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=10)):
     await bot.send_message(chat_id, 'entered schedule_message function')
     scheduled_time = datetime.datetime.now() + delay
     await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
