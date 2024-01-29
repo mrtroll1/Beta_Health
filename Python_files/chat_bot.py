@@ -23,7 +23,7 @@ from langchain.prompts import HumanMessagePromptTemplate
 
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token)
-scheduler = BackgroundScheduler()
+scheduler = AsyncIOScheduler()
 
 async def send_scheduled_message(chat_id, message):
     await bot.send_message(chat_id, message)
@@ -33,7 +33,7 @@ async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15
     scheduled_time = datetime.datetime.now() + delay
     await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
     try:
-        scheduler.add_job(func=send_scheduled_message, trigger='date', run_date=scheduled_time, args=[chat_id, message])
+        scheduler.add_job(func=send_scheduled_message, name=f'{datetime.datetime.now()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
     except:
         await bot.send_message(chat_id, f'Could not schedule a job with args: {chat_id}, {message}, {delay}')
 
