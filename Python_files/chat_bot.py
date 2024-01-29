@@ -240,7 +240,7 @@ async def send_help(message):
 @bot.message_handler(commands=['test'])
 async def test(message):
     await bot.send_message(message.chat.id, 'Введите рекоммендации врача, и я назначу Вам напоминания.')
-    set_user_state(message.chat.id, 'setting reminders')
+    set_user_state(message.chat.id, 'setting_reminders')
 
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
