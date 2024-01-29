@@ -7,6 +7,7 @@ import scheduling
 import menus 
 import mysql.connector
 import datetime
+import random
 import apscheduler 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -22,18 +23,23 @@ from langchain.schema import SystemMessage
 from langchain.prompts import HumanMessagePromptTemplate
 
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
-bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token)
+bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token, parse_mode='Markdown', )
 scheduler = AsyncIOScheduler()
 
 async def send_scheduled_message(chat_id, message):
     await bot.send_message(chat_id, message)
 
 async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
+    range_minutes = 2 * 60  
+    random_minutes = random.randint(-range_minutes, range_minutes)
+    random_timedelta = datetime.timedelta(minutes=random_seconds)
+    delay = delay + random_timedelta
+
     scheduled_time = datetime.datetime.now() + delay
     await bot.send_message(chat_id, f'''
 Отправка уведомления 
-{message} 
-запланирована на {scheduled_time}
+_{message}_ 
+запланирована на {scheduled_time.strftime("%Y-%m-%d %H-%M")}
     ''')
     scheduler.add_job(func=send_scheduled_message, name=f'{chat_id}_{datetime.datetime.now().time()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
 
@@ -41,6 +47,7 @@ async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15
 user_state = {}
 user_memory = {}
 user_curr_case = {}
+
 
 #                               """GLOBAL CHAT-MANAGING functions"""
 
@@ -352,19 +359,17 @@ async def set_reminders(message):
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
     response, reminders = reminder_instance.compose_reminders(message.text)
+
     await bot.send_message(message.chat.id, f'''
 Ответ GPT: 
 {response}
     ''')
+
     await bot.send_message(message.chat.id, f'''
 Отформатированные напоминания: 
 {reminders}
     ''')
 
-    user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    await schedule_message(message.chat.id, f'Привет, {user_name}', datetime.timedelta(seconds=60))
-
-    total = 1
     for reminder_text, delays in reminders.items():
         for delay in delays:
             total += 1
