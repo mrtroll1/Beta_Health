@@ -345,9 +345,9 @@ async def set_reminders(message):
                 'Планируйте визит к стоматологу для замены несостоятельных пломб на зубах 2.4 и 2.5 с профилактической целью.': [datetime.timedelta(days=3)],
                 'Если заметите повышенную чувствительность зубов или другие жалобы в области рецессий десны, рекомендуется консультация у стоматолога-хирурга по вопросу пластики десны.': [datetime.timedelta(days=7)]
     }
-    
+
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    await scheduler_functions.schedule_message(message.chat.id, f'Привет, {user_name}')
+    await scheduling.schedule_message(message.chat.id, f'Привет, {user_name}')
     await bot.send_message(message.chat.id, 'Подождите ещё ...')
     for reminder_text, delays in reminders.items():
         for delay in delays:
