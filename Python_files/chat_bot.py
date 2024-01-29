@@ -576,7 +576,7 @@ async def handle_document(message):
 
 
 async def main():
-    scheduling.scheduler.start()
+    scheduler.start()
     await bot.infinity_polling()
 
 if __name__ == '__main__':
