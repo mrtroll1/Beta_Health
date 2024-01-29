@@ -125,6 +125,26 @@ namer_prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
+reminder_prompt = ChatPromptTemplate.from_messages(
+    [
+        SystemMessage(
+            content="""Ты -- ИИ ассистент врача. Твоя задача планировать напоминания.  
+            Сегодня у врача был приём. Тебе на вход даются рекомендации, которые он дал пациенту. 
+            Что-то, что пациент должен делать в ближайшее время. 
+            Твоя задача написать текст напоминания для пациента и указать в днях/часах datetime.timedelta -- время, 
+            через которое эти напоминания надо отправить. 
+            Твой ответ должен быть в формате python dictionary, где keys - тексты напоминаний, 
+            а values - list of timdelta's (одно и тоже можно напоминать несколько раз). 
+            """
+        ),  
+        MessagesPlaceholder(
+            variable_name="chat_history"
+        ),  
+        HumanMessagePromptTemplate.from_template(
+            "{human_input}"
+        ),  
+    ]
+)
 
 
 
