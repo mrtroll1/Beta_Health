@@ -109,7 +109,7 @@ async def quickstart(message):
 
     await bot.send_chat_action(user_id, 'typing')
     await asyncio.sleep(3)
-    await bot.send_message(user_id, 'Я подробно расспрошу Вас о проблеме и дам предварительные рекоммендации. Далее, при необходимости, передам дело в руки врача.', parse_mode='Markdown')
+    await bot.send_message(user_id, 'Вы обратитесь ко мне с жалобой или сипмтомами. Я подробно расспрошу Вас о проблеме и дам предварительные рекоммендации. Далее, при необходимости, передам дело в руки врача.', parse_mode='Markdown')
 
     await bot.send_chat_action(user_id, 'typing')
     await asyncio.sleep(7)
@@ -282,7 +282,7 @@ async def handle_message(message):
 async def handle_message(message):
     await conversation_step(message, get_user_memory(message.chat.id))
 
-@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case'
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case' 
                                             and not message.text.startswith('/'))
 async def edit_case(message):
     user_id = message.chat.id
@@ -368,7 +368,7 @@ async def handle_query(call):
         results = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
         case_ids = [item[0] for item in results]
         
-        await bot.send_message(user_id, 'Список Ваших кейсов:', reply_markup=menus.my_cases_menu(case_names, case_ids))
+        await bot.send_message(user_id, 'Список Ваших проблем:', reply_markup=menus.my_cases_menu(case_names, case_ids))
     
     elif call.data == 'my_subscriptions':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
@@ -478,7 +478,7 @@ async def handle_query(call):
 
         case_id = get_user_curr_case(user_id)
         case_name = functions.get_item_from_table_by_key('case_name', 'user_cases', 'case_id', case_id)
-        await bot.send_message(user_id, f'Кейс {case_name} сохранён.')
+        await bot.send_message(user_id, f'Проблема {case_name} сохранена.')
         functions.alter_table('user_cases', 'case_status', 'saved', 'case_id', case_id)
         await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
@@ -520,7 +520,7 @@ async def handle_photos(message):
     elif user_state == 'quickstart_sending_documents':
         await save_document(message)
         await bot.send_message(user_id, 'Получил!') 
-        await bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
+        await bot.send_message(user_id, 'Показать?', reply_markup=menus.quickstart_finalize_case_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
@@ -546,7 +546,7 @@ async def handle_document(message):
         if message.document.file_name.lower().endswith(('.pdf', '.jpg', '.png', '.jpeg')):
             await save_document(message)
             await bot.send_message(user_id, 'Получил!')
-            await bot.send_message(user_id, 'Наш пробный кейс готов. Показать?', reply_markup=menus.quickstart_finalize_case_menu())
+            await bot.send_message(user_id, 'Показать?', reply_markup=menus.quickstart_finalize_case_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
         else:
             await bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.quickstart_add_document_menu())
