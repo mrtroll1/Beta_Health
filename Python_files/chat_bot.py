@@ -370,6 +370,7 @@ async def set_reminders(message):
 {reminders}
     ''')
 
+    total = 0
     for reminder_text, delays in reminders.items():
         for delay in delays:
             total += 1
