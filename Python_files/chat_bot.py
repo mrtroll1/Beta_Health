@@ -353,7 +353,7 @@ async def set_reminders(message):
         for delay in delays:
             await scheduling.schedule_message(message.chat.id, reminder_text, delay)
     await bot.send_message(message.chat.id, 'Reminders have been set, here they are:')
-    jobs = await scheduler.get_jobs()
+    jobs = scheduler.get_jobs()
     await bot.send_message(message.chat.id, jobs)
 
 
