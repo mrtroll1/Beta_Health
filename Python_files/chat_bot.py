@@ -348,14 +348,16 @@ async def set_reminders(message):
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
     reminders = reminder_instance.compose_reminders(message.text)
+    await bot.send_message(message.chat.id, reminders)
 
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
     await schedule_message(message.chat.id, f'Привет, {user_name}', datetime.timedelta(seconds=60))
+
     for reminder_text, delays in reminders.items():
         for delay in delays:
             await schedule_message(message.chat.id, reminder_text, delay)
     jobs = scheduler.get_jobs()
-    await bot.send_message(message.chat.id, f'{len(jobs)}/{len(reminders.items())}  уведомлений были успешно установлены')
+    await bot.send_message(message.chat.id, f'{len(jobs)}/{len(reminders.items()) + 1}  уведомлений были успешно установлены')
 
 
 
