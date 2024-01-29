@@ -65,7 +65,7 @@ class Reminder(langchain.chains.llm.LLMChain):
     
     def compose_reminders(self, recommendations):
         response = self.invoke(recommendations)['text']
-        return process_output(response)
+        return self.process_output(response)
 
 llm = ChatOpenAI(openai_api_key=openai_api_key, model_name='gpt-4-turbo-preview')  
 
