@@ -24,12 +24,11 @@ from langchain.prompts import HumanMessagePromptTemplate
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token)
 scheduler = BackgroundScheduler()
-scheduler.start()
 
 async def send_scheduled_message(chat_id, message):
     await bot.send_message(chat_id, message)
 
-async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=10)):
+async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
     await bot.send_message(chat_id, 'entered schedule_message function')
     scheduled_time = datetime.datetime.now() + delay
     await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
@@ -596,6 +595,7 @@ async def handle_document(message):
 
 
 async def main():
+    scheduler.start()
     await bot.infinity_polling()
 
 if __name__ == '__main__':
