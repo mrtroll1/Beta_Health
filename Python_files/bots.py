@@ -52,7 +52,7 @@ class Reminder(langchain.chains.llm.LLMChain):
     def process_output(self, response):
         allowed_names = {"datetime": datetime}
     
-        formatted_string = input_string.replace("'''", "").replace("python", "")
+        formatted_string = response.replace("'''", "").replace("python", "")
         
         formatted_string = formatted_string.replace("\n", "")
         
