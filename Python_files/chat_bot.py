@@ -28,7 +28,6 @@ user_memory = {}
 user_curr_case = {}
 
 
-
 scheduler = AsyncIOScheduler()
 scheduler.start()
 
