@@ -2,7 +2,8 @@ import os
 import time
 import asyncio
 import bots
-import functions
+import data_functions
+import scheduler_functions
 import menus 
 import mysql.connector
 import telebot
@@ -26,7 +27,7 @@ user_curr_case = {}
 
 
 
-#                               """GLOBAL CHAT-MANAGING FUNCTIONS"""
+#                               """GLOBAL CHAT-MANAGING data_functions"""
 
 def set_user_state(user_id, state):
     user_state[user_id] = state
@@ -47,7 +48,7 @@ def get_user_curr_case(user_id):
     return user_curr_case.get(user_id, None)
 
 def generate_case_id(user_id):
-    num_cases = functions.get_item_from_table_by_key('num_cases', 'users', 'user_id', user_id)
+    num_cases = data_functions.get_item_from_table_by_key('num_cases', 'users', 'user_id', user_id)
 
     if num_cases is None:
         num_cases = 0
@@ -114,14 +115,14 @@ async def quickstart(message):
     await bot.send_chat_action(user_id, 'typing')
     await asyncio.sleep(7)
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    bio = functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
+    bio = data_functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
     memory.save_context({'input': 'Начнём.'}, {'output': 'Какие у вас жалобы?'})
     set_user_memory(user_id, memory)
 
-    functions.increment_value('users', 'num_cases', 'user_id', user_id)
+    data_functions.increment_value('users', 'num_cases', 'user_id', user_id)
     case_id, num_cases = generate_case_id(user_id)
     set_user_curr_case(user_id, case_id)
-    functions.add_user_case(case_id, user_id, 'Активен')
+    data_functions.add_user_case(case_id, user_id, 'Активен')
     await bot.send_message(user_id, 'Давайте попробуем! Какие у Вас жалобы?') 
 
 def summarize_into_case(memory): 
@@ -159,14 +160,14 @@ async def save_document(message):
     downloaded_file = await bot.download_file(file_info.file_path)
 
     case_id = get_user_curr_case(message.chat.id)
-    case_specific_path, full_path = functions.save_file_to_server(downloaded_file, message.chat.id, case_id, original_file_name, file_extension)
+    case_specific_path, full_path = data_functions.save_file_to_server(downloaded_file, message.chat.id, case_id, original_file_name, file_extension)
 
-    functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
+    data_functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
 
 async def compile_case(case_id, recipient):
     base_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
     case_path = os.path.join(base_path, str(case_id))
-    case_text = functions.get_item_from_table_by_key('case_data', 'user_cases', 'case_id', case_id)
+    case_text = data_functions.get_item_from_table_by_key('case_data', 'user_cases', 'case_id', case_id)
 
     if not os.path.exists(case_path):
         await bot.send_message(recipient, 'Данные не найдены')
@@ -185,10 +186,10 @@ async def compile_case(case_id, recipient):
         document_names.append(filename[:-14] + file_extension)
 
         if file_extension in ['.jpg', '.jpeg', '.png']:
-            functions.decrypt_file(file_path)
+            data_functions.decrypt_file(file_path)
             with open(file_path, 'rb') as file:
                 photo_group.append(types.InputMediaPhoto(file.read()))
-            functions.encrypt_file(file_path)
+            data_functions.encrypt_file(file_path)
 
         elif file_extension == '.pdf':
             document_paths.append(file_path)
@@ -198,10 +199,10 @@ async def compile_case(case_id, recipient):
     
     if document_paths:
         for i, file_path in enumerate(document_paths, 0):
-            functions.decrypt_file(file_path)
+            data_functions.decrypt_file(file_path)
             with open(file_path, 'rb') as file:
                 await bot.send_document(recipient, types.InputFile(file), caption=document_names[i])
-            functions.encrypt_file(file_path)
+            data_functions.encrypt_file(file_path)
     
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
 
@@ -213,7 +214,7 @@ async def compile_case(case_id, recipient):
 @bot.message_handler(commands=['start'])
 async def send_welcome(message):
     user_id = message.chat.id
-    user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
+    user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
     set_user_memory(user_id, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
 
     if user_name:
@@ -234,13 +235,13 @@ async def send_help(message):
 
 @bot.message_handler(commands=['test'])
 async def send_help(message):
-    help_text = """Отправляйте документы"""
-    set_user_state(message.chat.id, 'sending_documents')
-    await bot.send_message(message.chat.id, help_text)
+    await bot.send_message(message.chat.id, 'Через минуту Вам придёт сообщение')
+    user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
+    await scheduler_functions.schedule_message(bot, message.chat.id, f'Привет, {user_name}')
 
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
-    user_name = functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
+    user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
     await bot.send_message(message.chat.id, f'{user_name}, как я могу Вам помочь?', reply_markup=menus.main_menu())
     set_user_state(message.chat.id, 'awaiting_menu_choice')
 
@@ -266,7 +267,7 @@ async def handle_name_input(message):
     user_id = message.chat.id
     user_name = message.text
 
-    functions.add_user_name(user_id, user_name)
+    data_functions.add_user_name(user_id, user_name)
 
     confirmation_msg = f"Очень приятно, {user_name}! Сейчас я покажу, как всё работает..."
     await bot.send_message(user_id, confirmation_msg)
@@ -297,7 +298,7 @@ async def edit_case(message):
     case = summarize_into_case(memory)
     set_user_memory(user_id, case)
     case_id = get_user_curr_case(user_id)
-    functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
+    data_functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
     await compile_case(case_id, user_id)
     await bot.send_message(user_id, 'Отправляю врачу?', reply_markup=menus.accept_case_menu())
@@ -307,7 +308,7 @@ async def edit_case(message):
                                             and not message.text.startswith('/'))
 async def edit_bio(message):
     user_id = message.chat.id
-    functions.alter_table('users', 'medical_bio', message.text, 'user_id', user_id)
+    data_functions.alter_table('users', 'medical_bio', message.text, 'user_id', user_id)
     await bot.send_message(user_id, 'Обновил!')
     await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
@@ -341,17 +342,17 @@ async def handle_query(call):
     if call.data == 'new_case':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        bio = functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
+        bio = data_functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
         if bio:
             memory.save_context({'input': f'Общая информация обо мне: {bio}'}, {'output': 'Начинаем. Какие у вас жалобы?'})
         else:
             memory.save_context({'input': 'Начнём.'}, {'output': 'Какие у вас жалобы?'})
         set_user_memory(user_id, memory)
 
-        functions.increment_value('users', 'num_cases', 'user_id', user_id)
+        data_functions.increment_value('users', 'num_cases', 'user_id', user_id)
         case_id, num_cases = generate_case_id(user_id)
         set_user_curr_case(user_id, case_id)
-        functions.add_user_case(case_id, user_id, 'Активен')
+        data_functions.add_user_case(case_id, user_id, 'Активен')
 
         if get_user_state(user_id) == 'quickstarting':
             await bot.send_message(user_id, 'Какие у Вас жалобы? (подыграйте мне, если жалоб нет)') 
@@ -362,10 +363,10 @@ async def handle_query(call):
     elif call.data == 'my_cases':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
 
-        results = functions.get_items_from_table_by_key('case_name', 'user_cases', 'user_id', user_id)
+        results = data_functions.get_items_from_table_by_key('case_name', 'user_cases', 'user_id', user_id)
         case_names = [item[0] for item in results]
 
-        results = functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
+        results = data_functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
         case_ids = [item[0] for item in results]
         
         await bot.send_message(user_id, 'Список Ваших проблем:', reply_markup=menus.my_cases_menu(case_names, case_ids))
@@ -378,7 +379,7 @@ async def handle_query(call):
     
     elif call.data == 'bio':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        bio = functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
+        bio = data_functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
         if bio:
             await bot.send_message(user_id, 'Информация о Вас:')
             await bot.send_message(user_id, bio)
@@ -394,7 +395,7 @@ async def handle_query(call):
         await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
         # bot.send_message(get_user_doctor(user_id), get_user_memory(user_id))
-        # functions.alter_table('user_cases', 'case_status', 'shared', 'case_id', case_id)
+        # data_functions.alter_table('user_cases', 'case_status', 'shared', 'case_id', case_id)
         # bot.send_message(user_id, 'Отправил врачу! Он скоро с Вами свяжется.')
         # bot.send_message(user_id, 'Лука', reply_markup=menus.main_menu())
         # set_user_state(user_id, 'awaiting_menu_choice')
@@ -438,14 +439,14 @@ async def handle_query(call):
         case = summarize_into_case(get_user_memory(user_id))
         set_user_memory(user_id, case)
         case_id = get_user_curr_case(user_id)
-        functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
+        data_functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
         await compile_case(case_id, user_id)
 
         namer_instance = bots.Namer(bots.llm, bots.namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
         await bot.send_message(user_id, f'Я решил назвать эту проблему {case_name}.')
-        functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
+        data_functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
         await bot.send_message(user_id, 'Хотите отправить эти материалы врачу?', reply_markup=menus.accept_case_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
@@ -459,14 +460,14 @@ async def handle_query(call):
         case = summarize_into_case(get_user_memory(user_id))
         set_user_memory(user_id, case)
         case_id = get_user_curr_case(user_id)
-        functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
+        data_functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
         await compile_case(case_id, user_id)
 
         namer_instance = bots.Namer(bots.llm, bots.namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
         await bot.send_message(user_id, f'Я решил назвать эту проблему {case_name} (я не самый талантливый автор названий).')
-        functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
+        data_functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
         await bot.send_message(user_id, 'Теперь Вы умеете работать со мной. Чтобы начать делиться данными с доктором, нужно оформить подписку.')
         await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
@@ -477,9 +478,9 @@ async def handle_query(call):
         await bot.send_chat_action(user_id, 'typing')
 
         case_id = get_user_curr_case(user_id)
-        case_name = functions.get_item_from_table_by_key('case_name', 'user_cases', 'case_id', case_id)
+        case_name = data_functions.get_item_from_table_by_key('case_name', 'user_cases', 'case_id', case_id)
         await bot.send_message(user_id, f'Проблема {case_name} сохранена.')
-        functions.alter_table('user_cases', 'case_status', 'saved', 'case_id', case_id)
+        data_functions.alter_table('user_cases', 'case_status', 'saved', 'case_id', case_id)
         await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
     
@@ -487,9 +488,9 @@ async def handle_query(call):
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_chat_action(user_id, 'typing')
         case_id = get_user_curr_case(user_id)
-        functions.delete_row_from_table_by_key('user_cases', 'case_id', case_id)
-        functions.delete_case(case_id)
-        functions.decrement_value('users', 'num_cases', 'user_id', user_id)
+        data_functions.delete_row_from_table_by_key('user_cases', 'case_id', case_id)
+        data_functions.delete_case(case_id)
+        data_functions.decrement_value('users', 'num_cases', 'user_id', user_id)
         await bot.send_message(user_id, 'Данные удалены.')
         await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
