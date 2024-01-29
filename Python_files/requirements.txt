@@ -7,3 +7,4 @@ openai==1.6.1
 mysql-connector-python==8.2.0
 aiogram==3.3.0
 pyrogram==2.0.106
+apscheduler==3.10.4
