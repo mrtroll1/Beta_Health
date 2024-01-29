@@ -347,11 +347,7 @@ async def handle_photos(message):
 async def set_reminders(message):
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
-    # reminders = reminder_instance.compose_reminders(message.text)
-    reminders = {'Не забудьте записаться на лечение кариеса зубов 4.6 и 4.8. Важно позаботиться о здоровье ваших зубов вовремя.': [datetime.timedelta(days=1)], 
-                'Планируйте визит к стоматологу для замены несостоятельных пломб на зубах 2.4 и 2.5 с профилактической целью.': [datetime.timedelta(days=3)], 
-                'Если заметите повышенную чувствительность зубов или другие жалобы в области рецессий десны, рекомендуется консультация у стоматолога-хирурга по вопросу пластики десны.': [datetime.timedelta(days=7)]
-    }
+    reminders = reminder_instance.compose_reminders(message.text)
     await bot.send_message(message.chat.id, reminders)
 
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
