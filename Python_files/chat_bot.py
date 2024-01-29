@@ -32,7 +32,7 @@ async def send_scheduled_message(chat_id, message):
 async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
     range_minutes = 2 * 60  
     random_minutes = random.randint(-range_minutes, range_minutes)
-    random_timedelta = datetime.timedelta(minutes=random_seconds)
+    random_timedelta = datetime.timedelta(minutes=random_minutes)
     delay = delay + random_timedelta
 
     scheduled_time = datetime.datetime.now() + delay
