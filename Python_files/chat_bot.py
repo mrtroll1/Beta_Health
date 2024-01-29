@@ -27,7 +27,6 @@ user_state = {}
 user_memory = {}
 user_curr_case = {}
 
-
 scheduler = AsyncIOScheduler()
 
 async def send_scheduled_message(chat_id, message):
@@ -573,7 +572,7 @@ async def handle_document(message):
 
 
 async def main():
-    await scheduler.start()
+    scheduler.start()
     await bot.infinity_polling()
 
 if __name__ == '__main__':
