@@ -57,6 +57,20 @@ class Reminder(langchain.chains.llm.LLMChain):
 
         return ''.join(matches)
 
+    def remove_comments(self, s):
+        result = ""
+        i = 0
+        while i < len(s):
+            if s[i] == '#':
+                i = s.find('\n', i)
+                if i == -1:  
+                    break
+            else:
+                result += s[i]
+                i += 1
+        return result
+
+
     def safe_eval(self, expr):
         try:
             node = ast.parse(expr, mode='eval')
@@ -79,6 +93,7 @@ class Reminder(langchain.chains.llm.LLMChain):
         allowed_names = {"datetime": datetime, "range": range, "timedelta": timedelta}
 
         formatted_string = self.extract_bracket_content(response)
+        formatted_string = self.remove_comments(formatted_string)
         formatted_string = self.comprehension_to_proper(formatted_string)
         formatted_string = formatted_string.replace("'''", "").replace("python", "").replace("```", "")
         formatted_string = formatted_string.replace("\n", "")
@@ -161,7 +176,7 @@ reminder_prompt = ChatPromptTemplate.from_messages(
             Твоя задача написать текст напоминаний для пациента и указать в днях/часах datetime.timedelta -- время, 
             через которое эти напоминания надо отправить. 
             Твой ответ должен быть в формате python dictionary, где keys - тексты напоминаний, 
-            а values - list of timedelta's (одно и тоже можно напоминать несколько раз). 
+            а values - list of timedelta's (одно и тоже можно напоминать несколько раз).  Не комментируй код. 
             """
         ),  
         MessagesPlaceholder(
