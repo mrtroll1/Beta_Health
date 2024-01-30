@@ -50,20 +50,44 @@ class Reminder(langchain.chains.llm.LLMChain):
 
         self.memory = memory  
 
+    def extract_bracket_content(self, s):
+        matches = re.findall(r'\{[^{}]*\}', s)
+
+        return ''.join(matches)
+
+    def safe_eval(self, expr):
+        try:
+            node = ast.parse(expr, mode='eval')
+            return eval(compile(node, '<string>', mode='eval'), {"__builtins__": None, "datetime": datetime, "range": range, "timedelta": timedelta})
+        except Exception as e:
+            print(f"Error evaluating expression: {expr}. Error: {e}")
+            return None
+
+    def replace_comprehension(self, match):
+        expression, variable, sequence = match.groups()
+        full_comprehension = f'[{expression} for {variable} in {self.safe_eval(sequence)}]'
+        evaluated_list = self.safe_eval(full_comprehension)
+        return str(evaluated_list)
+
+    def comprehension_to_proper(self, input_string):
+        comprehension_pattern = r'\[(.+?) for (.+?) in (.+?)\]'
+        return re.sub(comprehension_pattern, self.replace_comprehension, input_string)
+
     def process_output(self, response):
-        allowed_names = {"datetime": datetime}
-    
-        formatted_string = response.replace("'''", "").replace("python", "").replace("```", "")
-        
+        allowed_names = {"datetime": datetime, "range": range, "timedelta": timedelta}
+
+        formatted_string = self.extract_bracket_content(response)
+        formatted_string = self.comprehension_to_proper(formatted_string)
+        formatted_string = formatted_string.replace("'''", "").replace("python", "").replace("```", "")
         formatted_string = formatted_string.replace("\n", "")
-        
+
         try:
             result_dict = eval(formatted_string, {"__builtins__": None}, allowed_names)
         except Exception as e:
-            return {}
+            return e
 
         return result_dict
-    
+        
     def compose_reminders(self, recommendations):
         response = self.invoke(recommendations)['text']
         return response, self.process_output(response)
@@ -134,7 +158,7 @@ reminder_prompt = ChatPromptTemplate.from_messages(
             Твоя задача написать текст напоминаний для пациента и указать в днях/часах datetime.timedelta -- время, 
             через которое эти напоминания надо отправить. 
             Твой ответ должен быть в формате python dictionary, где keys - тексты напоминаний, 
-            а values - list of timdelta's (одно и тоже можно напоминать несколько раз). Не используй list comprehension. 
+            а values - list of timdelta's (одно и тоже можно напоминать несколько раз). 
             """
         ),  
         MessagesPlaceholder(
