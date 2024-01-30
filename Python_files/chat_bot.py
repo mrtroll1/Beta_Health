@@ -605,7 +605,7 @@ async def handle_document(message):
 
 async def main():
     scheduler.start()
-    await bot.infinity_polling(non_stop=True)
+    await bot.infinity_polling()
 
 if __name__ == '__main__':
     asyncio.run(main())
