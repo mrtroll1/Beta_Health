@@ -23,7 +23,7 @@ from langchain.schema import SystemMessage
 from langchain.prompts import HumanMessagePromptTemplate
 
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
-bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token, parse_mode='Markdown', )
+bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token, parse_mode='Markdown')
 scheduler = AsyncIOScheduler()
 
 async def send_scheduled_message(chat_id, message):
@@ -119,7 +119,7 @@ async def conversation_step(message, memory):
         if get_user_state(user_id) == 'quickstarting':
             await bot.send_chat_action(user_id, 'typing')
             await asyncio.sleep(3)
-            await bot.send_message(user_id, """Хотите прикрепить медиа? (Например, фото симптомов или результаты анализов)""", parse_mode='Markdown', reply_markup=menus.quickstart_add_document_menu())
+            await bot.send_message(user_id, """Хотите прикрепить медиа? (например, фото симптомов или результаты анализов)""", parse_mode='Markdown', reply_markup=menus.quickstart_add_document_menu())
             set_user_state(user_id, 'quickstart_sending_documents')
         else:
             await bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.add_document_menu())
@@ -361,22 +361,19 @@ async def set_reminders(message):
     response, reminders = reminder_instance.compose_reminders(message.text)
 
     await bot.send_message(message.chat.id, f'''
-Ответ GPT: 
+*Ответ GPT*: 
 {response}
     ''')
 
     await bot.send_message(message.chat.id, f'''
-Отформатированные напоминания: 
+*Отформатированные напоминания*: 
 {reminders}
     ''')
 
-    total = 0
     for reminder_text, delays in reminders.items():
         for delay in delays:
-            total += 1
             await schedule_message(message.chat.id, reminder_text, delay)
-    jobs = scheduler.get_jobs()
-    await bot.send_message(message.chat.id, f'{len(jobs)} из {total}  уведомлений были успешно установлены')
+    await bot.send_message(message.chat.id, 'Уведомления были успешно установлены')
 
 
 
