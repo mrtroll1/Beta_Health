@@ -1,4 +1,5 @@
 from datetime import datetime
+import random
 
 def datetime_to_greeting(dt, name):
     hour = dt.hour
