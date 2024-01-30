@@ -540,6 +540,12 @@ async def handle_query(call):
         await bot.send_message(user_id, 'Данные удалены.')
         await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
+    
+    elif call.data == 'main_menu':
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_chat_action(user_id, 'typing')
+        await bot.send_message(user_id, "Как могу помочь?", reply_markup=menus.main_menu())
+        set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
