@@ -13,7 +13,7 @@ def datetime_to_greeting(dt, name):
 
 def final_scheduled_time(delay, range_minutes):
     random_minutes = random.randint(-range_minutes, range_minutes)
-    random_timedelta = datetime.timedelta(minutes=random_minutes)
+    random_timedelta = timedelta(minutes=random_minutes)
     return datetime.datetime.now() + delay + random_timedelta
 
 
