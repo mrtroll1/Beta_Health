@@ -27,7 +27,7 @@ jobs:
           username: luka
           key: ${{ secrets.HETZNER_KEY }}
           passphrase: ${{ secrets.HETZNER_KEY_PASSPHRASE }}
-          port: 618
+          port: ${{ secrets.SSH_PORT }}
           script: |
             git -C /home/luka/Projects/Beta_Health/Beta_Health_Git pull origin master
             sudo pip install -r /home/luka/Projects/Beta_Health/Beta_Health_Git/Python_files/requirements.txt  
