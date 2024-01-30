@@ -32,6 +32,8 @@ async def send_scheduled_message(chat_id, message):
 async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
     scheduled_time = scheduling.final_scheduled_time(delay, range_minutes=120)
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', chat_id)
+    if user_name == None:
+        user_name = 'Боб'
     greeting = scheduling.datetime_to_greeting(scheduled_time, user_name)
     message = greeting + message
 
@@ -40,7 +42,7 @@ async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15
 _{message}_ 
 запланирована на {scheduled_time.strftime("%Y-%m-%d %H-%M")}
     ''')
-    
+
     scheduler.add_job(func=send_scheduled_message, name=f'{chat_id}_{datetime.datetime.now().time()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
 
 
