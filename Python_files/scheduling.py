@@ -1,21 +1,22 @@
-import asyncio
-import datetime
-import apscheduler 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.schedulers.background import BackgroundScheduler
-from chat_bot import bot, scheduler
+from datetime import datetime
 
-async def send_scheduled_message(chat_id, message):
-    await bot.send_message(chat_id, message)
+def datetime_to_greeting(dt, name):
+    hour = dt.hour
 
-async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=10)):
-    await bot.send_message(chat_id, 'entered schedule_message function')
-    scheduled_time = datetime.datetime.now() + delay
-    await bot.send_message(chat_id, f'Отправка сообщения запланированна на {scheduled_time}')
-    try:
-        scheduler.add_job(func=send_scheduled_message, trigger='date', run_date=scheduled_time, args=[chat_id, message])
-    except:
-        bot.send_message(chat_id, f'Could not schedule a job with args: {chat_id}, {message}, {delay}')
+    if 5 <= hour < 12:
+        return f'Доброе утро, {name}.'
+    elif 12 <= hour < 18:
+        return f'Добрый день, {name}.'
+    else:
+        return f'Добрый вечер, {name}.'
+
+def final_scheduled_time(delay, range_minutes):
+    random_minutes = random.randint(-range_minutes, range_minutes)
+    random_timedelta = datetime.timedelta(minutes=random_minutes)
+    return datetime.datetime.now() + delay + random_timedelta
+
+
+
 
 
 

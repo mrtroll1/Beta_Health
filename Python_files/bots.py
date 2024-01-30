@@ -160,7 +160,7 @@ reminder_prompt = ChatPromptTemplate.from_messages(
             Твоя задача написать текст напоминаний для пациента и указать в днях/часах datetime.timedelta -- время, 
             через которое эти напоминания надо отправить. 
             Твой ответ должен быть в формате python dictionary, где keys - тексты напоминаний, 
-            а values - list of timdelta's (одно и тоже можно напоминать несколько раз). 
+            а values - list of timedelta's (одно и тоже можно напоминать несколько раз). 
             """
         ),  
         MessagesPlaceholder(
