@@ -365,7 +365,7 @@ async def set_reminders(message):
     await bot.send_message(message.chat.id, f'''
 *Ответ GPT*: 
 {response}
-    ''')
+    ''', parse_mode=None)
 
     await bot.send_message(message.chat.id, f'''
 *Отформатированные напоминания*: 
