@@ -160,7 +160,7 @@ async def save_document(message):
 
     elif message.document:
         file_id = message.document.file_id
-        file_name = doc.file_name
+        file_name = message.document.file_name
         file_extension = file_name.split('.')[-1] if '.' in file_name else None
         original_file_name = os.path.splitext(message.document.file_name)[0]
 
