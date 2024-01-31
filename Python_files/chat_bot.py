@@ -10,6 +10,7 @@ import datetime
 import random
 import apscheduler 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 import telebot
 from telebot import types
@@ -24,7 +25,11 @@ from langchain.prompts import HumanMessagePromptTemplate
 
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token, parse_mode='Markdown')
-scheduler = AsyncIOScheduler()
+mysql_apscheduler_url = os.environ.get('MYSQL_APSCHEDULER_URL')
+jobstores = {
+    'default': SQLAlchemyJobStore(url=mysql_apscheduler_url)
+}
+scheduler = AsyncIOScheduler(jobstores=jobstores)
 
 
 user_state = {}
@@ -149,12 +154,14 @@ async def save_document(message):
     elif isinstance(message.document, list):
         for doc in message.document:
             file_id = doc.file_id
-            file_extension = 'pdf'
+            file_name = doc.file_name
+            file_extension = file_name.split('.')[-1] if '.' in file_name else None
             original_file_name = os.path.splitext(doc.file_name)[0]
 
     elif message.document:
         file_id = message.document.file_id
-        file_extension = 'pdf'
+        file_name = doc.file_name
+        file_extension = file_name.split('.')[-1] if '.' in file_name else None
         original_file_name = os.path.splitext(message.document.file_name)[0]
 
     if not file_id:
