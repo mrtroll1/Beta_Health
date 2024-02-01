@@ -29,7 +29,8 @@ mysql_apscheduler_url = os.environ.get('MYSQL_APSCHEDULER_URL')
 jobstores = {
     'default': SQLAlchemyJobStore(url=mysql_apscheduler_url)
 }
-scheduler = AsyncIOScheduler(jobstores=jobstores)
+# scheduler = AsyncIOScheduler(jobstores=jobstores)
+scheduler = AsyncIOScheduler()
 
 
 user_state = {}
