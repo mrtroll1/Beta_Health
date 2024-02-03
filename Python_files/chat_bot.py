@@ -383,7 +383,7 @@ async def set_reminders(message):
 
 
     await bot.send_chat_action(user_id, 'typing')
-    data_functions.add_user_plan(user_id, plan_data)
+    data_functions.add_user_plan(user_id, message.text)
     await bot.send_message(user_id, 'Уведомления были успешно установлены')
     await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
