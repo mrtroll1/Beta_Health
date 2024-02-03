@@ -7,7 +7,7 @@ def main_menu():
 
     button_1 = types.InlineKeyboardButton("📝 Новая проблема", callback_data='new_case')
     button_2 = types.InlineKeyboardButton("🗃 Активные проблемы", callback_data='my_cases')
-    игеещт_3 = types.InlineKeyboardButton("🔔 Напоминания", callback_data='reminders')
+    button_3 = types.InlineKeyboardButton("🔔 Напоминания", callback_data='reminders')
     button_4 = types.InlineKeyboardButton("🔐 Мои подписки", callback_data='my_subscriptions')
     button_5 = types.InlineKeyboardButton("👤 Обо мне", callback_data='bio')
 
