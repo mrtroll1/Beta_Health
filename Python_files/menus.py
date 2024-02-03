@@ -7,10 +7,11 @@ def main_menu():
 
     button_1 = types.InlineKeyboardButton("📝 Новая проблема", callback_data='new_case')
     button_2 = types.InlineKeyboardButton("🗃 Активные проблемы", callback_data='my_cases')
-    button_3 = types.InlineKeyboardButton("🔐 Мои подписки", callback_data='my_subscriptions')
-    button_4 = types.InlineKeyboardButton("👤 Обо мне", callback_data='bio')
+    игеещт_3 = types.InlineKeyboardButton("🔔 Напоминания", callback_data='reminders')
+    button_4 = types.InlineKeyboardButton("🔐 Мои подписки", callback_data='my_subscriptions')
+    button_5 = types.InlineKeyboardButton("👤 Обо мне", callback_data='bio')
 
-    keyboard.add(button_1, button_2, button_3, button_4)
+    keyboard.add(button_1, button_2, button_3, button_4, button_5)
 
     return keyboard
 
@@ -68,6 +69,18 @@ def more_documents_menu():
 
     button_1 = types.InlineKeyboardButton("Да", callback_data='more_documents')
     button_2 = types.InlineKeyboardButton("Нет", callback_data='finalize_case')
+
+    keyboard.add(button_1, button_2)
+
+    return keyboard
+
+def reminders_menu():
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
+
+    button_1 = types.InlineKeyboardButton("Посмотреть напоминания", callback_data='my_reminders')
+    button_2 = types.InlineKeyboardButton("Назначить новые напоминания", callback_data='set_reminders')
+    button = types.InlineKeyboardButton("<< Назад", callback_data='main_menu')
 
     keyboard.add(button_1, button_2)
 

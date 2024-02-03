@@ -241,6 +241,7 @@ _{message}_
 
 
 
+
 #                                    """/-COMMAND HANDLERS""" 
 
 @bot.message_handler(commands=['start'])
@@ -264,11 +265,6 @@ async def send_welcome(message):
 async def send_help(message):
     help_text = """Быть идеальным ботом непросто. Какой у Вас вопрос? (ответа не ждите, колл-центр пока не арендовали)"""
     await bot.send_message(message.chat.id, help_text)
-
-@bot.message_handler(commands=['test'])
-async def test(message):
-    await bot.send_message(message.chat.id, 'Введите рекоммендации врача, и я назначу Вам напоминания.')
-    set_user_state(message.chat.id, 'setting_reminders')
 
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
@@ -384,6 +380,7 @@ async def set_reminders(message):
         for delay in delays:
             await schedule_message(message.chat.id, reminder_text, delay)
     await bot.send_message(message.chat.id, 'Уведомления были успешно установлены')
+
 
 
 
@@ -551,9 +548,22 @@ async def handle_query(call):
     
     elif call.data == 'main_menu':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_chat_action(user_id, 'typing')
         await bot.send_message(user_id, "Как могу помочь?", reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
+    
+    elif call.data == 'reminders':
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, "Хотите посмотреть имеющиеся напоминания или назначить новые?", reply_markup=menus.reminders_menu())
+        set_user_state(user_id, 'awaiting_menu_choice')
+    
+    elif call.data == 'my_reminders':
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(chat_id=user_id, 'Not implemented yet')
+    
+    elif call.data == 'set_reminders':
+        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.send_message(message.chat.id, 'Введите рекоммендации врача и даты предстоящих приёмов, и я назначу Вам напоминания.')
+        set_user_state(message.chat.id, 'setting_reminders')
 
     else:
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
