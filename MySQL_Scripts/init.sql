@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS user_cases;
+DROP TABLE IF EXISTS user_plans;
 DROP TABLE IF EXISTS user_doctors;
 DROP TABLE IF EXISTS users;
 
@@ -15,6 +16,15 @@ CREATE TABLE user_doctors (
     user_id BIGINT NOT NULL,
     doctor_name VARCHAR(50)
 );
+
+CREATE TABLE user_plans (
+    plan_id BIGINT NOT NULL AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    plan_data TEXT,
+    plan_reminder_ids TEXT DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    PRIMARY KEY (plan_id)
+)
 
 CREATE TABLE user_cases (
     case_id VARCHAR(64) PRIMARY KEY,

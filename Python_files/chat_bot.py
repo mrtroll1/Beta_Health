@@ -379,6 +379,10 @@ async def set_reminders(message):
     for reminder_text, delays in reminders.items():
         for delay in delays:
             await schedule_message(message.chat.id, reminder_text, delay)
+
+
+    await bot.send_chat_action(user_id, 'typing')
+    data_functions.add_user_plan(user_id, plan_data)
     await bot.send_message(message.chat.id, 'Уведомления были успешно установлены')
     await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
@@ -560,7 +564,10 @@ async def handle_query(call):
     
     elif call.data == 'my_reminders':
         await bot.delete_message(user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Not implemented yet')
+        plans = data_functions.get_items_from_table_by_key('plan_data', 'user_plans', 'user_id', user_id)
+        for plan in plans:
+            await bot.send_message(user_id, plan)
+        await bot.send_message(user_id, 'Вот Ваши планы')
     
     elif call.data == 'set_reminders':
         await bot.delete_message(user_id, message_id=call.message.message_id)
