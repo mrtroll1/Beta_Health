@@ -80,9 +80,9 @@ def reminders_menu():
 
     button_1 = types.InlineKeyboardButton("Посмотреть напоминания", callback_data='my_reminders')
     button_2 = types.InlineKeyboardButton("Назначить новые напоминания", callback_data='set_reminders')
-    button = types.InlineKeyboardButton("<< Назад", callback_data='main_menu')
+    button_3 = types.InlineKeyboardButton("<< Назад", callback_data='main_menu')
 
-    keyboard.add(button_1, button_2)
+    keyboard.add(button_1, button_2, button_3)
 
     return keyboard
 
