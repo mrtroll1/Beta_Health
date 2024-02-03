@@ -547,23 +547,23 @@ async def handle_query(call):
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'main_menu':
-        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.delete_message(user_id, message_id=call.message.message_id)
         await bot.send_message(user_id, "Как могу помочь?", reply_markup=menus.main_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'reminders':
-        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        await bot.delete_message(user_id, message_id=call.message.message_id)
         await bot.send_message(user_id, "Хотите посмотреть имеющиеся напоминания или назначить новые?", reply_markup=menus.reminders_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'my_reminders':
-        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(chat_id=user_id, 'Not implemented yet')
+        await bot.delete_message(user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Not implemented yet')
     
     elif call.data == 'set_reminders':
-        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(message.chat.id, 'Введите рекоммендации врача и даты предстоящих приёмов, и я назначу Вам напоминания.')
-        set_user_state(message.chat.id, 'setting_reminders')
+        await bot.delete_message(user_id, message_id=call.message.message_id)
+        await bot.send_message(user_id, 'Введите рекоммендации врача и даты предстоящих приёмов, и я назначу Вам напоминания.')
+        set_user_state(user_id, 'setting_reminders')
 
     else:
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
