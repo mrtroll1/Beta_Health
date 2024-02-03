@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS user_plans;
 DROP TABLE IF EXISTS user_doctors;
 DROP TABLE IF EXISTS users;
 
-
 CREATE TABLE users (
     user_id BIGINT PRIMARY KEY,
     user_name VARCHAR(50),
@@ -14,17 +13,17 @@ CREATE TABLE users (
 CREATE TABLE user_doctors (
     doctor_id BIGINT PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    doctor_name VARCHAR(50)
+    doctor_name VARCHAR(50),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) 
 );
 
 CREATE TABLE user_plans (
-    plan_id BIGINT NOT NULL AUTO_INCREMENT,
+    plan_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     plan_data TEXT,
     plan_reminder_ids TEXT DEFAULT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    PRIMARY KEY (plan_id)
-)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
 
 CREATE TABLE user_cases (
     case_id VARCHAR(64) PRIMARY KEY,
@@ -37,4 +36,5 @@ CREATE TABLE user_cases (
     case_media_path VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
 
