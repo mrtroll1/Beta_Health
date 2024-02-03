@@ -381,7 +381,7 @@ async def set_reminders(message):
             await schedule_message(message.chat.id, reminder_text, delay)
     await bot.send_message(message.chat.id, 'Уведомления были успешно установлены')
     await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
-        set_user_state(user_id, 'awaiting_menu_choice')
+    set_user_state(user_id, 'awaiting_menu_choice')
 
 
 
