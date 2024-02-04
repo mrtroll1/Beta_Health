@@ -803,14 +803,14 @@ async def handle_query(call):
     
     elif call.data == 'russian':
         await bot.delete_message(user_id, message_id=call.message.message_id)
-        data_functions.alter_table('users', 'user_language', 'russian', 'user_id', user_id)
+        data_functions.add_user_language('russian', user_id)
         welcome_msg = "Добро пожаловать! Как я могу к Вам обращаться?"
         set_user_state(user_id, 'entering_name')
         await bot.send_message(user_id, welcome_msg)
     
     elif call.data == 'english':
         await bot.delete_message(user_id, message_id=call.message.message_id)
-        data_functions.alter_table('users', 'user_language', 'english', 'user_id', user_id)
+        data_functions.add_user_language('english', user_id)
         welcome_msg = "Welcome! How would you like me to call you?"
         set_user_state(user_id, 'entering_name')
         await bot.send_message(user_id, welcome_msg)
