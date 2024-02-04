@@ -389,7 +389,7 @@ async def edit_case(message):
         memory.save_context({"input": case}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
         memory.save_context({"input": message.text}, {"output": "Сейчас внесу изменения!"})
         msg = 'Вот обновлённая версия:'
-        menu_msg = 'Отправляю врачу?
+        menu_msg = 'Отправляю врачу?'
     elif user_language == 'english':
         memory.save_context({"input": case}, {"output": "What would you like to edit or add?"}) 
         memory.save_context({"input": message.text}, {"output": "I will apply the changes now!"})
