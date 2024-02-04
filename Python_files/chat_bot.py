@@ -353,7 +353,6 @@ async def handle_name_input(message):
     data_functions.add_user_name(user_id, user_name)
 
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
-    await bot.send_message(user_id, user_language)
 
     if user_language == 'russian':
         msg = f"Очень приятно, {user_name}! Сейчас я покажу, как всё работает..."
@@ -895,6 +894,7 @@ async def handle_query(call):
 async def handle_photos(message):
     user_id = message.chat.id
     user_state = get_user_state(user_id)
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     if user_state == 'sending_documents':
         await save_document(message)
