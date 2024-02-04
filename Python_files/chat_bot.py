@@ -898,26 +898,25 @@ async def handle_photos(message):
 
     if user_state == 'sending_documents':
         await save_document(message)
-            if get_user_state != 'awaiting_menu_choice':
-                
-                if user_language == 'russian':
-                    msg = 'Получил! Хотите отправить больше документов?'
-                elif user_language == 'english':
-                    msg = 'Got it! Would you like to attach more documents?'
+        if get_user_state != 'awaiting_menu_choice':
+            if user_language == 'russian':
+                msg = 'Получил! Хотите отправить больше документов?'
+            elif user_language == 'english':
+                msg = 'Got it! Would you like to attach more documents?'
 
-                await bot.send_message(message.chat.id, msg, reply_markup=menus.more_documents_menu(user_language))
-                set_user_state(message.chat.id, 'awaiting_menu_choice')
+            await bot.send_message(message.chat.id, msg, reply_markup=menus.more_documents_menu(user_language))
+            set_user_state(message.chat.id, 'awaiting_menu_choice')
         
     elif user_state == 'quickstart_sending_documents':
         await save_document(message)
             
-            if user_language == 'russian':
-                msg = 'Получил! Давайте я покажу, что получилось.'
-            elif user_language == 'english':
-                msg = 'Got it! Let me show you the result.'
+        if user_language == 'russian':
+            msg = 'Получил! Давайте я покажу, что получилось.'
+        elif user_language == 'english':
+            msg = 'Got it! Let me show you the result.'
 
-            await bot.send_message(user_id, msg, reply_markup=menus.quickstart_finalize_case_menu(user_language))
-            set_user_state(user_id, 'awaiting_menu_choice')
+        await bot.send_message(user_id, msg, reply_markup=menus.quickstart_finalize_case_menu(user_language))
+        set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
         if user_language == 'russian':
