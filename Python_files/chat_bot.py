@@ -390,7 +390,8 @@ async def set_reminders(message):
 
 
     await bot.send_chat_action(user_id, 'typing')
-    data_functions.add_user_plan(user_id, message.text)
+    plan_data = f'План был создан {datetime.datetime.now().date()} \n{message.text}'
+    data_functions.add_user_plan(user_id, plan_data)
     await bot.send_message(user_id, 'Уведомления были успешно установлены')
     await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
@@ -605,7 +606,7 @@ async def handle_query(call):
 
         
 
-#                                    """PHOTO HANDLER"""
+#                                    """MEDIA HANDLERS"""
 @bot.message_handler(content_types=['photo'])
 async def handle_photos(message):
     user_id = message.chat.id
@@ -654,6 +655,18 @@ async def handle_document(message):
 
     else:
         await bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
+
+
+
+
+
+#                                    """REACTIONS HANDLERS"""
+@bot.message_reaction_handler()
+async def reactions_handler(reaction):
+    await bot.send_message(reaction.chat.id, f'Ого! Это было клёво ...\nМы ценим Вашу реакцию на {reaction.message_id}')
+
+
+
 
 
 async def main():
