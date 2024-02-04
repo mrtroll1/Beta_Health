@@ -5,9 +5,9 @@ DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
     user_id BIGINT PRIMARY KEY,
-    user_name VARCHAR(50),
+    user_name VARCHAR(50) DEFAULT NULL,
     num_cases INT DEFAULT 0,
-    user_language VARCHAR(20) DEFAULT 'english',
+    user_language VARCHAR(20) DEFAULT NULL,
     medical_bio TEXT DEFAULT NULL
 );
 

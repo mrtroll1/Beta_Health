@@ -166,9 +166,9 @@ def add_user_name(user_id, user_name):
 
     try:
         db_cursor = db_connection.cursor()
-        query = "INSERT INTO users (user_id, user_name) VALUES (%s, %s)"
-        db_cursor.execute(query, (user_id, user_name))
-        db_connection.commit() 
+        query = "UPDATE users SET user_name = %s WHERE user_id = %s"
+        db_cursor.execute(query, (user_name, user_id))
+        db_connection.commit()
     except Error as e:
         print(f"Error: {e}")
     finally:
