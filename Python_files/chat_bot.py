@@ -93,7 +93,7 @@ def chatgpt_to_telegram_markdown(input_text):
 
     return italics_transformed
     
-async def conversation_step(message, memory):
+async def conversation_step(message, memory, language):
     user_id = message.chat.id
     bot_instance = bots.ChatBot(bots.llm, bots.chat_prompt, memory)
 
@@ -109,33 +109,50 @@ async def conversation_step(message, memory):
         if get_user_state(user_id) == 'quickstarting':
             await bot.send_chat_action(user_id, 'typing')
             await asyncio.sleep(3)
-            await bot.send_message(user_id, """Хотите прикрепить медиа? (например, фото симптомов или результаты анализов)""", parse_mode='Markdown', reply_markup=menus.quickstart_add_document_menu())
+            if language == 'russian':
+                msg = 'Хотите прикрепить медиа? (например, фото симптомов или результаты анализов)'
+            elif language == 'english':
+                msg = 'Would you like to attach media? (for example, photo of symptoms or medical tests results)'
+            await bot.send_message(user_id, msg, parse_mode='Markdown', reply_markup=menus.quickstart_add_document_menu(language))
             set_user_state(user_id, 'quickstart_sending_documents')
         else:
-            await bot.send_message(user_id, 'Хотите прикрепить медиа?', reply_markup=menus.add_document_menu())
+            if language == 'russian':
+                msg = 'Хотите прикрепить медиа?'
+            elif language == 'english':
+                msg = 'Would you like to attach media?'
+            await bot.send_message(user_id, msg, reply_markup=menus.add_document_menu(language))
             set_user_state(user_id, 'awaiting_menu_choice')
 
 
-async def quickstart(message):
+async def quickstart(message, language):
     user_id = message.chat.id
     set_user_state(user_id, 'quickstarting')
 
     await bot.send_chat_action(user_id, 'typing')
     await asyncio.sleep(3)
-    await bot.send_message(user_id, 'Вы обратитесь ко мне с жалобой или сипмтомами. Я подробно расспрошу Вас о проблеме и дам предварительные рекоммендации. Далее, при необходимости, передам дело в руки врача.', parse_mode='Markdown')
+    if language == 'russian':
+        msg = 'Вы обратитесь ко мне с жалобой или сипмтомами. Я подробно расспрошу Вас о проблеме и дам предварительные рекоммендации. Далее, при необходимости, передам дело в руки врача.'
+    elif language == 'english':
+        msg = 'You approach me with a medical complaint. I will thoroughly question you about it and provide simple treatment recommendations. Then, if needed, I will transfer this data to your doctor.'
+    await bot.send_message(user_id, msg, parse_mode='Markdown')
 
     await bot.send_chat_action(user_id, 'typing')
     await asyncio.sleep(7)
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     bio = data_functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
-    memory.save_context({'input': 'Начнём.'}, {'output': 'Какие у вас жалобы?'})
+    if language == 'russian':
+        memory.save_context({'input': 'Начнём.'}, {'output': 'Какие у вас жалобы?'})
+        start_msg = 'Давайте попробуем! Какие у Вас жалобы?'
+    elif language == 'english':
+        memory.save_context({'input': 'Let\'s begin.'}, {'output': 'What are your complaints?'})
+        start_msg = 'Let\'s try this! What are your complaints?'
     set_user_memory(user_id, memory)
 
     data_functions.increment_value('users', 'num_cases', 'user_id', user_id)
     case_id, num_cases = generate_case_id(user_id)
     set_user_curr_case(user_id, case_id)
-    data_functions.add_user_case(case_id, user_id, 'Активен')
-    await bot.send_message(user_id, 'Давайте попробуем! Какие у Вас жалобы?') 
+    data_functions.add_user_case(case_id, user_id, 'Active')
+    await bot.send_message(user_id, start_msg) 
 
 def summarize_into_case(memory): 
     summarizer_instance = bots.Summarizer(bots.llm, bots.summarizer_prompt, memory)
@@ -249,18 +266,23 @@ _{message}_
 async def send_welcome(message):
     user_id = message.chat.id
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     set_user_memory(user_id, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
 
     if user_name:
-        welcome_msg = f"Здравствуйте, {user_name}!"
+        if user_language == 'russian':
+            welcome_msg = f"Здравствуйте, {user_name}!"
+            menu_msg = "Как могу помочь?"
+        elif user_language == 'english':
+            welcome_msg = f"Hi, {user_name}!"
+            menu_msg = "How can I help?"
         await bot.send_message(user_id, welcome_msg)
-        await bot.send_message(user_id, "Как могу помочь?", reply_markup=menus.main_menu())
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
-        welcome_msg = "Добро пожаловать! Как я могу к Вам обращаться?"
-        set_user_state(user_id, 'entering_name')
-        await bot.send_message(user_id, welcome_msg)
+        await bot.send_message(user_id, 'Please select preferred language', reply_markup=menus.set_language_menu())
+        set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 @bot.message_handler(commands=['help'])
 async def send_help(message):
@@ -271,17 +293,33 @@ async def send_help(message):
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
-    await bot.send_message(message.chat.id, f'{user_name}, как я могу Вам помочь?', reply_markup=menus.main_menu())
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
+
+    if user_language == 'russian':
+        msg = f'{user_name}, как я могу Вам помочь?'
+    elif user_language == 'english':
+        msg = f'{user_name}, how can I help'
+
+    await bot.send_message(message.chat.id, msg, reply_markup=menus.main_menu(user_language))
     set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 @bot.message_handler(commands=['info'])
 async def send_info(message):
-    info = '''
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
+
+    if user_language == 'russian':
+        info = '''
 Я помогаю Вам чуточку лучше следить за здоровьем. 
-Это open-source проект: https://github.com/mrtroll1/Beta_Health
-    '''
+Это open-source проект: https://github.com/mrtroll1/Beta_Health '''
+        menu_msg = 'Главное меню'
+    elif user_language == 'english':
+        info = '''
+I help you take care of yourself a bit better.  
+This is an open-source project: https://github.com/mrtroll1/Beta_Health '''
+        menu_msg = 'Main menu'
+
     await bot.send_message(message.chat.id, info)
-    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+    await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
     
 
@@ -301,27 +339,34 @@ async def handle_menu_choice(message):
 async def handle_name_input(message):
     user_id = message.chat.id
     user_name = message.text
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     data_functions.add_user_name(user_id, user_name)
-
-    confirmation_msg = f"Очень приятно, {user_name}! Сейчас я покажу, как всё работает..."
+    
+    if user_language == 'russian':
+        confirmation_msg = f"Очень приятно, {user_name}! Сейчас я покажу, как всё работает..."
+    elif user_language == 'russian':
+        confirmation_msg = f"Nice to meet you, {user_name}! Let me show how everything works..."
     await bot.send_message(user_id, confirmation_msg)
-    await quickstart(message)
+    await quickstart(message, user_language)
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'creating_case'
                                             and not message.text.startswith('/'))
 async def handle_message(message):
-    await conversation_step(message, get_user_memory(message.chat.id))
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
+    await conversation_step(message, get_user_memory(message.chat.id), user_language)
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstarting'
                                             and not message.text.startswith('/'))
 async def handle_message(message):
-    await conversation_step(message, get_user_memory(message.chat.id))
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
+    await conversation_step(message, get_user_memory(message.chat.id), user_language)
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_case' 
                                             and not message.text.startswith('/'))
 async def edit_case(message):
     user_id = message.chat.id
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     case = get_user_memory(user_id)
     memory.save_context({"input": case}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
@@ -336,33 +381,53 @@ async def edit_case(message):
     data_functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
     await compile_case(case_id, user_id)
-    await bot.send_message(user_id, 'Отправляю врачу?', reply_markup=menus.accept_case_menu())
+    await bot.send_message(user_id, 'Отправляю врачу?', reply_markup=menus.accept_case_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_bio'
                                             and not message.text.startswith('/'))
 async def edit_bio(message):
     user_id = message.chat.id
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     data_functions.alter_table('users', 'medical_bio', message.text, 'user_id', user_id)
-    await bot.send_message(user_id, 'Обновил!')
-    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+    
+    if user_language == 'russian':
+            msg = 'Обновил!'
+            menu_msg = 'Главное меню'
+        elif user_language == 'russian':
+            msg = 'Done!'
+            menu_msg = 'Main menu'
+
+    await bot.send_message(user_id, msg)
+    await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_documents'
                                             and not message.text.startswith('/'))
 async def handle_photos(message):
     await save_document(message)
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     if get_user_state != 'awaiting_menu_choice':
-        await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+        await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu(user_language))
         set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstart_sending_documents'
                                             and not message.text.startswith('/'))
 async def handle_photos(message):
     await save_document(message)
+    user_id = message.chat.id
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     if get_user_state != 'awaiting_menu_choice':
-        await bot.send_message(message.chat.id, 'Получил!')
-        await bot.send_message(message.chat.id, 'Показать, что получилось?', reply_markup=menus.quickstart_finalize_case_menu())
+
+        if user_language == 'russian':
+            msg = 'Получил!'
+            menu_msg = 'Давайте покажу, что получилось'
+        elif user_language == 'russian':
+            msg = 'Received!'
+            menu_msg = 'Let me show you the result'
+
+        await bot.send_message(user_id, msg)
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.quickstart_finalize_case_menu(user_language))
         set_user_state(message.chat.id, 'awaiting_menu_choice')
 
 
@@ -373,6 +438,7 @@ async def set_reminders(message):
     reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
     response, reminders = reminder_instance.compose_reminders(message.text)
     user_id = message.chat.id
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     await bot.send_message(user_id, f'''
 *Ответ GPT*: 
@@ -393,7 +459,7 @@ async def set_reminders(message):
     plan_data = f'План был создан {datetime.datetime.now().date()} \n{message.text}'
     data_functions.add_user_plan(user_id, plan_data)
     await bot.send_message(user_id, 'Уведомления были успешно установлены')
-    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'requesting_help'
@@ -401,9 +467,10 @@ async def set_reminders(message):
 async def set_reminders(message):
     request = message.text
     user_id = message.chat.id
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     await bot.send_message(helpservice_telegram_id, f'Пользователь {user_id} обратился в службу поддержки: \n_{message}_') 
     await bot.send_message(user_id, 'Отправил службе поддержки')                       
-    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
 
 
@@ -413,27 +480,37 @@ async def set_reminders(message):
 @bot.callback_query_handler(func=lambda call: True)
 async def handle_query(call):
     user_id = call.message.chat.id
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     if call.data == 'new_case':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         bio = data_functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
         if bio:
-            memory.save_context({'input': f'Общая информация обо мне: {bio}'}, {'output': 'Начинаем. Какие у вас жалобы?'})
+            if user_language == 'russian':
+                memory.save_context({'input': f'Общая информация обо мне: {bio}'}, {'output': 'Начинаем. Какие у вас жалобы?'})
+            elif user_language == 'english':
+                memory.save_context({'input': f'My general bio: {bio}'}, {'output': 'let\'s start. What are your complaints?'})
         else:
-            memory.save_context({'input': 'Начнём.'}, {'output': 'Какие у вас жалобы?'})
+            if user_language == 'russian':
+                memory.save_context({'input': 'Начнём.'}, {'output': 'Какие у вас жалобы?'})
+            elif user_language == 'english':
+                memory.save_context({'input': 'Let\'s start.'}, {'output': 'What are your complaints?'})
+
         set_user_memory(user_id, memory)
 
         data_functions.increment_value('users', 'num_cases', 'user_id', user_id)
         case_id, num_cases = generate_case_id(user_id)
         set_user_curr_case(user_id, case_id)
-        data_functions.add_user_case(case_id, user_id, 'Активен')
+        data_functions.add_user_case(case_id, user_id, 'Active')
 
-        if get_user_state(user_id) == 'quickstarting':
-            await bot.send_message(user_id, 'Какие у Вас жалобы? (подыграйте мне, если жалоб нет)') 
-        else:
-            await bot.send_message(user_id, "Какие у вас жалобы?")
-            set_user_state(user_id, 'creating_case')
+        if user_language == 'russian':
+            msg = 'Какие у вас жалобы?'
+        elif user_language == 'english':
+            msg = 'What are your complaints?'
+
+        await bot.send_message(user_id, msg)
+        set_user_state(user_id, 'creating_case')
         
     elif call.data == 'my_cases':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
@@ -444,30 +521,62 @@ async def handle_query(call):
         results = data_functions.get_items_from_table_by_key('case_id', 'user_cases', 'user_id', user_id)
         case_ids = [item[0] for item in results]
         
-        await bot.send_message(user_id, 'Список Ваших проблем:', reply_markup=menus.my_cases_menu(case_names, case_ids))
+        if user_language == 'russian':
+            msg = 'Список Ваших проблем:'
+        elif user_language == 'english':
+            msg = 'List of your complaints:'
+
+        await bot.send_message(user_id, msg, reply_markup=menus.my_cases_menu(case_names, case_ids))
     
     elif call.data == 'my_subscriptions':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'У Вас нет активных подписок. Чтобы купить, скажите: "Дон-дон"')
-        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+
+        if user_language == 'russian':
+            msg = 'У Вас нет активных подписок. Чтобы купить, скажите: "Дон-дон"'
+            menu_msg = 'Главное меню'
+        elif user_language == 'russian':
+            msg = 'You do not have active subscriptions. To buy one, say "Don-Don"'
+            menu_msg = 'Main menu'
+
+        await bot.send_message(user_id, msg)
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'bio':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         bio = data_functions.get_item_from_table_by_key('medical_bio', 'users', 'user_id', user_id)
         if bio:
-            await bot.send_message(user_id, 'Информация о Вас:')
-            await bot.send_message(user_id, bio)
-            await bot.send_message(user_id, 'Хотите изменить?', reply_markup=menus.change_bio_menu())
+            if user_language == 'russian':
+                await bot.send_message(user_id, 'Информация о Вас:')
+                await bot.send_message(user_id, bio)
+                await bot.send_message(user_id, 'Хотите изменить?', reply_markup=menus.change_bio_menu(user_language))
+            elif user_language == 'english':
+                await bot.send_message(user_id, 'Your bio:')
+                await bot.send_message(user_id, bio)
+                await bot.send_message(user_id, 'Want to change it?', reply_markup=menus.change_bio_menu(user_language))
+
             set_user_state(user_id, 'awaiting_menu_choice')
         else:
-            await bot.send_message(user_id, 'Поделитесь полом, возрастом, историей заболеваний или наличием аллергий. Эта информация немного улучшит качество моей работы. Хотите добавить?', reply_markup=menus.change_bio_menu())
+            if user_language == 'russian':
+                msg = 'Поделитесь полом, возрастом, историей заболеваний или наличием аллергий. Эта информация немного улучшит качество моей работы. Хотите добавить?'
+            elif user_language == 'english':
+                msg = 'Share your gender, age, medical history or allergies. This information will slighlty improve my performance. Would you like to add it?'
+
+            await bot.send_message(user_id, msg, reply_markup=menus.change_bio_menu(user_language))
             set_user_state(user_id, 'awaiting_menu_choice')
 
     elif call.data == 'send_case_to_doctor':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Чтобы воспользоваться этой функцией, оформите подписку.')
-        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+
+        if user_language == 'russian':
+            msg = 'Чтобы воспользоваться этой функцией, оформите подписку.'
+            menu_msg = 'Главное меню'
+        elif user_language == 'russian':
+            msg = 'You need a subscription to share data with doctors.'
+            menu_msg = 'Main menu'
+
+        await bot.send_message(user_id, msg)
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
         # bot.send_message(get_user_doctor(user_id), get_user_memory(user_id))
         # data_functions.alter_table('user_cases', 'case_status', 'shared', 'case_id', case_id)
@@ -482,32 +591,66 @@ async def handle_query(call):
     
     elif call.data == 'edit_bio':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Отправьте информацию о Вас одним сообщением')
+
+        if user_language == 'russian':
+            msg = 'Отправьте информацию о Вас одним сообщением'
+        elif user_language == 'english':
+            msg = 'Send your bio as a single message'
+
+        await bot.send_message(user_id, msg)
         set_user_state(user_id, 'editing_bio')
     
     elif call.data == 'save_bio':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+
+        if user_language == 'russian':
+            menu_msg = 'Главное меню'
+        elif user_language == 'english':
+            menu_msg = 'Main menu'
+
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'add_document':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Отправляйте! (Лучше по одному фото или pdf за раз. В общей сложности не больше 10 файлов)')
+
+        if user_language == 'russian':
+            msg = 'Отправляйте! (Лучше по одному фото или pdf за раз. В общей сложности не больше 10 файлов)'
+        elif user_language == 'english':
+            msg = 'Send! (Preferrably one photo or pdf at a time. Not more than 10 files in total)'
+
+        await bot.send_message(user_id, msg)
         set_user_state(user_id, 'sending_documents')
 
     elif call.data == 'quickstart_add_document':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Отправляйте!')
+
+        if user_language == 'russian':
+            await bot.send_message(user_id, 'Отправляйте!')
+        if user_language == 'english':
+            await bot.send_message(user_id, 'Send!')
+
         set_user_state(user_id, 'quickstart_sending_documents')
 
     elif call.data == 'more_documents':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Присылайте документы')
+
+        if user_language == 'russian':
+            msg = 'Присылайте документы'
+        elif user_language == 'english':
+            msg = 'Send documents'
+
+        await bot.send_message(user_id, msg)
         set_user_state(user_id, 'sending_documents')
         
     elif call.data == 'finalize_case':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Подождите немного ...')
+
+        if user_language == 'russian':
+            await bot.send_message(user_id, 'Подождите немного ...')
+        elif user_language == 'english':
+            await bot.send_message(user_id, 'Give me a second ...')
+
         await bot.send_chat_action(user_id, 'typing')
         await bot.send_chat_action(user_id, 'upload_document')
 
@@ -520,15 +663,30 @@ async def handle_query(call):
 
         namer_instance = bots.Namer(bots.llm, bots.namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
-        await bot.send_message(user_id, f'Я решил назвать эту проблему {case_name}.')
+
+        if user_language == 'russian':
+            await bot.send_message(user_id, f'Я решил назвать эту проблему {case_name}.')
+        elif user_language == 'english':
+            await bot.send_message(user_id, f'I decided to name your complaint {case_name}.')
+
         data_functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
-        
-        await bot.send_message(user_id, 'Хотите отправить эти материалы врачу?', reply_markup=menus.accept_case_menu())
+
+        if user_language == 'russian':
+            menu_msg = 'Хотите отправить эти материалы врачу?'
+        elif user_language == 'russian':
+            menu_msg = 'Do you wish to send that to your doctor'
+
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.accept_case_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
 
     elif call.data == 'quickstart_finalize_case':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Подождите немного ...')
+
+        if user_language == 'russian':
+            await bot.send_message(user_id, 'Подождите немного ...')
+        elif user_language == 'english':
+            await bot.send_message(user_id, 'Give me a second ...')
+
         await bot.send_chat_action(user_id, 'typing')
         await bot.send_chat_action(user_id, 'upload_document')
 
@@ -541,11 +699,23 @@ async def handle_query(call):
 
         namer_instance = bots.Namer(bots.llm, bots.namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
-        await bot.send_message(user_id, f'Я решил назвать эту проблему {case_name} (я не самый талантливый автор названий).')
+
+        if user_language == 'russian':
+            await bot.send_message(user_id, f'Я решил назвать эту проблему {case_name} (я не самый талантливый автор названий).')
+        elif user_language == 'english':
+            await bot.send_message(user_id, f'I decided to name your complaint {case_name} (I am not the greatest namer).')
+
         data_functions.alter_table('user_cases', 'case_name', case_name, 'case_id', case_id)
         
-        await bot.send_message(user_id, 'Теперь Вы умеете работать со мной. Чтобы начать делиться данными с доктором, нужно оформить подписку.')
-        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+        if user_language == 'russian':
+            msg = 'Теперь Вы умеете работать со мной. Чтобы начать делиться данными с доктором, нужно оформить подписку.'
+            menu_msg = 'Главное меню'
+        elif user_language == 'english':
+            msg = 'Now you know how to work with me. Buy a subscription to start sharing data with a doctor.'
+            menu_msg = 'Main menu'
+
+        await bot.send_message(user_id, msg)
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'save_and_not_share':
@@ -554,9 +724,17 @@ async def handle_query(call):
 
         case_id = get_user_curr_case(user_id)
         case_name = data_functions.get_item_from_table_by_key('case_name', 'user_cases', 'case_id', case_id)
-        await bot.send_message(user_id, f'Проблема {case_name} сохранена.')
+
+        if user_language == 'russian':
+            msg = f'Проблема {case_name} сохранена.'
+            menu_msg = 'Главное меню'
+        elif user_language == 'english':
+            msg = f'Complaint {case_name} is saved.'
+            menu_msg = 'Main menu'
+
+        await bot.send_message(user_id, msg)
         data_functions.alter_table('user_cases', 'case_status', 'saved', 'case_id', case_id)
-        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'delete_and_not_share':
@@ -566,13 +744,25 @@ async def handle_query(call):
         data_functions.delete_row_from_table_by_key('user_cases', 'case_id', case_id)
         data_functions.delete_case(case_id)
         data_functions.decrement_value('users', 'num_cases', 'user_id', user_id)
-        await bot.send_message(user_id, 'Данные удалены.')
-        await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+
+        if user_language == 'russian':
+            msg = 'Данные удалены.'
+            menu_msg = 'Главное меню'
+        elif user_language == 'english':
+            msg = 'Data deleted'
+            menu_msg = 'Main menu'
+
+        await bot.send_message(user_id, msg)
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'main_menu':
         await bot.delete_message(user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, "Как могу помочь?", reply_markup=menus.main_menu())
+        if user_language == 'russian':
+            menu_msg = 'Как я могу помочь?'
+        elif user_language == 'english':
+            menu_msg = 'How can I help?'
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'reminders':
@@ -599,6 +789,20 @@ async def handle_query(call):
         await bot.delete_message(user_id, message_id=call.message.message_id)
         user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
         await bot.send_message(user_id, f'Молодец, {user_name}')
+    
+    elif call.data == 'russian':
+        await bot.delete_message(user_id, message_id=call.message.message_id)
+        data_functions.alter_table('users', 'user_language', 'russian', 'user_id', user_id)
+        welcome_msg = "Добро пожаловать! Как я могу к Вам обращаться?"
+        set_user_state(user_id, 'entering_name')
+        await bot.send_message(user_id, welcome_msg)
+    
+    elif call.data == 'english':
+        await bot.delete_message(user_id, message_id=call.message.message_id)
+        data_functions.alter_table('users', 'user_language', 'english', 'user_id', user_id)
+        welcome_msg = "Welcome! How would you like me to call you?"
+        set_user_state(user_id, 'entering_name')
+        await bot.send_message(user_id, welcome_msg)
 
     else:
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
@@ -619,7 +823,7 @@ async def handle_photos(message):
     if user_state == 'sending_documents':
         await save_document(message)
         if get_user_state != 'awaiting_menu_choice':
-            await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+            await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu(user_language))
             set_user_state(message.chat.id, 'awaiting_menu_choice')
         
     elif user_state == 'quickstart_sending_documents':
@@ -635,16 +839,17 @@ async def handle_photos(message):
 async def handle_document(message):
     user_id = message.chat.id
     user_state = get_user_state(user_id)
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     
     if user_state == 'sending_documents':
         if message.document.file_name.lower().endswith(('.pdf', '.jpg', '.png', '.jpeg')):
             await save_document(message)
             if get_user_state != 'awaiting_menu_choice':
-                await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu())
+                await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu(user_language))
                 set_user_state(message.chat.id, 'awaiting_menu_choice')
             
         else:
-            await bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.more_documents_menu())
+            await bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.more_documents_menu(user_language))
             set_user_state(user_id, 'awaiting_menu_choice')
 
     elif user_state == 'quickstart_sending_documents':
@@ -654,7 +859,7 @@ async def handle_document(message):
             await bot.send_message(user_id, 'Показать?', reply_markup=menus.quickstart_finalize_case_menu())
             set_user_state(user_id, 'awaiting_menu_choice')
         else:
-            await bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.quickstart_add_document_menu())
+            await bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.quickstart_add_document_menu(user_language))
             set_user_state(user_id, 'awaiting_menu_choice')
 
     else:

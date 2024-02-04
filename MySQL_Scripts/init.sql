@@ -7,6 +7,7 @@ CREATE TABLE users (
     user_id BIGINT PRIMARY KEY,
     user_name VARCHAR(50),
     num_cases INT DEFAULT 0,
+    user_language VARCHAR(20) DEFAULT 'english',
     medical_bio TEXT DEFAULT NULL
 );
 
