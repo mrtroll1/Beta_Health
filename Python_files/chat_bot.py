@@ -356,7 +356,7 @@ async def handle_name_input(message):
     if user_language == 'russian':
         msg = f"Очень приятно, {user_name}! Сейчас я покажу, как всё работает..."
     elif user_language == 'english':
-        msg = f"Nice to meet you, {user_name}! Let me show how everything works..."
+        msg = f"Nice to meet you, {user_name}! Let me explain how everything works..."
 
     await bot.send_message(user_id, msg)
     await quickstart(message, user_language)
@@ -364,12 +364,14 @@ async def handle_name_input(message):
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'creating_case'
                                             and not message.text.startswith('/'))
 async def handle_message(message):
+    user_id = message.chat.id
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     await conversation_step(message, get_user_memory(message.chat.id), user_language)
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstarting'
                                             and not message.text.startswith('/'))
 async def handle_message(message):
+    user_id = message.chat.id
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     await conversation_step(message, get_user_memory(message.chat.id), user_language)
 
