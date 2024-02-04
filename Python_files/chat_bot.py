@@ -133,7 +133,7 @@ async def quickstart(message, language):
     if language == 'russian':
         msg = 'Вы обратитесь ко мне с жалобой или сипмтомами. Я подробно расспрошу Вас о проблеме и дам предварительные рекоммендации. Далее, при необходимости, передам дело в руки врача.'
     elif language == 'english':
-        msg = 'You approach me with a medical complaint. I will thoroughly question you about it and provide simple treatment recommendations. Then, if needed, I will transfer this data to your doctor.'
+        msg = 'You approach me with a medical complaint. I thoroughly question you about it and provide simple treatment recommendations. Then, if needed, I will transfer this data to your doctor.'
     await bot.send_message(user_id, msg, parse_mode='Markdown')
 
     await bot.send_chat_action(user_id, 'typing')
@@ -145,7 +145,7 @@ async def quickstart(message, language):
         start_msg = 'Давайте попробуем! Какие у Вас жалобы?'
     elif language == 'english':
         memory.save_context({'input': 'Let\'s begin.'}, {'output': 'What are your complaints?'})
-        start_msg = 'Let\'s try this! What are your complaints?'
+        start_msg = 'So... What are your complaints?'
     set_user_memory(user_id, memory)
 
     data_functions.increment_value('users', 'num_cases', 'user_id', user_id)
@@ -184,7 +184,7 @@ async def save_document(message):
         original_file_name = os.path.splitext(message.document.file_name)[0]
 
     if not file_id:
-        await bot.send_message(recipient, 'Данный формат файлов не поддерживается')
+        await bot.send_message(recipient, 'This file type is not supported')
         return
 
     file_info = await bot.get_file(file_id)
@@ -201,7 +201,7 @@ async def compile_case(case_id, recipient):
     case_text = data_functions.get_item_from_table_by_key('case_data', 'user_cases', 'case_id', case_id)
 
     if not os.path.exists(case_path):
-        await bot.send_message(recipient, 'Данные не найдены')
+        await bot.send_message(recipient, 'Data not found')
         return
 
     photo_group = []
@@ -209,7 +209,7 @@ async def compile_case(case_id, recipient):
     document_names = []
     for filename in os.listdir(case_path):
         if len(photo_group) + len(document_paths) >= 10: 
-            await bot.send_message(recipient, 'Только первые 10 файлов будут отправлены')
+            await bot.send_message(recipient, 'Only first 10 files will be sent')
             break
 
         file_path = os.path.join(case_path, filename)
@@ -238,20 +238,22 @@ async def compile_case(case_id, recipient):
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
 
 async def send_scheduled_message(chat_id, message):
-    await bot.send_message(chat_id, message, reply_markup=menus.reply_to_reminder_menu())
+    user_id = chat_id
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
+    await bot.send_message(chat_id, message, reply_markup=menus.reply_to_reminder_menu(user_language))
 
 async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
     scheduled_time = scheduling.final_scheduled_time(delay, range_minutes=120)
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', chat_id)
     if user_name == None:
-        user_name = 'Боб'
+        user_name = 'Bob'
     greeting = scheduling.datetime_to_greeting(scheduled_time, user_name)
     message = greeting + message
 
     await bot.send_message(chat_id, f'''
-Отправка уведомления 
+Message 
 _{message}_ 
-запланирована на {scheduled_time.strftime("%Y-%m-%d %H-%M")}
+will be sent on {scheduled_time.strftime("%Y-%m-%d %H-%M")}
     ''')
 
     scheduler.add_job(func=send_scheduled_message, name=f'{chat_id}_{datetime.datetime.now().time()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
@@ -382,10 +384,19 @@ async def edit_case(message):
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
     case = get_user_memory(user_id)
-    memory.save_context({"input": case}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
-    memory.save_context({"input": message.text}, {"output": "Сейчас внесу изменения!"})
 
-    await bot.send_message(user_id, 'Вот обновлённая версия:')
+    if user_language == 'russian':
+        memory.save_context({"input": case}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
+        memory.save_context({"input": message.text}, {"output": "Сейчас внесу изменения!"})
+        msg = 'Вот обновлённая версия:'
+        menu_msg = 'Отправляю врачу?
+    elif user_language == 'english':
+        memory.save_context({"input": case}, {"output": "What would you like to edit or add?"}) 
+        memory.save_context({"input": message.text}, {"output": "I will apply the changes now!"})
+        msg = 'Here is the update version:'
+        menu_msg = 'Shall I send it to the doctor?'
+
+    await bot.send_message(user_id, msg)
     await bot.send_chat_action(user_id, 'typing')
 
     case = summarize_into_case(memory)
@@ -394,7 +405,8 @@ async def edit_case(message):
     data_functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
     await compile_case(case_id, user_id)
-    await bot.send_message(user_id, 'Отправляю врачу?', reply_markup=menus.accept_case_menu(user_language))
+
+    await bot.send_message(user_id, menu_msg, reply_markup=menus.accept_case_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'editing_bio'
@@ -454,25 +466,34 @@ async def set_reminders(message):
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     await bot.send_message(user_id, f'''
-*Ответ GPT*: 
+*GPT response*: 
 {response}
     ''', parse_mode=None)
 
     await bot.send_message(user_id, f'''
-*Отформатированные напоминания*: 
+*Parse reminders*: 
 {reminders}
     ''')
 
+    if user_language == 'russian':
+        plan_data = f'Этот план был создан {datetime.datetime.now().date()} \n{message.text}'
+        msg = 'Уведомления были успешно установлены'
+        menu_msg = 'Главное меню'
+    elif user_language == 'english':
+        plan_data = f'This \'to-do\' was created on {datetime.datetime.now().date()} \n{message.text}'
+        msg = 'What are your complaints?'
+        menu_msg = 'Main menu'
+
     for reminder_text, delays in reminders.items():
         for delay in delays:
+            reminder_text = plan_data + '\n' + reminder_text
             await schedule_message(user_id, reminder_text, delay)
 
-
     await bot.send_chat_action(user_id, 'typing')
-    plan_data = f'План был создан {datetime.datetime.now().date()} \n{message.text}'
+
     data_functions.add_user_plan(user_id, plan_data)
-    await bot.send_message(user_id, 'Уведомления были успешно установлены')
-    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu(user_language))
+    await bot.send_message(user_id, msg)
+    await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'requesting_help'
@@ -481,9 +502,19 @@ async def set_reminders(message):
     request = message.text
     user_id = message.chat.id
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
-    await bot.send_message(helpservice_telegram_id, f'Пользователь {user_id} обратился в службу поддержки: \n_{message}_') 
-    await bot.send_message(user_id, 'Отправил службе поддержки')                       
-    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu(user_language))
+
+    if user_language == 'russian':
+        help_msg = f'Пользователь {user_id} обратился в службу поддержки: \n_{message}_'
+        msg = 'Отправил службе поддержки'
+        menu_msg = 'Главное меню'
+    elif user_language == 'english':
+        plan_data = f'User {user_id} requested help: \n_{message}_'
+        msg = 'Your request was sent'
+        menu_msg = 'Main menu'
+    
+    await bot.send_message(helpservice_telegram_id, help_msg) 
+    await bot.send_message(user_id, msg)                       
+    await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
 
 
@@ -771,16 +802,24 @@ async def handle_query(call):
     
     elif call.data == 'main_menu':
         await bot.delete_message(user_id, message_id=call.message.message_id)
+
         if user_language == 'russian':
             menu_msg = 'Как я могу помочь?'
         elif user_language == 'english':
             menu_msg = 'How can I help?'
+
         await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'reminders':
         await bot.delete_message(user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, "Хотите посмотреть имеющиеся напоминания или назначить новые?", reply_markup=menus.reminders_menu())
+
+        if user_language == 'russian':
+            msg = 'Хотите посмотреть имеющиеся напоминания или назначить новые?'
+        elif user_language == 'english':
+            msg = 'Do you wish to rewise your current reminders or set new ones?'
+
+        await bot.send_message(user_id, msg, reply_markup=menus.reminders_menu(user_language))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'my_reminders':
@@ -789,19 +828,43 @@ async def handle_query(call):
         if plans:
             for plan in plans:
                 await bot.send_message(user_id, plan[0])
-            await bot.send_message(user_id, 'Вот Ваши планы.')
+            
+            if user_language == 'russian':
+                msg = 'Вот то, что Вам необходимо сделать'
+            elif user_language == 'english':
+                msg = 'This is your current to-do list'
+
+            await bot.send_message(user_id, msg)
         else:
-            await bot.send_message(user_id, 'У Вас нет напоминаний.')
+
+            if user_language == 'russian':
+                msg = 'У Вас нет напоминаний.'
+            elif user_language == 'english':
+                msg = 'You do not have any reminders'
+
+            await bot.send_message(user_id, msg)
     
     elif call.data == 'set_reminders':
         await bot.delete_message(user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Введите рекоммендации врача и даты предстоящих приёмов, и я назначу Вам напоминания.')
+
+        if user_language == 'russian':
+            msg = 'Введите рекоммендации врача и даты предстоящих приёмов, и я назначу Вам напоминания.'
+        elif user_language == 'english':
+            msg = 'Enter doctor recommendations and future appointment dates, and I will set the reminders.'
+
+        await bot.send_message(user_id, msg)
         set_user_state(user_id, 'setting_reminders')
     
     elif call.data == 'reminder_job_done':
         await bot.delete_message(user_id, message_id=call.message.message_id)
         user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
-        await bot.send_message(user_id, f'Молодец, {user_name}')
+
+        if user_language == 'russian':
+            msg = f'Молодец, {user_name}'
+        elif user_language == 'english':
+            msg = f'Good job, {user_name}'
+
+        await bot.send_message(user_id, msg)
     
     elif call.data == 'russian':
         await bot.delete_message(user_id, message_id=call.message.message_id)
@@ -821,7 +884,7 @@ async def handle_query(call):
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_chat_action(user_id, 'typing')
         await compile_case(call.data, user_id)
-        await bot.send_message(user_id, 'Тут должно быть какое-то меню, но я его пока не придумал)')
+        await bot.send_message(user_id, 'Not implemented yet')
 
 
 
@@ -835,18 +898,34 @@ async def handle_photos(message):
 
     if user_state == 'sending_documents':
         await save_document(message)
-        if get_user_state != 'awaiting_menu_choice':
-            await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu(user_language))
-            set_user_state(message.chat.id, 'awaiting_menu_choice')
+            if get_user_state != 'awaiting_menu_choice':
+                
+                if user_language == 'russian':
+                    msg = 'Получил! Хотите отправить больше документов?'
+                elif user_language == 'english':
+                    msg = 'Got it! Would you like to attach more documents?'
+
+                await bot.send_message(message.chat.id, msg, reply_markup=menus.more_documents_menu(user_language))
+                set_user_state(message.chat.id, 'awaiting_menu_choice')
         
     elif user_state == 'quickstart_sending_documents':
         await save_document(message)
-        await bot.send_message(user_id, 'Получил!') 
-        await bot.send_message(user_id, 'Показать?', reply_markup=menus.quickstart_finalize_case_menu())
-        set_user_state(user_id, 'awaiting_menu_choice')
+            
+            if user_language == 'russian':
+                msg = 'Получил! Давайте я покажу, что получилось.'
+            elif user_language == 'english':
+                msg = 'Got it! Let me show you the result.'
+
+            await bot.send_message(user_id, msg, reply_markup=menus.quickstart_finalize_case_menu(user_language))
+            set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
-        await bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
+        if user_language == 'russian':
+            msg = 'Кажется, сейчас не самый подходящий момент для этого.'
+        elif user_language == 'english':
+            msg = 'I wasn\'t expecting to receive this now.'
+
+        await bot.send_message(user_id, msg)
 
 @bot.message_handler(content_types=['document'])
 async def handle_document(message):
@@ -858,25 +937,51 @@ async def handle_document(message):
         if message.document.file_name.lower().endswith(('.pdf', '.jpg', '.png', '.jpeg')):
             await save_document(message)
             if get_user_state != 'awaiting_menu_choice':
-                await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu(user_language))
+                
+                if user_language == 'russian':
+                    msg = 'Получил! Хотите отправить больше документов?'
+                elif user_language == 'english':
+                    msg = 'Got it! Would you like to attach more documents?'
+
+                await bot.send_message(message.chat.id, msg, reply_markup=menus.more_documents_menu(user_language))
                 set_user_state(message.chat.id, 'awaiting_menu_choice')
             
         else:
-            await bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.more_documents_menu(user_language))
+            if user_language == 'russian':
+                msg = 'Увы, но данный формат файлов я не принимаю (только фото и pdf файлы). Хотите прикрепить что-то ещё?'
+            elif user_language == 'english':
+                msg = 'Unfortunately, this type of documents is not supported (only images or pdf files). Would you like to attach something else?'
+
+            await bot.reply_to(message, msg, reply_markup=menus.more_documents_menu(user_language))
             set_user_state(user_id, 'awaiting_menu_choice')
 
     elif user_state == 'quickstart_sending_documents':
         if message.document.file_name.lower().endswith(('.pdf', '.jpg', '.png', '.jpeg')):
             await save_document(message)
-            await bot.send_message(user_id, 'Получил!')
-            await bot.send_message(user_id, 'Показать?', reply_markup=menus.quickstart_finalize_case_menu())
+            
+            if user_language == 'russian':
+                msg = 'Получил! Давайте я покажу, что получилось.'
+            elif user_language == 'english':
+                msg = 'Got it! Let me show you the result.'
+
+            await bot.send_message(user_id, msg, reply_markup=menus.quickstart_finalize_case_menu(user_language))
             set_user_state(user_id, 'awaiting_menu_choice')
         else:
-            await bot.reply_to(message, "Увы, но данный формат файлов я не принимаю. Хотите прикрепить что-то ещё?", reply_markup=menus.quickstart_add_document_menu(user_language))
+            if user_language == 'russian':
+                msg = 'Увы, но данный формат файлов я не принимаю (только фото и pdf файлы). Хотите прикрепить что-то ещё?'
+            elif user_language == 'english':
+                msg = 'Unfortunately, this type of documents is not supported (only images or pdf files). Would you like to attach something else?'
+
+            await bot.reply_to(message, msg, reply_markup=menus.quickstart_add_document_menu(user_language))
             set_user_state(user_id, 'awaiting_menu_choice')
 
     else:
-        await bot.send_message(user_id, "Кажется, сейчас не самый подходящий момент для этого.")
+        if user_language == 'russian':
+            msg = 'Кажется, сейчас не самый подходящий момент для этого.'
+        elif user_language == 'english':
+            msg = 'I wasn\'t expecting to receive this now.'
+
+        await bot.send_message(user_id, msg)
 
 
 
@@ -885,7 +990,15 @@ async def handle_document(message):
 #                                    """REACTIONS HANDLERS"""
 @bot.message_reaction_handler()
 async def reactions_handler(reaction):
-    await bot.send_message(reaction.chat.id, f'Ого! Это было клёво ...\nМы ценим Вашу реакцию на {reaction.message_id}')
+    user_id = reaction.chat.id
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
+
+    if user_language == 'russian':
+        msg = f'Ого! Это было клёво ...\nЯ ценю Вашу реакцию на {reaction.message_id}'
+    elif user_language == 'english':
+        msg = f'Wow! That was cool ...\nI appreciate your reaction to {reaction.message_id}'
+
+    await bot.send_message(user_id, )
 
 
 

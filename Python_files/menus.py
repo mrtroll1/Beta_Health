@@ -110,23 +110,31 @@ def more_documents_menu(language):
 
     return keyboard
 
-def reminders_menu():
+def reminders_menu(language):
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Посмотреть напоминания", callback_data='my_reminders')
-    button_2 = types.InlineKeyboardButton("Назначить новые напоминания", callback_data='set_reminders')
-    button_3 = types.InlineKeyboardButton("<< Назад", callback_data='main_menu')
+    if language == 'russian':
+        button_1 = types.InlineKeyboardButton("Посмотреть напоминания", callback_data='my_reminders')
+        button_2 = types.InlineKeyboardButton("Назначить новые напоминания", callback_data='set_reminders')
+        button_3 = types.InlineKeyboardButton("<<", callback_data='main_menu')
+    elif language == 'english':
+        button_1 = types.InlineKeyboardButton("See existing reminders", callback_data='my_reminders')
+        button_2 = types.InlineKeyboardButton("Set new reminders", callback_data='set_reminders')
+        button_3 = types.InlineKeyboardButton("<<", callback_data='main_menu')
 
     keyboard.add(button_1, button_2, button_3)
 
     return keyboard
 
-def reply_to_reminder_menu():
+def reply_to_reminder_menu(language):
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
-    button_1 = types.InlineKeyboardButton("Спасибо, уже сделал", callback_data='reminder_job_done')
+    if language == 'russian':
+        button_1 = types.InlineKeyboardButton("Спасибо, уже сделал", callback_data='reminder_job_done')
+    elif language == 'english':
+        button_1 = types.InlineKeyboardButton("Thank you, I have already done it", callback_data='reminder_job_done')
 
     keyboard.add(button_1)
 
