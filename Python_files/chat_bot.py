@@ -248,7 +248,7 @@ async def send_scheduled_message(chat_id, message):
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     await bot.send_message(chat_id, message, reply_markup=menus.reply_to_reminder_menu(user_language))
 
-async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15), language):
+async def schedule_message(chat_id, message, language, delay=datetime.timedelta(seconds=15)):
     scheduled_time = scheduling.final_scheduled_time(delay, range_minutes=120)
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', chat_id)
     if user_name == None:
@@ -494,7 +494,7 @@ async def set_reminders(message):
     for reminder_text, delays in reminders.items():
         for delay in delays:
             reminder_text = plan_data + '\n' + reminder_text
-            await schedule_message(user_id, reminder_text, delay, user_language)
+            await schedule_message(user_id, reminder_text, user_language, delay)
 
     await bot.send_chat_action(user_id, 'typing')
 
