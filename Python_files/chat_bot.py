@@ -661,7 +661,7 @@ async def handle_document(message):
 
 
 #                                    """REACTIONS HANDLERS"""
-@bot.message_reaction_handler(func=lambda reaction: True)
+@bot.message_reaction_handler()
 async def reactions_handler(reaction):
     await bot.send_message(reaction.chat.id, f'Ого! Это было клёво ...\nМы ценим Вашу реакцию на {reaction.message_id}')
 
@@ -671,7 +671,7 @@ async def reactions_handler(reaction):
 
 async def main():
     scheduler.start()
-    await bot.infinity_polling()
+    await bot.infinity_polling(allowed_updates=['message', 'callback_query', 'message_reaction'])
 
 if __name__ == '__main__':
     asyncio.run(main())
