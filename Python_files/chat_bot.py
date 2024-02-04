@@ -221,7 +221,7 @@ async def compile_case(case_id, recipient):
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
 
 async def send_scheduled_message(chat_id, message):
-    await bot.send_message(chat_id, message)
+    await bot.send_message(chat_id, message, reply_markup=menus.reply_to_reminder_menu())
 
 async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
     scheduled_time = scheduling.final_scheduled_time(delay, range_minutes=120)
@@ -594,11 +594,15 @@ async def handle_query(call):
         await bot.delete_message(user_id, message_id=call.message.message_id)
         await bot.send_message(user_id, 'Введите рекоммендации врача и даты предстоящих приёмов, и я назначу Вам напоминания.')
         set_user_state(user_id, 'setting_reminders')
+    
+    elif call.data == 'reminder_job_done':
+        await bot.delete_message(user_id, message_id=call.message.message_id)
+        user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
+        await bot.send_message(user_id, f'Молодец, {user_name}')
 
     else:
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_chat_action(user_id, 'typing')
-
         await compile_case(call.data, user_id)
         await bot.send_message(user_id, 'Тут должно быть какое-то меню, но я его пока не придумал)')
 
