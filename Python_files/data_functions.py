@@ -223,7 +223,7 @@ def add_user_language(user_id, language):
 
     try:
         db_cursor = db_connection.cursor()
-        query = "INSERT INTO user_plans (user_id, user_language) VALUES (%s, %s)"
+        query = "INSERT INTO users (user_id, user_language) VALUES (%s, %s)"
         db_cursor.execute(query, (user_id, language))
         db_connection.commit()
     except Error as e:
