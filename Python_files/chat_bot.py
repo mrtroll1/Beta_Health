@@ -299,6 +299,7 @@ async def send_help(message):
 
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
+    user_id = message.chat.id
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', message.chat.id)
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
@@ -307,11 +308,12 @@ async def show_main_menu(message):
     elif user_language == 'english':
         msg = f'{user_name}, how can I help'
 
-    await bot.send_message(message.chat.id, msg, reply_markup=menus.main_menu(user_language))
-    set_user_state(message.chat.id, 'awaiting_menu_choice')
+    await bot.send_message(user_id, msg, reply_markup=menus.main_menu(user_language))
+    set_user_state(user_id, 'awaiting_menu_choice')
 
 @bot.message_handler(commands=['info'])
 async def send_info(message):
+    user_id = message.chat.id
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     if user_language == 'russian':
@@ -325,7 +327,7 @@ I help you take care of yourself a bit better.
 This is an open-source project: https://github.com/mrtroll1/Beta_Health '''
         menu_msg = 'Main menu'
 
-    await bot.send_message(message.chat.id, info)
+    await bot.send_message(user_id, info)
     await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
     
