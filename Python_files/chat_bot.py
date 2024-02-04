@@ -345,8 +345,9 @@ async def handle_name_input(message):
     
     if user_language == 'russian':
         confirmation_msg = f"Очень приятно, {user_name}! Сейчас я покажу, как всё работает..."
-    elif user_language == 'russian':
+    elif user_language == 'english':
         confirmation_msg = f"Nice to meet you, {user_name}! Let me show how everything works..."
+
     await bot.send_message(user_id, confirmation_msg)
     await quickstart(message, user_language)
 
