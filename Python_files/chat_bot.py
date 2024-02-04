@@ -495,7 +495,6 @@ async def set_reminders(message):
 
     for reminder_text, delays in reminders.items():
         for delay in delays:
-            reminder_text = plan_data + '\n' + reminder_text
             await schedule_message(user_id, reminder_text, user_language, delay)
 
     await bot.send_chat_action(user_id, 'typing')
