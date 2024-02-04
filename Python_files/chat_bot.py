@@ -661,7 +661,7 @@ async def handle_document(message):
 
 
 #                                    """REACTIONS HANDLERS"""
-@bot.message_reaction_handler()
+@bot.message_reaction_handler(func=lambda reaction: True)
 async def reactions_handler(reaction):
     await bot.send_message(reaction.chat.id, f'Ого! Это было клёво ...\nМы ценим Вашу реакцию на {reaction.message_id}')
 
