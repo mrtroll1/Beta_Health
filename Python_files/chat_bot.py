@@ -347,10 +347,10 @@ async def handle_menu_choice(message):
 async def handle_name_input(message):
     user_id = message.chat.id
     user_name = message.text
-    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     data_functions.add_user_name(user_id, user_name)
 
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     await bot.send_message(user_id, user_language)
 
     if user_language == 'russian':
