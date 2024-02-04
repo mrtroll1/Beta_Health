@@ -468,11 +468,14 @@ async def set_reminders(message):
     user_id = message.chat.id
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
+
     if user_language == 'russian':
         reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt_russian, memory)
     elif user_language == 'english':
         reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt_english, memory)
-    response, reminders = reminder_instance.compose_reminders(message.text)
+
+    dated_message = f'Current time is {datetime.datetime.now()}' +'\n' + message.text 
+    response, reminders = reminder_instance.compose_reminders(dated_message)
     
     await bot.send_message(user_id, f'''
 *GPT response*: 
