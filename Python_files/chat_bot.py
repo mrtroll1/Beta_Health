@@ -534,7 +534,7 @@ async def handle_query(call):
         if user_language == 'russian':
             msg = 'У Вас нет активных подписок. Чтобы купить, скажите: "Дон-дон"'
             menu_msg = 'Главное меню'
-        elif user_language == 'russian':
+        elif user_language == 'english':
             msg = 'You do not have active subscriptions. To buy one, say "Don-Don"'
             menu_msg = 'Main menu'
 
@@ -571,7 +571,7 @@ async def handle_query(call):
         if user_language == 'russian':
             msg = 'Чтобы воспользоваться этой функцией, оформите подписку.'
             menu_msg = 'Главное меню'
-        elif user_language == 'russian':
+        elif user_language == 'english':
             msg = 'You need a subscription to share data with doctors.'
             menu_msg = 'Main menu'
 
