@@ -132,18 +132,7 @@ def reply_to_reminder_menu():
 
     return keyboard
 
-
-def quickstart_new_case_menu():
-    keyboard = types.InlineKeyboardMarkup()
-    keyboard.row_width = 1
-
-    button_1 = types.InlineKeyboardButton("📝 Начать новую проблему", callback_data='new_case')
-
-    keyboard.add(button_1)
-
-    return keyboard
-
-def quickstart_add_document_menu():
+def quickstart_add_document_menu(language):
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
@@ -156,7 +145,7 @@ def quickstart_add_document_menu():
 
     return keyboard
 
-def quickstart_finalize_case_menu():
+def quickstart_finalize_case_menu(language):
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1
 
