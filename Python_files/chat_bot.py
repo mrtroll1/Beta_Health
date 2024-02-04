@@ -332,7 +332,15 @@ This is an open-source project: https://github.com/mrtroll1/Beta_Health '''
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'awaiting_menu_choice'
                                             and not message.text.startswith('/'))
 async def handle_menu_choice(message):
-    await bot.send_message(message.chat.id, "Пожалуйста, выберите вариант из меню.")
+    user_id = message.chat.id
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
+
+    if user_language == 'russian':
+        msg = 'Пожалуйста, выберите вариант из меню.'
+    elif user_language == 'english':
+        msg = 'Please, choose one of the menu options.'
+
+    await bot.send_message(user_id, msg)
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'entering_name'
                                             and not message.text.startswith('/'))
@@ -342,13 +350,15 @@ async def handle_name_input(message):
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     data_functions.add_user_name(user_id, user_name)
-    
-    if user_language == 'russian':
-        confirmation_msg = f"Очень приятно, {user_name}! Сейчас я покажу, как всё работает..."
-    elif user_language == 'english':
-        confirmation_msg = f"Nice to meet you, {user_name}! Let me show how everything works..."
 
-    await bot.send_message(user_id, confirmation_msg)
+    await bot.send_message(user_id, user_language)
+
+    if user_language == 'russian':
+        msg = f"Очень приятно, {user_name}! Сейчас я покажу, как всё работает..."
+    elif user_language == 'english':
+        msg = f"Nice to meet you, {user_name}! Let me show how everything works..."
+
+    await bot.send_message(user_id, msg)
     await quickstart(message, user_language)
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'creating_case'
