@@ -394,7 +394,7 @@ async def edit_bio(message):
     if user_language == 'russian':
             msg = 'Обновил!'
             menu_msg = 'Главное меню'
-        elif user_language == 'russian':
+        elif user_language == 'english':
             msg = 'Done!'
             menu_msg = 'Main menu'
 
@@ -422,7 +422,7 @@ async def handle_photos(message):
         if user_language == 'russian':
             msg = 'Получил!'
             menu_msg = 'Давайте покажу, что получилось'
-        elif user_language == 'russian':
+        elif user_language == 'english':
             msg = 'Received!'
             menu_msg = 'Let me show you the result'
 
