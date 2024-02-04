@@ -95,7 +95,10 @@ def chatgpt_to_telegram_markdown(input_text):
     
 async def conversation_step(message, memory, language):
     user_id = message.chat.id
-    bot_instance = bots.ChatBot(bots.llm, bots.chat_prompt, memory)
+    if language == 'russian':
+        bot_instance = bots.ChatBot(bots.llm, bots.chat_prompt_russian, memory)
+    elif language == 'english':
+        bot_instance = bots.ChatBot(bots.llm, bots.chat_prompt_english, memory)
 
     await bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
@@ -133,7 +136,7 @@ async def quickstart(message, language):
     if language == 'russian':
         msg = 'Вы обратитесь ко мне с жалобой или сипмтомами. Я подробно расспрошу Вас о проблеме и дам предварительные рекоммендации. Далее, при необходимости, передам дело в руки врача.'
     elif language == 'english':
-        msg = 'You approach me with a medical complaint. I thoroughly question you about it and provide simple treatment recommendations. Then, if needed, I will transfer this data to your doctor.'
+        msg = 'You approach me with a medical complaint. I thoroughly question you about it and provide simple treatment recommendations. Then, if needed, I transfer this data to your doctor.'
     await bot.send_message(user_id, msg, parse_mode='Markdown')
 
     await bot.send_chat_action(user_id, 'typing')
@@ -154,8 +157,11 @@ async def quickstart(message, language):
     data_functions.add_user_case(case_id, user_id, 'Active')
     await bot.send_message(user_id, start_msg) 
 
-def summarize_into_case(memory): 
-    summarizer_instance = bots.Summarizer(bots.llm, bots.summarizer_prompt, memory)
+def summarize_into_case(memory, language): 
+    if language == 'russian':
+        summarizer_instance = bots.Summarizer(bots.llm, bots.summarizer_prompt_russian, memory)
+    elif language == 'english':
+        summarizer_instance = bots.Summarizer(bots.llm, bots.summarizer_prompt_english, memory)
     summary = summarizer_instance.summarize(memory)
     return chatgpt_to_telegram_markdown(summary)
 
@@ -242,12 +248,12 @@ async def send_scheduled_message(chat_id, message):
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
     await bot.send_message(chat_id, message, reply_markup=menus.reply_to_reminder_menu(user_language))
 
-async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15)):
+async def schedule_message(chat_id, message, delay=datetime.timedelta(seconds=15), language):
     scheduled_time = scheduling.final_scheduled_time(delay, range_minutes=120)
     user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', chat_id)
     if user_name == None:
         user_name = 'Bob'
-    greeting = scheduling.datetime_to_greeting(scheduled_time, user_name)
+    greeting = scheduling.datetime_to_greeting(scheduled_time, user_name, language)
     message = greeting + message
 
     await bot.send_message(chat_id, f'''
@@ -257,7 +263,6 @@ will be sent on {scheduled_time.strftime("%Y-%m-%d %H-%M")}
     ''')
 
     scheduler.add_job(func=send_scheduled_message, name=f'{chat_id}_{datetime.datetime.now().time()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
-
 
 
 
@@ -398,7 +403,7 @@ async def edit_case(message):
     await bot.send_message(user_id, msg)
     await bot.send_chat_action(user_id, 'typing')
 
-    case = summarize_into_case(memory)
+    case = summarize_into_case(memory, user_language)
     set_user_memory(user_id, case)
     case_id = get_user_curr_case(user_id)
     data_functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
@@ -458,12 +463,15 @@ async def handle_photos(message):
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'setting_reminders'
                                             and not message.text.startswith('/'))
 async def set_reminders(message):
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
-    reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt, memory)
-    response, reminders = reminder_instance.compose_reminders(message.text)
     user_id = message.chat.id
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
-
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
+    if user_language == 'russian':
+        reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt_russian, memory)
+    elif user_language == 'english':
+        reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt_english, memory)
+    response, reminders = reminder_instance.compose_reminders(message.text)
+    
     await bot.send_message(user_id, f'''
 *GPT response*: 
 {response}
@@ -486,7 +494,7 @@ async def set_reminders(message):
     for reminder_text, delays in reminders.items():
         for delay in delays:
             reminder_text = plan_data + '\n' + reminder_text
-            await schedule_message(user_id, reminder_text, delay)
+            await schedule_message(user_id, reminder_text, delay, user_language)
 
     await bot.send_chat_action(user_id, 'typing')
 
@@ -697,14 +705,18 @@ async def handle_query(call):
         await bot.send_chat_action(user_id, 'typing')
         await bot.send_chat_action(user_id, 'upload_document')
 
-        case = summarize_into_case(get_user_memory(user_id))
+        case = summarize_into_case(get_user_memory(user_id), user_language)
         set_user_memory(user_id, case)
         case_id = get_user_curr_case(user_id)
         data_functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
         await compile_case(case_id, user_id)
 
-        namer_instance = bots.Namer(bots.llm, bots.namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        if user_language == 'russian':
+            namer_instance = bots.Namer(bots.llm, bots.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        elif user_language == 'english':
+            namer_instance = bots.Namer(bots.llm, bots.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+
         case_name = namer_instance.name_case(case)
 
         if user_language == 'russian':
@@ -733,14 +745,17 @@ async def handle_query(call):
         await bot.send_chat_action(user_id, 'typing')
         await bot.send_chat_action(user_id, 'upload_document')
 
-        case = summarize_into_case(get_user_memory(user_id))
+        case = summarize_into_case(get_user_memory(user_id), user_language)
         set_user_memory(user_id, case)
         case_id = get_user_curr_case(user_id)
         data_functions.alter_table('user_cases', 'case_data', case, 'case_id', case_id)
 
         await compile_case(case_id, user_id)
 
-        namer_instance = bots.Namer(bots.llm, bots.namer_prompt, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        if user_language == 'russian':
+            namer_instance = bots.Namer(bots.llm, bots.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+        elif user_language == 'english':
+            namer_instance = bots.Namer(bots.llm, bots.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
 
         if user_language == 'russian':
