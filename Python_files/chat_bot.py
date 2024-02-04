@@ -394,9 +394,9 @@ async def edit_bio(message):
     if user_language == 'russian':
             msg = 'Обновил!'
             menu_msg = 'Главное меню'
-        elif user_language == 'english':
-            msg = 'Done!'
-            menu_msg = 'Main menu'
+    elif user_language == 'english':
+        msg = 'Done!'
+        menu_msg = 'Main menu'
 
     await bot.send_message(user_id, msg)
     await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
