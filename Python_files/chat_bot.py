@@ -25,6 +25,7 @@ from langchain.prompts import HumanMessagePromptTemplate
 
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token, parse_mode='Markdown')
+helpservice_telegram_id = os.environ.get('HELPSERVICE_TELEGRAM_ID')
 mysql_apscheduler_url = os.environ.get('MYSQL_APSCHEDULER_URL')
 jobstores = {
     'default': SQLAlchemyJobStore(url=mysql_apscheduler_url)
@@ -263,8 +264,9 @@ async def send_welcome(message):
 
 @bot.message_handler(commands=['help'])
 async def send_help(message):
-    help_text = """Быть идеальным ботом непросто. Какой у Вас вопрос? (ответа не ждите, колл-центр пока не арендовали)"""
+    help_text = """Быть идеальным ботом непросто. Какой у Вас вопрос? (вам ответит служба поддержки)"""
     await bot.send_message(message.chat.id, help_text)
+    set_user_state('requesting_help')
 
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
@@ -274,9 +276,14 @@ async def show_main_menu(message):
 
 @bot.message_handler(commands=['info'])
 async def send_info(message):
-    info = 'А чё тут писать-то)'
+    info = '''
+Я помогаю Вам чуточку лучше следить за здоровьем. 
+Это open-source проект: https://github.com/mrtroll1/Beta_Health
+    '''
     await bot.send_message(message.chat.id, info)
-    # ... введите /menu, чтобы начать пользоваться
+    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+    set_user_state(user_id, 'awaiting_menu_choice')
+    
 
 
     
@@ -388,6 +395,15 @@ async def set_reminders(message):
     await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
     set_user_state(user_id, 'awaiting_menu_choice')
 
+@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'requesting_help'
+                                            and not message.text.startswith('/'))
+async def set_reminders(message):
+    request = message.text
+    user_id = message.chat.id
+    await bot.send_message(helpservice_telegram_id, f'Пользователь {user_id} обратился в службу поддержки: \n_{message}_') 
+    await bot.send_message(user_id, 'Отправил службе поддержки')                       
+    await bot.send_message(user_id, 'Главное меню', reply_markup=menus.main_menu())
+    set_user_state(user_id, 'awaiting_menu_choice')
 
 
 
@@ -568,7 +584,7 @@ async def handle_query(call):
         plans = data_functions.get_items_from_table_by_key('plan_data', 'user_plans', 'user_id', user_id)
         if plans:
             for plan in plans:
-                await bot.send_message(user_id, plan)
+                await bot.send_message(user_id, plan[0])
             await bot.send_message(user_id, 'Вот Ваши планы.')
         else:
             await bot.send_message(user_id, 'У Вас нет напоминаний.')
