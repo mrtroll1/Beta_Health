@@ -220,7 +220,7 @@ async def compile_case(case_id, recipient):
 
         file_path = os.path.join(case_path, filename)
         file_extension = os.path.splitext(filename)[1].lower()
-        document_names.append(filename[:-15] + file_extension)
+        document_names.append(filename[:-14] + file_extension)
 
         if file_extension in ['.jpg', '.jpeg', '.png']:
             data_functions.decrypt_file(file_path)
@@ -238,7 +238,7 @@ async def compile_case(case_id, recipient):
         for i, file_path in enumerate(document_paths, 0):
             data_functions.decrypt_file(file_path)
             with open(file_path, 'rb') as file:
-                await bot.send_document(recipient, types.InputFile(file), caption=document_names[i])
+                await bot.send_document(recipient, types.InputFile(file), caption=document_names[i], parse_mode=None)
             data_functions.encrypt_file(file_path)
     
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
