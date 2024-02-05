@@ -229,12 +229,6 @@ async def schedule_message(chat_id, message, language, delay=datetime.timedelta(
     greeting = scheduling.datetime_to_greeting(scheduled_time, user_name, language)
     message = greeting + message
 
-    await bot.send_message(chat_id, f'''
-Message 
-_{message}_ 
-will be sent on {scheduled_time.strftime("%Y-%m-%d %H-%M")}
-    ''')
-
     scheduler.add_job(func=send_scheduled_message, name=f'{chat_id}_{datetime.datetime.now().time()}', trigger='date', run_date=scheduled_time, args=[chat_id, message])
 
 
@@ -420,14 +414,9 @@ async def set_reminders(message):
 
     dated_message = f'Current time is {datetime.datetime.now()}' +'\n' + message.text 
     response, reminders = reminder_instance.compose_reminders(dated_message)
-    
-    await bot.send_message(user_id, f'''
-*GPT response*: 
-{response}
-    ''', parse_mode=None)
 
     await bot.send_message(user_id, f'''
-*Parse reminders*: 
+*Parsed reminders*: 
 {reminders}
     ''')
 
@@ -437,7 +426,7 @@ async def set_reminders(message):
         menu_msg = 'Главное меню'
     elif user_language == 'english':
         plan_data = f'This \'to-do\' was created on {datetime.datetime.now().date()} \n \n{message.text}'
-        msg = 'What are your complaints?'
+        msg = 'Reminders were succesfully set'
         menu_msg = 'Main menu'
 
     for reminder_text, delays in reminders.items():
