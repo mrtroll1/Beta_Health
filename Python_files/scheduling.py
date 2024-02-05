@@ -1,3 +1,5 @@
+# This file contains minor functions that parse scheduling messages
+
 from datetime import datetime
 from datetime import timedelta
 import random

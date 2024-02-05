@@ -1,3 +1,5 @@
+# This is the main TelegramBot file
+
 import telebot
 import os
 import time

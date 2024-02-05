@@ -1,3 +1,5 @@
+# This file contains functions resposible for MySQL connections and document processing
+
 import os
 import mysql.connector
 from mysql.connector import Error

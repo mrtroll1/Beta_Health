@@ -1,3 +1,5 @@
+# This file contains LLM prompts 
+
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import SystemMessage
 from langchain_core.prompts import MessagesPlaceholder
