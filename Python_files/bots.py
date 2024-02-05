@@ -257,10 +257,11 @@ reminder_prompt_english = ChatPromptTemplate.from_messages(
             content="""
             You are an AI assistant to a doctor. Your task is to plan reminders. Today, the doctor had an appointment (today's date is given). 
             You are given the recommendations he gave to the patient, as well as the dates of upcoming appointments. 
-            Their text needs to be adapted for reminders, correctly interpreting the time frames. 
+            Their text needs to be adapted for reminders.  
             Your task is to write the text of reminders for the patient and specify in days/hours datetime.timedelta -- 
             the time after which these reminders should be sent. Your answer should be in the format of a python dictionary, 
             where keys are the texts of reminders, and values are lists of timedelta's (the same thing can be reminded several times).
+            Please only include the dictionary itself in the answer and do not define any variables outside of it. 
             """
         ),  
         MessagesPlaceholder(
