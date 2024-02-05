@@ -62,26 +62,6 @@ def generate_case_id(user_id):
         return None
 
     return f"{user_id}_{num_cases}", num_cases
-
-
-def chatgpt_to_telegram_markdown(input_text):
-    bold_transformed = input_text.replace('**', '*')
-
-    italics_transformed = ''
-    skip_next = False
-    for i, char in enumerate(bold_transformed):
-        if skip_next:
-            skip_next = False
-            continue
-
-        if char == '*' and (i == 0 or bold_transformed[i-1] != '*') and (i == len(bold_transformed) - 1 or bold_transformed[i+1] != '*'):
-            italics_transformed += '_'
-        else:
-            italics_transformed += char
-            if char == '*':
-                skip_next = True
-
-    return italics_transformed
     
 async def conversation_step(message, memory, language):
     user_id = message.chat.id
@@ -92,7 +72,6 @@ async def conversation_step(message, memory, language):
 
     await bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
-    response = chatgpt_to_telegram_markdown(response)
     await bot.send_message(user_id, response, parse_mode='Markdown')
 
     set_user_memory(user_id, memory)
@@ -153,7 +132,7 @@ def summarize_into_case(memory, language):
     elif language == 'english':
         summarizer_instance = llms.Summarizer(llms.llm, llm_prompts.summarizer_prompt_english, memory)
     summary = summarizer_instance.summarize(memory)
-    return chatgpt_to_telegram_markdown(summary)
+    return summary
 
 async def save_document(message):
     file_id = None
@@ -489,6 +468,8 @@ async def set_reminders(message):
     await bot.send_message(user_id, msg)                       
     await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
+
+
 
 
 
@@ -971,6 +952,7 @@ async def handle_document(message):
 
 
 #                                    """REACTIONS HANDLERS"""
+
 @bot.message_reaction_handler()
 async def reactions_handler(reaction):
     user_id = reaction.chat.id

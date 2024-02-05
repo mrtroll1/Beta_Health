@@ -15,8 +15,28 @@ class ChatBot(langchain.chains.llm.LLMChain):
 
         self.memory = memory  
 
+    def chatgpt_to_telegram_markdown(input_text):
+        bold_transformed = input_text.replace('**', '*')
+
+        italics_transformed = ''
+        skip_next = False
+        for i, char in enumerate(bold_transformed):
+            if skip_next:
+                skip_next = False
+                continue
+
+            if char == '*' and (i == 0 or bold_transformed[i-1] != '*') and (i == len(bold_transformed) - 1 or bold_transformed[i+1] != '*'):
+                italics_transformed += '_'
+            else:
+                italics_transformed += char
+                if char == '*':
+                    skip_next = True
+
+        return italics_transformed
+
     def process_message(self, message):
-        return self.invoke(message)['text']
+        response = self.invoke(message)['text']
+        return self.chatgpt_to_telegram_markdown(response)
 
 class Summarizer(langchain.chains.llm.LLMChain):
     def __init__(self, llm, prompt, memory, verbose=False):
@@ -24,10 +44,29 @@ class Summarizer(langchain.chains.llm.LLMChain):
 
         self.memory = memory  
     
+    def chatgpt_to_telegram_markdown(input_text):
+        bold_transformed = input_text.replace('**', '*')
+
+        italics_transformed = ''
+        skip_next = False
+        for i, char in enumerate(bold_transformed):
+            if skip_next:
+                skip_next = False
+                continue
+
+            if char == '*' and (i == 0 or bold_transformed[i-1] != '*') and (i == len(bold_transformed) - 1 or bold_transformed[i+1] != '*'):
+                italics_transformed += '_'
+            else:
+                italics_transformed += char
+                if char == '*':
+                    skip_next = True
+
+        return italics_transformed
+
     def summarize(self, memory):
         messages = memory.buffer_as_messages
-        
-        return self.invoke(messages)['text']
+        response = self.invoke(messages)['text']
+        return self.chatgpt_to_telegram_markdown(response)
 
 class Namer(langchain.chains.llm.LLMChain):
     def __init__(self, llm, prompt, memory, verbose=False):
