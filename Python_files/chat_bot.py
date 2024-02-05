@@ -13,10 +13,11 @@ import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from telebot import types
+from telebot.async_telebot import AsyncTeleBot
 from langchain.memory import ConversationBufferMemory
 
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
-bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token, parse_mode='Markdown')
+bot = AsyncTeleBot(telegram_api_token, parse_mode='Markdown')
 helpservice_telegram_id = os.environ.get('HELPSERVICE_TELEGRAM_ID')
 mysql_apscheduler_url = os.environ.get('MYSQL_APSCHEDULER_URL')
 jobstores = {
