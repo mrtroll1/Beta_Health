@@ -1,27 +1,17 @@
+import telebot
 import os
 import time
 import asyncio
-import bots
+import llms
+import llm_prompts
 import data_functions
 import scheduling
 import menus 
-import mysql.connector
 import datetime
-import random
-import apscheduler 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from apscheduler.schedulers.background import BackgroundScheduler
-import telebot
 from telebot import types
-from telebot.async_telebot import AsyncTeleBot
-from langchain.prompts import ChatPromptTemplate
 from langchain.memory import ConversationBufferMemory
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.prompts import MessagesPlaceholder
-from langchain.schema import SystemMessage
-from langchain.prompts import HumanMessagePromptTemplate
 
 telegram_api_token = os.environ.get('TELEGRAM_API_TOKEN')
 bot = telebot.async_telebot.AsyncTeleBot(telegram_api_token, parse_mode='Markdown')
@@ -96,9 +86,9 @@ def chatgpt_to_telegram_markdown(input_text):
 async def conversation_step(message, memory, language):
     user_id = message.chat.id
     if language == 'russian':
-        bot_instance = bots.ChatBot(bots.llm, bots.chat_prompt_russian, memory)
+        bot_instance = llms.ChatBot(llms.llm, llm_propmpts.chat_prompt_russian, memory)
     elif language == 'english':
-        bot_instance = bots.ChatBot(bots.llm, bots.chat_prompt_english, memory)
+        bot_instance = llms.ChatBot(llms.llm, llm_prompts.chat_prompt_english, memory)
 
     await bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
@@ -159,9 +149,9 @@ async def quickstart(message, language):
 
 def summarize_into_case(memory, language): 
     if language == 'russian':
-        summarizer_instance = bots.Summarizer(bots.llm, bots.summarizer_prompt_russian, memory)
+        summarizer_instance = llms.Summarizer(llms.llm, llm_prompts.summarizer_prompt_russian, memory)
     elif language == 'english':
-        summarizer_instance = bots.Summarizer(bots.llm, bots.summarizer_prompt_english, memory)
+        summarizer_instance = llms.Summarizer(llms.llm, llm_prompts.summarizer_prompt_english, memory)
     summary = summarizer_instance.summarize(memory)
     return chatgpt_to_telegram_markdown(summary)
 
@@ -220,7 +210,7 @@ async def compile_case(case_id, recipient):
 
         file_path = os.path.join(case_path, filename)
         file_extension = os.path.splitext(filename)[1].lower()
-        escaped_filename = filename.replace('_', '\_')
+        escaped_filename = filename.replace('_', '\_').replace('*', '\*')
         document_names.append(escaped_filename[:-14] + file_extension)
 
         if file_extension in ['.jpg', '.jpeg', '.png']:
@@ -434,35 +424,6 @@ async def edit_bio(message):
     await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
 
-@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'sending_documents'
-                                            and not message.text.startswith('/'))
-async def handle_photos(message):
-    await save_document(message)
-    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
-    if get_user_state != 'awaiting_menu_choice':
-        await bot.send_message(message.chat.id, 'Получил! Хотите отправить больше документов?', reply_markup=menus.more_documents_menu(user_language))
-        set_user_state(message.chat.id, 'awaiting_menu_choice')
-
-@bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'quickstart_sending_documents'
-                                            and not message.text.startswith('/'))
-async def handle_photos(message):
-    await save_document(message)
-    user_id = message.chat.id
-    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
-    if get_user_state != 'awaiting_menu_choice':
-
-        if user_language == 'russian':
-            msg = 'Получил!'
-            menu_msg = 'Давайте покажу, что получилось'
-        elif user_language == 'english':
-            msg = 'Received!'
-            menu_msg = 'Let me show you the result'
-
-        await bot.send_message(user_id, msg)
-        await bot.send_message(user_id, menu_msg, reply_markup=menus.quickstart_finalize_case_menu(user_language))
-        set_user_state(message.chat.id, 'awaiting_menu_choice')
-
-
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'setting_reminders'
                                             and not message.text.startswith('/'))
 async def set_reminders(message):
@@ -471,9 +432,9 @@ async def set_reminders(message):
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
 
     if user_language == 'russian':
-        reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt_russian, memory)
+        reminder_instance = llms.Reminder(llms.llm, llm_prompts.reminder_prompt_russian, memory)
     elif user_language == 'english':
-        reminder_instance = bots.Reminder(bots.llm, bots.reminder_prompt_english, memory)
+        reminder_instance = llms.Reminder(llms.llm, llm_prompts.reminder_prompt_english, memory)
 
     dated_message = f'Current time is {datetime.datetime.now()}' +'\n' + message.text 
     response, reminders = reminder_instance.compose_reminders(dated_message)
@@ -489,11 +450,11 @@ async def set_reminders(message):
     ''')
 
     if user_language == 'russian':
-        plan_data = f'Этот план был создан {datetime.datetime.now().date()} \n{message.text}'
+        plan_data = f'Этот план был создан {datetime.datetime.now().date()} \n \n{message.text}'
         msg = 'Уведомления были успешно установлены'
         menu_msg = 'Главное меню'
     elif user_language == 'english':
-        plan_data = f'This \'to-do\' was created on {datetime.datetime.now().date()} \n{message.text}'
+        plan_data = f'This \'to-do\' was created on {datetime.datetime.now().date()} \n \n{message.text}'
         msg = 'What are your complaints?'
         menu_msg = 'Main menu'
 
@@ -520,7 +481,7 @@ async def set_reminders(message):
         msg = 'Отправил службе поддержки'
         menu_msg = 'Главное меню'
     elif user_language == 'english':
-        plan_data = f'User {user_id} requested help: \n_{message}_'
+        help_msg = f'User {user_id} requested help: \n_{message}_'
         msg = 'Your request was sent'
         menu_msg = 'Main menu'
     
@@ -718,9 +679,9 @@ async def handle_query(call):
         await compile_case(case_id, user_id)
 
         if user_language == 'russian':
-            namer_instance = bots.Namer(bots.llm, bots.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+            namer_instance = llms.Namer(llms.llm, llm_prompts.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         elif user_language == 'english':
-            namer_instance = bots.Namer(bots.llm, bots.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+            namer_instance = llms.Namer(llms.llm, llm_prompts.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
 
         case_name = namer_instance.name_case(case)
 
@@ -758,9 +719,9 @@ async def handle_query(call):
         await compile_case(case_id, user_id)
 
         if user_language == 'russian':
-            namer_instance = bots.Namer(bots.llm, bots.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+            namer_instance = llms.Namer(llms.llm, llm_prompts.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         elif user_language == 'english':
-            namer_instance = bots.Namer(bots.llm, bots.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+            namer_instance = llms.Namer(llms.llm, llm_prompts.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
 
         if user_language == 'russian':
@@ -858,10 +819,13 @@ async def handle_query(call):
 
             if user_language == 'russian':
                 msg = 'У Вас нет напоминаний.'
+                menu_msg = 'Главное меню'
             elif user_language == 'english':
                 msg = 'You do not have any reminders'
+                menu_msg = 'Main menu'
 
             await bot.send_message(user_id, msg)
+            await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     
     elif call.data == 'set_reminders':
         await bot.delete_message(user_id, message_id=call.message.message_id)
