@@ -220,7 +220,7 @@ async def compile_case(case_id, recipient):
 
         file_path = os.path.join(case_path, filename)
         file_extension = os.path.splitext(filename)[1].lower()
-        document_names.append(filename[:-14] + file_extension)
+        document_names.append(filename[:-15] + file_extension)
 
         if file_extension in ['.jpg', '.jpeg', '.png']:
             data_functions.decrypt_file(file_path)
