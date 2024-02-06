@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS user_cases;
 DROP TABLE IF EXISTS user_plans;
 DROP TABLE IF EXISTS user_doctors;
+DROP TABLE IF EXISTS user_documents;
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
@@ -10,6 +11,13 @@ CREATE TABLE users (
     user_language VARCHAR(20) DEFAULT NULL,
     medical_bio TEXT DEFAULT NULL
 );
+
+CREATE TABLE user_documents (
+    document_tg_id BIGINT PRIMARY KEY,
+    document_name VARCHAR(100) DEFAULT 'No-name',
+    case_id BIGINT NOT NULL,
+    FOREIGN KEY (case_id) REFERENCES user_cases(case_id)
+)
 
 CREATE TABLE user_doctors (
     doctor_id BIGINT PRIMARY KEY,
@@ -35,6 +43,7 @@ CREATE TABLE user_cases (
     case_status VARCHAR(20),
     case_data TEXT DEFAULT NULL,
     case_media_path VARCHAR(255) DEFAULT NULL,
+    case_media_tg_ids VARCHAR (255) DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 

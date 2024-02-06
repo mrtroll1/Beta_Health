@@ -217,6 +217,25 @@ def add_user_case(case_id, user_id, case_status):
         if db_connection:
             db_connection.close()
 
+def add_user_document(document_id, case_id, document_name):
+    db_connection = connect()
+    if db_connection is None:
+        print("Database connection failed.")
+        return
+
+    try:
+        db_cursor = db_connection.cursor()
+        query = "INSERT INTO user_documents (document_id, case_id, document_name) VALUES (%s, %s, %s)"
+        db_cursor.execute(query, (document_id, case_id, document_name))
+        db_connection.commit()
+    except Error as e:
+        print(f"Error: {e}")
+    finally:
+        if db_cursor:
+            db_cursor.close()
+        if db_connection:
+            db_connection.close()
+
 def add_user_language(user_id, language):
     db_connection = connect()
     if db_connection is None:

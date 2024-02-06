@@ -26,7 +26,6 @@ jobstores = {
 # scheduler = AsyncIOScheduler(jobstores=jobstores)
 scheduler = AsyncIOScheduler()
 
-
 user_state = {}
 user_memory = {}
 user_curr_case = {}
@@ -172,6 +171,7 @@ async def save_document(message):
     case_specific_path, full_path = data_functions.save_file_to_server(downloaded_file, message.chat.id, case_id, original_file_name, file_extension)
 
     data_functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
+    data_functions.add_user_document(file_id, case_id, original_file_name)
 
 async def compile_case(case_id, recipient):
     base_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
@@ -215,6 +215,10 @@ async def compile_case(case_id, recipient):
             data_functions.encrypt_file(file_path)
     
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
+    
+    file_ids = data_functions.get_items_from_table_by_key('document_tg_id', 'user_documents', 'case_id', case_id)
+    for file_id in file_ids:
+        await bot.send_document(recipient, file_id)
 
 async def send_scheduled_message(chat_id, message):
     user_id = chat_id
@@ -278,7 +282,7 @@ async def show_main_menu(message):
     if user_language == 'russian':
         msg = f'{user_name}, как я могу Вам помочь?'
     elif user_language == 'english':
-        msg = f'{user_name}, how can I help'
+        msg = f'{user_name}, how can I help?'
 
     await bot.send_message(user_id, msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
@@ -291,16 +295,13 @@ async def send_info(message):
     if user_language == 'russian':
         info = '''
 Я помогаю Вам чуточку лучше следить за здоровьем. 
-Это open-source проект: https://github.com/mrtroll1/Beta_Health '''
-        menu_msg = 'Главное меню'
+Это open-source проект: https://github.com/mrtroll1/Beta\_Health '''
     elif user_language == 'english':
         info = '''
 I help you take care of yourself a bit better.  
-This is an open-source project: https://github.com/mrtroll1/Beta_Health '''
-        menu_msg = 'Main menu'
+This is an open-source project: https://github.com/mrtroll1/Beta\_Health '''
 
-    await bot.send_message(user_id, info)
-    await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
+    await bot.send_message(user_id, info, reply_markup=menus.go_back_menu('main_menu'))
     set_user_state(user_id, 'awaiting_menu_choice')
     
 
@@ -527,13 +528,10 @@ async def handle_query(call):
 
         if user_language == 'russian':
             msg = 'У Вас нет активных подписок. Чтобы купить, скажите: "Дон-дон"'
-            menu_msg = 'Главное меню'
         elif user_language == 'english':
             msg = 'You do not have active subscriptions. To buy one, say "Don-Don"'
-            menu_msg = 'Main menu'
 
-        await bot.send_message(user_id, msg)
-        await bot.send_message(user_id, menu_msg, reply_markup=menus.go_back_menu('main_menu'))
+        await bot.send_message(user_id, msg, reply_markup=menus.go_back_menu('main_menu'))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'bio':
@@ -796,13 +794,10 @@ async def handle_query(call):
 
             if user_language == 'russian':
                 msg = 'У Вас нет напоминаний.'
-                menu_msg = 'Главное меню'
             elif user_language == 'english':
                 msg = 'You do not have any reminders'
-                menu_msg = 'Main menu'
 
-            await bot.send_message(user_id, msg)
-            await bot.send_message(user_id, menu_msg, reply_markup=menus.go_back_menu('main_menu'))
+            await bot.send_message(user_id, msg, reply_markup=menus.go_back_menu('main_menu'))
     
     elif call.data == 'set_reminders':
         await bot.delete_message(user_id, message_id=call.message.message_id)
