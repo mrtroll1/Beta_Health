@@ -8,8 +8,8 @@ def main_menu(language):
     keyboard.row_width = 1
 
     if language == 'russian':
-        button_1 = types.InlineKeyboardButton("📝 Новая проблема", callback_data='new_case')
-        button_2 = types.InlineKeyboardButton("🗃 Активные проблемы", callback_data='my_cases')
+        button_1 = types.InlineKeyboardButton("📝 Новая жалоба", callback_data='new_case')
+        button_2 = types.InlineKeyboardButton("🗃 Активные жалобы", callback_data='my_cases')
         button_3 = types.InlineKeyboardButton("🔔 Напоминания", callback_data='reminders')
         button_4 = types.InlineKeyboardButton("🔐 Мои подписки", callback_data='my_subscriptions')
         button_5 = types.InlineKeyboardButton("👤 Обо мне", callback_data='bio')
@@ -78,15 +78,15 @@ def accept_case_menu(language):
     keyboard.row_width = 1
 
     if language == 'russian':
-        button_1 = types.InlineKeyboardButton("Да, отправляй!", callback_data='send_case_to_doctor')
+        button_1 = types.InlineKeyboardButton("Отправить врачу", callback_data='send_case_to_doctor')
         button_2 = types.InlineKeyboardButton("Хочу изменить", callback_data='edit_case')
-        button_3 = types.InlineKeyboardButton("Сохрани, но не отправляй врачу", callback_data='save_and_not_share')
-        button_4 = types.InlineKeyboardButton("Не сохраняй и не отправляй врачу", callback_data='delete_and_not_share')
+        button_3 = types.InlineKeyboardButton("Сохрани", callback_data='save_and_not_share')
+        button_4 = types.InlineKeyboardButton("Удали", callback_data='delete_and_not_share')
     elif language == 'english':
-        button_1 = types.InlineKeyboardButton("Yes, send!", callback_data='send_case_to_doctor')
+        button_1 = types.InlineKeyboardButton("Send to doctor", callback_data='send_case_to_doctor')
         button_2 = types.InlineKeyboardButton("I want to make changes", callback_data='edit_case')
-        button_3 = types.InlineKeyboardButton("Save but do not share", callback_data='save_and_not_share')
-        button_4 = types.InlineKeyboardButton("Delete and do not share", callback_data='delete_and_not_share')
+        button_3 = types.InlineKeyboardButton("Save", callback_data='save_and_not_share')
+        button_4 = types.InlineKeyboardButton("Delete", callback_data='delete_and_not_share')
 
     keyboard.add(button_1, button_2, button_3, button_4)
 

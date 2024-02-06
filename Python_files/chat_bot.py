@@ -275,7 +275,7 @@ async def send_help(message):
     if user_language == 'russian':
         help_text = 'Быть идеальным ботом непросто. Какой у Вас вопрос? (вам ответит служба поддержки)'
     elif user_language == 'english':
-        help_text = 'It\'s hard to be perfect. What happened? (I will transfer your request to customer service)'
+        help_text = 'It\'s hard to be perfect. What happened? (I will transfer your request to tech support)'
     await bot.send_message(user_id, help_text)
     set_user_state(user_id, 'requesting_help')
 
@@ -427,28 +427,29 @@ async def set_reminders(message):
     dated_message = f'Current time is {datetime.datetime.now()}' +'\n' + message.text 
     response, reminders = reminder_instance.compose_reminders(dated_message)
 
-    await bot.send_message(user_id, f'''
-*Parsed reminders*: 
-{reminders}
-    ''')
-
     if user_language == 'russian':
         plan_data = f'Этот план был создан {datetime.datetime.now().date()} \n \n{message.text}'
         msg = 'Уведомления были успешно установлены'
+        err_msg = 'Упс... Что-то пошло не так. Не удалось установить уведомления. Пожалуйста, попробуйте ещё раз.'
         menu_msg = 'Главное меню'
     elif user_language == 'english':
         plan_data = f'This \'to-do\' was created on {datetime.datetime.now().date()} \n \n{message.text}'
         msg = 'Reminders were succesfully set'
+        err_msg = 'Oops... Something went wrong. Reminders were not set. Please try again.'
         menu_msg = 'Main menu'
 
-    for reminder_text, delays in reminders.items():
-        for delay in delays:
-            await schedule_message(user_id, reminder_text, user_language, delay)
+    try:
+        for reminder_text, delays in reminders.items():
+            for delay in delays:
+                await schedule_message(user_id, reminder_text, user_language, delay)
 
-    await bot.send_chat_action(user_id, 'typing')
+        await bot.send_chat_action(user_id, 'typing')
+        data_functions.add_user_plan(user_id, plan_data)
+        await bot.send_message(user_id, msg)
 
-    data_functions.add_user_plan(user_id, plan_data)
-    await bot.send_message(user_id, msg)
+    except Exception as e:
+        await bot.send_message(user_id, err_msg)
+
     await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
 
@@ -584,7 +585,13 @@ async def handle_query(call):
 
     elif call.data == 'edit_case':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        await bot.send_message(user_id, 'Что бы Вы хотели изменить или добавить?')
+
+        if user_language == 'russian':
+            msg = 'Что бы Вы хотели изменить или добавить?'
+        elif user_language == 'english':
+            msg = 'What would you like to change or add?'
+
+        await bot.send_message(user_id, msg)
         set_user_state(user_id, 'editing_case')
     
     elif call.data == 'edit_bio':
@@ -731,7 +738,7 @@ async def handle_query(call):
         case_name = data_functions.get_item_from_table_by_key('case_name', 'user_cases', 'case_id', case_id)
 
         if user_language == 'russian':
-            msg = f'Проблема {case_name} сохранена.'
+            msg = f'Жалоба {case_name} сохранена.'
             menu_msg = 'Главное меню'
         elif user_language == 'english':
             msg = f'Complaint {case_name} is saved.'
@@ -747,6 +754,7 @@ async def handle_query(call):
         await bot.send_chat_action(user_id, 'typing')
         case_id = get_user_curr_case(user_id)
         data_functions.delete_row_from_table_by_key('user_cases', 'case_id', case_id)
+        data_functions.delete_row_from_table_by_key('user_documents', 'case_id', case_id)
         data_functions.delete_case(case_id)
         data_functions.decrement_value('users', 'num_cases', 'user_id', user_id)
 
@@ -845,7 +853,14 @@ async def handle_query(call):
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_chat_action(user_id, 'typing')
         await compile_case(call.data, user_id)
-        await bot.send_message(user_id, 'Not implemented yet', reply_markup=menus.go_back_menu('main_menu'))
+        set_user_curr_case(user_id, call.data)
+
+        if user_language == 'russian':
+            msg = 'Что бы Вы хотели сделать?'
+        if user_language == 'english':
+            msg = 'What would you like to do?'
+
+        await bot.send_message(user_id, msg, reply_markup=menus.accept_case_menu(user_language))
 
 
 
