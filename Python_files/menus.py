@@ -24,6 +24,16 @@ def main_menu(language):
 
     return keyboard
 
+def go_back_menu(callback_data):
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.row_width = 1
+
+    button_1 = types.InlineKeyboardButton("<<", callback_data=callback_data)
+
+    keyboard.add(button_1)
+
+    return keyboard
+
 def set_language_menu():
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row_width = 1

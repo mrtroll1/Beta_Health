@@ -260,9 +260,10 @@ async def send_welcome(message):
 
 @bot.message_handler(commands=['help'])
 async def send_help(message):
+    user_id = message.chat.id
     help_text = """Быть идеальным ботом непросто. Какой у Вас вопрос? (вам ответит служба поддержки)"""
-    await bot.send_message(message.chat.id, help_text)
-    set_user_state('requesting_help')
+    await bot.send_message(user_id, help_text)
+    set_user_state(user_id, 'requesting_help')
 
 @bot.message_handler(commands=['menu'])
 async def show_main_menu(message):
@@ -442,7 +443,7 @@ async def set_reminders(message):
 
 @bot.message_handler(func=lambda message: get_user_state(message.from_user.id) == 'requesting_help'
                                             and not message.text.startswith('/'))
-async def set_reminders(message):
+async def send_help(message):
     request = message.text
     user_id = message.chat.id
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
@@ -460,7 +461,6 @@ async def set_reminders(message):
     await bot.send_message(user_id, msg)                       
     await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
     set_user_state(user_id, 'awaiting_menu_choice')
-
 
 
 
@@ -529,7 +529,7 @@ async def handle_query(call):
             menu_msg = 'Main menu'
 
         await bot.send_message(user_id, msg)
-        await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
+        await bot.send_message(user_id, menu_msg, reply_markup=menus.go_back_menu('main_menu'))
         set_user_state(user_id, 'awaiting_menu_choice')
     
     elif call.data == 'bio':
@@ -798,7 +798,7 @@ async def handle_query(call):
                 menu_msg = 'Main menu'
 
             await bot.send_message(user_id, msg)
-            await bot.send_message(user_id, menu_msg, reply_markup=menus.main_menu(user_language))
+            await bot.send_message(user_id, menu_msg, reply_markup=menus.go_back_menu('main_menu'))
     
     elif call.data == 'set_reminders':
         await bot.delete_message(user_id, message_id=call.message.message_id)
