@@ -755,7 +755,7 @@ async def handle_query(call):
         case_id = get_user_curr_case(user_id)
         data_functions.delete_row_from_table_by_key('user_cases', 'case_id', case_id)
         data_functions.delete_row_from_table_by_key('user_documents', 'case_id', case_id)
-        data_functions.delete_case(case_id)
+        data_functions.delete_case_data(case_id)
         data_functions.decrement_value('users', 'num_cases', 'user_id', user_id)
 
         if user_language == 'russian':
