@@ -218,9 +218,16 @@ async def compile_case(case_id, recipient):
     
     results = data_functions.get_items_from_table_by_key('document_id', 'user_documents', 'case_id', case_id)
     file_ids = [item[0] for item in results]
-    
+
     for file_id in file_ids:
-        await bot.send_document(recipient, file_id)
+        try:
+            await bot.send_document(recipient, file_id)
+        except Exception as e:
+            try:
+                await bot.send_photo(recipient, file_id)
+            except Exception as e:
+                print(f"Failed to send media: {e}")
+
 
 async def send_scheduled_message(chat_id, message):
     user_id = chat_id
