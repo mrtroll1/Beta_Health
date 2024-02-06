@@ -40,7 +40,7 @@ CREATE TABLE user_plans (
 );
 
 CREATE TABLE user_documents (
-    document_tg_id VARCHAR(200) PRIMARY KEY,
+    document_id VARCHAR(200) PRIMARY KEY,
     document_name VARCHAR(100) DEFAULT 'No-name',
     case_id VARCHAR(64) NOT NULL,
     document_path VARCHAR(255) DEFAULT NULL,
