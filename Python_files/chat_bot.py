@@ -261,7 +261,11 @@ async def send_welcome(message):
 @bot.message_handler(commands=['help'])
 async def send_help(message):
     user_id = message.chat.id
-    help_text = """Быть идеальным ботом непросто. Какой у Вас вопрос? (вам ответит служба поддержки)"""
+    user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
+    if user_language == 'russian':
+        help_text = 'Быть идеальным ботом непросто. Какой у Вас вопрос? (вам ответит служба поддержки)'
+    elif user_language == 'english':
+        help_text = 'It\'s hard to be perfect. What happened? (I will transfer your request to customer service)'
     await bot.send_message(user_id, help_text)
     set_user_state(user_id, 'requesting_help')
 
@@ -449,11 +453,11 @@ async def send_help(message):
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     if user_language == 'russian':
-        help_msg = f'Пользователь {user_id} обратился в службу поддержки: \n_{message}_'
+        help_msg = f'Пользователь {user_id} обратился в службу поддержки: \n_{message.text}_'
         msg = 'Отправил службе поддержки'
         menu_msg = 'Главное меню'
     elif user_language == 'english':
-        help_msg = f'User {user_id} requested help: \n_{message}_'
+        help_msg = f'User {user_id} requested help: \n_{message.text}_'
         msg = 'Your request was sent'
         menu_msg = 'Main menu'
     
