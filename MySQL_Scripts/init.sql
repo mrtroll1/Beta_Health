@@ -21,7 +21,6 @@ CREATE TABLE user_cases (
     case_status VARCHAR(20),
     case_data TEXT DEFAULT NULL,
     case_media_path VARCHAR(255) DEFAULT NULL,
-    case_media_tg_ids VARCHAR (255) DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 

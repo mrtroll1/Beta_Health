@@ -171,7 +171,7 @@ async def save_document(message):
     case_specific_path, full_path = data_functions.save_file_to_server(downloaded_file, message.chat.id, case_id, original_file_name, file_extension)
 
     data_functions.alter_table('user_cases', 'case_media_path', case_specific_path, 'case_id', case_id)
-    data_functions.add_user_document(file_id, case_id, original_file_name, full_path)
+    data_functions.add_user_document(file_id, original_file_name, case_id, full_path)
 
 async def compile_case(case_id, recipient):
     base_path = '/home/luka/Projects/Beta_Health/User_data/Cases'
