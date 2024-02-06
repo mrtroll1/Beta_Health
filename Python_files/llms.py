@@ -17,7 +17,7 @@ class ChatBot(langchain.chains.llm.LLMChain):
 
         self.memory = memory  
 
-    def chatgpt_to_telegram_markdown(input_text):
+    def chatgpt_to_telegram_markdown(self, input_text):
         bold_transformed = input_text.replace('**', '*')
 
         italics_transformed = ''
@@ -46,7 +46,7 @@ class Summarizer(langchain.chains.llm.LLMChain):
 
         self.memory = memory  
     
-    def chatgpt_to_telegram_markdown(input_text):
+    def chatgpt_to_telegram_markdown(self, input_text):
         bold_transformed = input_text.replace('**', '*')
 
         italics_transformed = ''
@@ -75,10 +75,27 @@ class Namer(langchain.chains.llm.LLMChain):
         super().__init__(llm=llm, prompt=prompt, verbose=verbose, memory=memory)
 
         self.memory = memory  
+
+    def chatgpt_to_telegram_markdown(self, input_text):
+        bold_transformed = input_text.replace('**', '*')
+
+        italics_transformed = ''
+        skip_next = False
+        for i, char in enumerate(bold_transformed):
+            if skip_next:
+                skip_next = False
+                continue
+
+            if char == '*' and (i == 0 or bold_transformed[i-1] != '*') and (i == len(bold_transformed) - 1 or bold_transformed[i+1] != '*'):
+                italics_transformed += '_'
+            else:
+                italics_transformed += char
+                if char == '*':
+                    skip_next = True
     
     def name_case(self, case_data):
-
-        return self.invoke(case_data)['text']
+        response = self.invoke(case_data)['text']
+        return self.chatgpt_to_telegram_markdown(response)
 
 class Reminder(langchain.chains.llm.LLMChain):
     def __init__(self, llm, prompt, memory, verbose=False):
