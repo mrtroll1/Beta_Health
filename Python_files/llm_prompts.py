@@ -75,7 +75,7 @@ summarizer_prompt_english = ChatPromptTemplate.from_messages(
             content="""
             You are given a dialogue between an AI assistant and a Human patient. Your task, while preserving all factual details, 
             is to format the information provided by the patient about their condition into text. 
-            Your answer should have two sections: **Complaints** and **Preliminary Recommendations**. 
+            Your answer should have two sections: **complaints** and **preliminary recommendations**. 
             Do not use the words "patient" or "you have" in the text. For example, instead of "The patient complains of a sore throat 
             for three days" or "You have had a sore throat for three days", write "Three days of sore throat." 
             Do not indicate possible causes. Do not ask questions. Use only the symptoms contained in the patient's responses.

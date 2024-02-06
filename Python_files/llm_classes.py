@@ -94,8 +94,8 @@ class Namer(langchain.chains.llm.LLMChain):
                     skip_next = True
     
     def name_case(self, case_data):
-        response = self.invoke(case_data)['text']
-        return self.chatgpt_to_telegram_markdown(response)
+        
+        return self.invoke(case_data)['text']
 
 class Reminder(langchain.chains.llm.LLMChain):
     def __init__(self, llm, prompt, memory, verbose=False):

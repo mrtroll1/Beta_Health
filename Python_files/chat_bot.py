@@ -845,7 +845,7 @@ async def handle_query(call):
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
         await bot.send_chat_action(user_id, 'typing')
         await compile_case(call.data, user_id)
-        await bot.send_message(user_id, 'Not implemented yet')
+        await bot.send_message(user_id, 'Not implemented yet', reply_markup=menus.go_back_menu('main_menu'))
 
 
 
@@ -960,7 +960,7 @@ async def reactions_handler(reaction):
     elif user_language == 'english':
         msg = f'Wow! That was cool ...\nI appreciate your reaction to {reaction.message_id}'
 
-    await bot.send_message(user_id, )
+    await bot.send_message(user_id, msg)
 
 
 
