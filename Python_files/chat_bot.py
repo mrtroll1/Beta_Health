@@ -260,7 +260,9 @@ async def send_welcome(message):
 
     else:
         await bot.send_message(user_id, 'Please select preferred language', reply_markup=menus.set_language_menu())
-        set_user_state(message.chat.id, 'awaiting_menu_choice')
+        set_user_state(user_id, 'awaiting_menu_choice')
+
+    set_user_state(user_id, 'sending_documents')
 
 @bot.message_handler(commands=['help'])
 async def send_help(message):
