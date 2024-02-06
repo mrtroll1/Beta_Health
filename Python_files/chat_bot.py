@@ -217,7 +217,7 @@ async def compile_case(case_id, recipient):
     await bot.send_message(recipient, case_text, parse_mode='Markdown')
     
     file_ids = data_functions.get_items_from_table_by_key('document_id', 'user_documents', 'case_id', case_id)
-    for file_id in file_ids:
+    for (file_id, _) in file_ids:
         await bot.send_document(recipient, file_id)
 
 async def send_scheduled_message(chat_id, message):
