@@ -4,7 +4,7 @@ import telebot
 import os
 import time
 import asyncio
-import llms
+import llm_classes
 import llm_prompts
 import data_functions
 import scheduling
@@ -68,9 +68,9 @@ def generate_case_id(user_id):
 async def conversation_step(message, memory, language):
     user_id = message.chat.id
     if language == 'russian':
-        bot_instance = llms.ChatBot(llms.llm, llm_prompts.chat_prompt_russian, memory)
+        bot_instance = llm_classes.ChatBot(llm_classes.llm, llm_prompts.chat_prompt_russian, memory)
     elif language == 'english':
-        bot_instance = llms.ChatBot(llms.llm, llm_prompts.chat_prompt_english, memory)
+        bot_instance = llm_classes.ChatBot(llm_classes.llm, llm_prompts.chat_prompt_english, memory)
 
     await bot.send_chat_action(user_id, 'typing')
     response = bot_instance.process_message(message.text)
@@ -130,9 +130,9 @@ async def quickstart(message, language):
 
 def summarize_into_case(memory, language): 
     if language == 'russian':
-        summarizer_instance = llms.Summarizer(llms.llm, llm_prompts.summarizer_prompt_russian, memory)
+        summarizer_instance = llm_classes.Summarizer(llm_classes.llm, llm_prompts.summarizer_prompt_russian, memory)
     elif language == 'english':
-        summarizer_instance = llms.Summarizer(llms.llm, llm_prompts.summarizer_prompt_english, memory)
+        summarizer_instance = llm_classes.Summarizer(llm_classes.llm, llm_prompts.summarizer_prompt_english, memory)
     summary = summarizer_instance.summarize(memory)
     return summary
 
@@ -419,9 +419,9 @@ async def set_reminders(message):
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True) 
 
     if user_language == 'russian':
-        reminder_instance = llms.Reminder(llms.llm, llm_prompts.reminder_prompt_russian, memory)
+        reminder_instance = llm_classes.Reminder(llm_classes.llm, llm_prompts.reminder_prompt_russian, memory)
     elif user_language == 'english':
-        reminder_instance = llms.Reminder(llms.llm, llm_prompts.reminder_prompt_english, memory)
+        reminder_instance = llm_classes.Reminder(llm_classes.llm, llm_prompts.reminder_prompt_english, memory)
 
     dated_message = f'Current time is {datetime.datetime.now()}' +'\n' + message.text 
     response, reminders = reminder_instance.compose_reminders(dated_message)
@@ -659,9 +659,9 @@ async def handle_query(call):
         await compile_case(case_id, user_id)
 
         if user_language == 'russian':
-            namer_instance = llms.Namer(llms.llm, llm_prompts.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+            namer_instance = llm_classes.Namer(llm_classes.llm, llm_prompts.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         elif user_language == 'english':
-            namer_instance = llms.Namer(llms.llm, llm_prompts.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+            namer_instance = llm_classes.Namer(llm_classes.llm, llm_prompts.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
 
         case_name = namer_instance.name_case(case)
 
@@ -699,9 +699,9 @@ async def handle_query(call):
         await compile_case(case_id, user_id)
 
         if user_language == 'russian':
-            namer_instance = llms.Namer(llms.llm, llm_prompts.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+            namer_instance = llm_classes.Namer(llm_classes.llm, llm_prompts.namer_prompt_russian, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         elif user_language == 'english':
-            namer_instance = llms.Namer(llms.llm, llm_prompts.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
+            namer_instance = llm_classes.Namer(llm_classes.llm, llm_prompts.namer_prompt_english, ConversationBufferMemory(memory_key="chat_history", return_messages=True))
         case_name = namer_instance.name_case(case)
 
         if user_language == 'russian':
