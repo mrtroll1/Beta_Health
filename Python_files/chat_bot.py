@@ -68,7 +68,7 @@ def generate_case_id(user_id):
 async def conversation_step(message, memory, language):
     user_id = message.chat.id
     if language == 'russian':
-        bot_instance = llms.ChatBot(llms.llm, llm_propmpts.chat_prompt_russian, memory)
+        bot_instance = llms.ChatBot(llms.llm, llm_prompts.chat_prompt_russian, memory)
     elif language == 'english':
         bot_instance = llms.ChatBot(llms.llm, llm_prompts.chat_prompt_english, memory)
 
@@ -262,7 +262,6 @@ async def send_welcome(message):
         await bot.send_message(user_id, 'Please select preferred language', reply_markup=menus.set_language_menu())
         set_user_state(user_id, 'awaiting_menu_choice')
 
-    set_user_state(user_id, 'sending_documents')
 
 @bot.message_handler(commands=['help'])
 async def send_help(message):
