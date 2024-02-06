@@ -186,10 +186,6 @@ async def compile_case(case_id, recipient):
     document_paths = []
     document_names = []
     for filename in os.listdir(case_path):
-        if len(photo_group) + len(document_paths) >= 10: 
-            await bot.send_message(recipient, 'Only first 10 files will be sent')
-            break
-
         file_path = os.path.join(case_path, filename)
         file_extension = os.path.splitext(filename)[1].lower()
         escaped_filename = filename.replace('_', '\_').replace('*', '\*')
@@ -205,16 +201,14 @@ async def compile_case(case_id, recipient):
             document_paths.append(file_path)
 
     if photo_group:
-        await bot.send_media_group(recipient, photo_group)
+        # await bot.send_media_group(recipient, photo_group)
     
     if document_paths:
         for i, file_path in enumerate(document_paths, 0):
             data_functions.decrypt_file(file_path)
             with open(file_path, 'rb') as file:
-                await bot.send_document(recipient, types.InputFile(file), caption=document_names[i], parse_mode=None)
+                # await bot.send_document(recipient, types.InputFile(file), caption=document_names[i], parse_mode=None)
             data_functions.encrypt_file(file_path)
-    
-    await bot.send_message(recipient, case_text, parse_mode='Markdown')
     
     results = data_functions.get_items_from_table_by_key('document_id', 'user_documents', 'case_id', case_id)
     file_ids = [item[0] for item in results]
@@ -228,6 +222,7 @@ async def compile_case(case_id, recipient):
             except Exception as e:
                 print(f"Failed to send media: {e}")
 
+    await bot.send_message(recipient, case_text, parse_mode='Markdown')
 
 async def send_scheduled_message(chat_id, message):
     user_id = chat_id
