@@ -144,11 +144,13 @@ def reply_to_reminder_menu(language):
     keyboard.row_width = 1
 
     if language == 'russian':
-        button_1 = types.InlineKeyboardButton("Спасибо, уже сделал", callback_data='reminder_job_done')
+        button_1 = types.InlineKeyboardButton("Уже сделал", callback_data='reminder_job_done')
+        button_1 = types.InlineKeyboardButton("Спасибо, что напомнил", callback_data='reminder_job_not_done')
     elif language == 'english':
-        button_1 = types.InlineKeyboardButton("Thank you, I have already done it", callback_data='reminder_job_done')
+        button_1 = types.InlineKeyboardButton("I have already done it", callback_data='reminder_job_done')
+        button_1 = types.InlineKeyboardButton("Thank you for reminding me", callback_data='reminder_job_not_done')
 
-    keyboard.add(button_1)
+    keyboard.add(button_1, button_2)
 
     return keyboard
 

@@ -374,12 +374,12 @@ async def edit_case(message):
         memory.save_context({"input": case}, {"output": "Что бы Вы хотели изменить или добавить?"}) 
         memory.save_context({"input": message.text}, {"output": "Сейчас внесу изменения!"})
         msg = 'Вот обновлённая версия:'
-        menu_msg = 'Отправляю врачу?'
+        menu_msg = 'Хотите изменить что-то ещё?'
     elif user_language == 'english':
         memory.save_context({"input": case}, {"output": "What would you like to edit or add?"}) 
         memory.save_context({"input": message.text}, {"output": "I will apply the changes now!"})
-        msg = 'Here is the update version:'
-        menu_msg = 'Shall I send it to the doctor?'
+        msg = 'Here is the updated version:'
+        menu_msg = 'Do you wish to change anything else?'
 
     await bot.send_message(user_id, msg)
     await bot.send_chat_action(user_id, 'typing')
@@ -723,7 +723,7 @@ async def handle_query(call):
             msg = 'Теперь Вы умеете работать со мной. Чтобы начать делиться данными с доктором, нужно оформить подписку.'
             menu_msg = 'Главное меню'
         elif user_language == 'english':
-            msg = 'Now you know how to work with me. Buy a subscription to start sharing data with a doctor.'
+            msg = 'Now you know how it works! Buy a subscription to start sharing data with a doctor.'
             menu_msg = 'Main menu'
 
         await bot.send_message(user_id, msg)
@@ -803,7 +803,7 @@ async def handle_query(call):
             elif user_language == 'english':
                 msg = 'This is your current to-do list'
 
-            await bot.send_message(user_id, msg)
+            await bot.send_message(user_id, msg, reply_markup=menus.go_back_menu('reminders_menu'))
         else:
 
             if user_language == 'russian':
@@ -832,6 +832,17 @@ async def handle_query(call):
             msg = f'Молодец, {user_name}'
         elif user_language == 'english':
             msg = f'Good job, {user_name}'
+
+        await bot.send_message(user_id, msg)
+    
+    elif call.data == 'reminder_job_not_done':
+        await bot.delete_message(user_id, message_id=call.message.message_id)
+        user_name = data_functions.get_item_from_table_by_key('user_name', 'users', 'user_id', user_id)
+
+        if user_language == 'russian':
+            msg = f'Не за что, {user_name}'
+        elif user_language == 'english':
+            msg = f'You are welcom, {user_name}'
 
         await bot.send_message(user_id, msg)
     
@@ -971,9 +982,9 @@ async def reactions_handler(reaction):
     user_language = data_functions.get_item_from_table_by_key('user_language', 'users', 'user_id', user_id)
 
     if user_language == 'russian':
-        msg = f'Ого! Это было клёво ...\nЯ ценю Вашу реакцию на {reaction.message_id}'
+        msg = f'Ого! Это было клёво ...'
     elif user_language == 'english':
-        msg = f'Wow! That was cool ...\nI appreciate your reaction to {reaction.message_id}'
+        msg = f'Wow! That was cool ...'
 
     await bot.send_message(user_id, msg)
 
