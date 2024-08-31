@@ -1,2 +1,2 @@
 ### Telegram powered AI medical assistant. 
-Try it via https://t.me/beta_health_bot
+The point of this project was to explore programming beyond algorithmic LeetCode problems and Jupyter Data Science. This goal was achieved. Keywords and topics that have became meaningful to me: GitHub, Server set-up, Bash, CI/CD Workflow, Assynchronous programming, API. Now, the practical result is the so-called medical assistant made to collect pre-appointment symptom info and help you organize medical data. Try it via https://t.me/beta_health_bot
